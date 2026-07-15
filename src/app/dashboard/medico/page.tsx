@@ -1,36 +1,165 @@
-import { createClient } from "@/lib/supabase/server";
-import { AgendaMedico, type CitaAgenda } from "@/components/dashboard/AgendaMedico";
-import { DEMO_MODE, DEMO_CITAS } from "@/lib/demo";
-import { redirect } from "next/navigation";
+"use client";
 
-// Dashboard del Médico (Server Component).
-// RLS garantiza que la query solo devuelve citas del médico autenticado.
-export default async function DashboardMedicoPage() {
-  if (DEMO_MODE) {
-    return <AgendaMedico citas={DEMO_CITAS as CitaAgenda[]} />;
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { format, isToday } from "date-fns";
+import { es } from "date-fns/locale";
+import { Banknote, CalendarDays, CheckCircle2, MapPin, Users, Video } from "lucide-react";
+import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
+import { useDemoStore } from "@/lib/demo-store";
+
+const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
+
+// Nodo Médico: agenda con datos locales reales (marcar asistida funciona
+// y alimenta el programa de lealtad del paciente).
+export default function DashboardMedicoPage() {
+  const store = useDemoStore();
+  const { listo, citas, sesion } = store;
+  const [vista, setVista] = useState<"hoy" | "semana">("hoy");
+
+  const propias = useMemo(
+    () =>
+      citas
+        .filter((c) => c.medico_id === "med-1" && c.estado !== "cancelada")
+        .sort((a, b) => a.inicio.localeCompare(b.inicio)),
+    [citas]
+  );
+  const futurasOHoy = propias.filter(
+    (c) => isToday(new Date(c.inicio)) || new Date(c.inicio).getTime() > Date.now()
+  );
+  const visibles =
+    vista === "hoy" ? propias.filter((c) => isToday(new Date(c.inicio))) : futurasOHoy;
+
+  const deHoy = propias.filter((c) => isToday(new Date(c.inicio)));
+  const stats = {
+    hoy: deHoy.length,
+    tele: deHoy.filter((c) => c.modalidad === "telemedicina").length,
+    ingresos: deHoy.reduce((s, c) => s + c.precio, 0),
+    asistidas: deHoy.filter((c) => c.estado === "asistida").length,
+  };
+
+  if (!listo) return null;
+
+  if (!sesion || sesion.rol !== "medico") {
+    return <SinSesion rol="médico" />;
   }
 
-  const supabase = await createClient();
+  return (
+    <PanelShell sesion={sesion} activo="Mi agenda" onLogout={store.logout}>
+      <header className="anim-in mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Mi agenda</h1>
+          <p className="mt-1 text-sm capitalize" style={{ color: "var(--ink-muted)" }}>
+            {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
+          </p>
+        </div>
+        <div className="flex rounded-full p-1 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
+          {(["hoy", "semana"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setVista(v)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+                vista === v
+                  ? "bg-gradient-to-r from-brand-600 to-accent-500 text-white shadow-sm"
+                  : ""
+              }`}
+              style={vista === v ? undefined : { color: "var(--ink-muted)" }}
+            >
+              {v === "hoy" ? "Hoy" : "Próximas"}
+            </button>
+          ))}
+        </div>
+      </header>
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+      {/* KPIs pastel estilo referencia */}
+      <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiPastel tono="lila" delay="anim-d1" icon={<Users className="h-4 w-4" />} label="Citas de hoy" value={String(stats.hoy)} nota="Agenda del día" />
+        <KpiPastel tono="azul" delay="anim-d2" icon={<Video className="h-4 w-4" />} label="Telemedicina" value={String(stats.tele)} nota="Con enlace de video" />
+        <KpiPastel tono="menta" delay="anim-d3" icon={<Banknote className="h-4 w-4" />} label="Ingresos del día" value={mxn.format(stats.ingresos)} nota="Citas pagadas" />
+        <KpiPastel tono="durazno" delay="anim-d4" icon={<CheckCircle2 className="h-4 w-4" />} label="Atendidas" value={`${stats.asistidas}/${stats.hoy}`} nota="Marcadas como asistidas" />
+      </section>
 
-  const hoy = new Date();
-  const inicioDia = new Date(hoy.setHours(0, 0, 0, 0)).toISOString();
-  const finSemana = new Date(hoy.getTime() + 7 * 86_400_000).toISOString();
+      {/* Lista de citas */}
+      <section className="anim-in anim-d3 space-y-3">
+        {visibles.length === 0 && (
+          <div
+            className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-brand-500/30 py-14 text-center"
+            style={{ background: "var(--card)" }}
+          >
+            <CalendarDays className="h-8 w-8 text-accent-500" />
+            <p className="font-medium">Sin citas {vista === "hoy" ? "para hoy" : "próximas"}</p>
+            <p className="text-sm" style={{ color: "var(--ink-muted)" }}>
+              Las nuevas reservas de pacientes aparecen aquí al instante.
+            </p>
+          </div>
+        )}
 
-  const { data: citas, error } = await supabase
-    .from("citas")
-    .select(`
-      id, inicio, fin, modalidad, estado, precio, enlace_videollamada,
-      paciente:usuarios ( nombre, apellidos, avatar_url )
-    `)
-    .gte("inicio", inicioDia)
-    .lte("inicio", finSemana)
-    .in("estado", ["confirmada", "asistida"])
-    .order("inicio", { ascending: true });
+        {visibles.map((cita, i) => (
+          <article
+            key={cita.id}
+            className={`anim-in anim-d${Math.min(i + 1, 6)} card-hover flex flex-wrap items-center gap-4 rounded-2xl p-4 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10`}
+            style={{ background: "var(--card)" }}
+          >
+            <div className="flex w-16 shrink-0 flex-col items-center rounded-xl bg-gradient-to-b from-brand-600 to-accent-600 py-2 text-white">
+              <span className="text-[10px] font-medium capitalize opacity-90">
+                {format(new Date(cita.inicio), "d MMM", { locale: es })}
+              </span>
+              <span className="text-sm font-semibold">{format(new Date(cita.inicio), "HH:mm")}</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">{cita.paciente_nombre}</p>
+              <p className="mt-0.5 flex items-center gap-1.5 text-sm" style={{ color: "var(--ink-muted)" }}>
+                {cita.modalidad === "telemedicina" ? (
+                  <><Video className="h-3.5 w-3.5 text-accent-500" /> Videoconsulta</>
+                ) : (
+                  <><MapPin className="h-3.5 w-3.5 text-brand-500" /> Presencial</>
+                )}
+                <span aria-hidden>·</span> {mxn.format(cita.precio)}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {cita.modalidad === "telemedicina" &&
+                cita.enlace_videollamada &&
+                cita.estado === "confirmada" && (
+                  <a
+                    href={cita.enlace_videollamada}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-accent-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-600"
+                  >
+                    Unirse
+                  </a>
+                )}
+              {cita.estado === "confirmada" ? (
+                <button
+                  onClick={() => store.marcarAsistida(cita.id)}
+                  className="rounded-full border border-brand-500/30 px-4 py-2 text-sm font-medium text-brand-600 transition-colors hover:bg-brand-50 dark:hover:bg-brand-900/30"
+                >
+                  Marcar asistida
+                </button>
+              ) : (
+                <span className="anim-pop flex items-center gap-1.5 rounded-full bg-pastel-menta px-3 py-1.5 text-xs font-medium text-emerald-700">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Asistida
+                </span>
+              )}
+            </div>
+          </article>
+        ))}
+      </section>
+    </PanelShell>
+  );
+}
 
-  if (error) throw new Error(`Error cargando agenda: ${error.message}`);
-
-  return <AgendaMedico citas={(citas ?? []) as unknown as CitaAgenda[]} />;
+function SinSesion({ rol }: { rol: string }) {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+      <p className="anim-in text-lg font-semibold">Inicia sesión como {rol} para ver este panel</p>
+      <Link
+        href="/login"
+        className="anim-in anim-d1 rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md"
+      >
+        Entrar a la demo
+      </Link>
+    </main>
+  );
 }

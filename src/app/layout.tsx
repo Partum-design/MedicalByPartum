@@ -9,7 +9,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <footer className="py-6 text-center text-xs" style={{ color: "var(--ink-muted)" }}>
+          By Partum Design
+        </footer>
+      </body>
     </html>
   );
 }

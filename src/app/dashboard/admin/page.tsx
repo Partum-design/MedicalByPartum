@@ -1,113 +1,155 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo } from "react";
 import { Banknote, CalendarCheck, Gift, TrendingUp, Users } from "lucide-react";
-import { DEMO_ADMIN_STATS } from "@/lib/demo";
+import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
+import { MEDICOS_DEMO, useDemoStore } from "@/lib/demo-store";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
 
-// Nodo Administrador (demo): reportes financieros y gestión de médicos.
-// En producción estas métricas salen de vistas agregadas protegidas por RLS
-// (admin_clinica solo ve su clinica_id).
+// Nodo Administrador: métricas calculadas en vivo desde el almacén local —
+// atender o agendar citas en los otros paneles cambia estos números.
 export default function DashboardAdminPage() {
-  const s = DEMO_ADMIN_STATS;
+  const store = useDemoStore();
+  const { listo, citas, sesion } = store;
+
+  const stats = useMemo(() => {
+    const vivas = citas.filter((c) => c.estado !== "cancelada");
+    const asistidas = citas.filter((c) => c.estado === "asistida");
+    const pacientes = new Set(vivas.map((c) => c.paciente_id));
+    return {
+      ingresos: vivas.reduce((s, c) => s + c.precio, 0),
+      citas: vivas.length,
+      asistencia: vivas.length ? asistidas.length / vivas.length : 0,
+      pacientes: pacientes.size,
+      recompensas: Math.floor(asistidas.length / 5),
+      porMedico: MEDICOS_DEMO.map((m) => {
+        const suyas = vivas.filter((c) => c.medico_id === m.id);
+        return {
+          ...m,
+          citas: suyas.length,
+          ingresos: suyas.reduce((s, c) => s + c.precio, 0),
+        };
+      }),
+    };
+  }, [citas]);
+
+  if (!listo) return null;
+
+  if (!sesion || sesion.rol !== "admin") {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="anim-in text-lg font-semibold">
+          Inicia sesión como administrador para ver este panel
+        </p>
+        <Link
+          href="/login"
+          className="anim-in anim-d1 rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md"
+        >
+          Entrar a la demo
+        </Link>
+      </main>
+    );
+  }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-8">
-      <header className="mb-8">
-        <Link href="/" className="text-sm font-medium text-brand-600 hover:text-brand-700">
-          ← Inicio
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Clínica Partum — Panel global</h1>
+    <PanelShell sesion={sesion} activo="Panel" onLogout={store.logout}>
+      <header className="anim-in mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Clínica Partum</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-          Resumen del mes en curso · datos de demostración
+          Los números se actualizan en vivo con la actividad de pacientes y médicos.
         </p>
       </header>
 
-      <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi icon={<Banknote className="h-5 w-5" />} label="Ingresos del mes" value={mxn.format(s.ingresosMes)} />
-        <Kpi icon={<CalendarCheck className="h-5 w-5" />} label="Citas del mes" value={String(s.citasMes)} />
-        <Kpi icon={<TrendingUp className="h-5 w-5" />} label="Tasa de asistencia" value={`${Math.round(s.tasaAsistencia * 100)}%`} acento />
-        <Kpi icon={<Users className="h-5 w-5" />} label="Pacientes activos" value={String(s.pacientesActivos)} />
+      {/* KPIs pastel estilo referencia */}
+      <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiPastel tono="lila" delay="anim-d1" icon={<Banknote className="h-4 w-4" />} label="Ingresos" value={mxn.format(stats.ingresos)} nota="Citas confirmadas y asistidas" />
+        <KpiPastel tono="azul" delay="anim-d2" icon={<CalendarCheck className="h-4 w-4" />} label="Citas" value={String(stats.citas)} nota="Activas en la clínica" />
+        <KpiPastel tono="menta" delay="anim-d3" icon={<TrendingUp className="h-4 w-4" />} label="Tasa de asistencia" value={`${Math.round(stats.asistencia * 100)}%`} nota="Asistidas vs. totales" />
+        <KpiPastel tono="durazno" delay="anim-d4" icon={<Users className="h-4 w-4" />} label="Pacientes" value={String(stats.pacientes)} nota="Con citas activas" />
       </section>
 
-      <section className="mb-8 rounded-2xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold">Equipo médico</h2>
-          <button className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-700">
-            + Dar de alta médico
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left" style={{ color: "var(--ink-muted)" }}>
-                <th className="pb-3 font-medium">Médico</th>
-                <th className="pb-3 font-medium">Especialidad</th>
-                <th className="pb-3 text-right font-medium">Citas</th>
-                <th className="pb-3 text-right font-medium">Ingresos</th>
-                <th className="pb-3 text-right font-medium">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-              {s.medicos.map((m) => (
-                <tr key={m.nombre}>
-                  <td className="py-3 font-medium">{m.nombre}</td>
-                  <td className="py-3" style={{ color: "var(--ink-muted)" }}>{m.especialidad}</td>
-                  <td className="py-3 text-right tabular-nums">{m.citas}</td>
-                  <td className="py-3 text-right tabular-nums">{mxn.format(m.ingresos)}</td>
-                  <td className="py-3 text-right">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        m.activo
-                          ? "bg-accent-100 text-accent-600 dark:bg-accent-500/15 dark:text-accent-400"
-                          : "bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400"
-                      }`}
-                    >
-                      {m.activo ? "Activo" : "Baja"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="rounded-2xl bg-gradient-to-r from-brand-600 to-accent-500 p-6 text-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
-              <Gift className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="font-semibold">Programa de lealtad</h2>
-              <p className="text-sm text-white/80">
-                {s.recompensasCanjeadas} recompensas canjeadas este mes · regla: 5 citas → 20% de descuento
-              </p>
-            </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Equipo médico */}
+        <section
+          className="anim-in anim-d3 rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 lg:col-span-2"
+          style={{ background: "var(--card)" }}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-semibold">Equipo médico</h2>
+            <button className="card-hover rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-4 py-1.5 text-sm font-medium text-white shadow-sm">
+              + Dar de alta
+            </button>
           </div>
-          <button className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700 transition-transform hover:scale-105">
-            Configurar recompensas
-          </button>
-        </div>
-      </section>
-    </main>
-  );
-}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left" style={{ color: "var(--ink-muted)" }}>
+                  <th className="pb-3 font-medium">Médico</th>
+                  <th className="pb-3 font-medium">Especialidad</th>
+                  <th className="pb-3 text-right font-medium">Citas</th>
+                  <th className="pb-3 text-right font-medium">Ingresos</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                {stats.porMedico.map((m) => (
+                  <tr key={m.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-white/5">
+                    <td className="py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-xs font-semibold text-white">
+                          {m.nombre.replace(/^Dra?\.\s*/, "").charAt(0)}
+                        </span>
+                        <span className="font-medium">{m.nombre}</span>
+                      </div>
+                    </td>
+                    <td className="py-3" style={{ color: "var(--ink-muted)" }}>{m.especialidad}</td>
+                    <td className="py-3 text-right tabular-nums">{m.citas}</td>
+                    <td className="py-3 text-right tabular-nums">{mxn.format(m.ingresos)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-function Kpi({ icon, label, value, acento }: { icon: React.ReactNode; label: string; value: string; acento?: boolean }) {
-  return (
-    <div className="flex items-center gap-3 rounded-2xl p-4 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-      <div
-        className={`flex h-10 w-10 items-center justify-center rounded-xl text-white ${
-          acento ? "bg-gradient-to-br from-accent-400 to-accent-600" : "bg-gradient-to-br from-brand-500 to-brand-700"
-        }`}
-      >
-        {icon}
+        {/* Lealtad + acciones */}
+        <div className="space-y-4">
+          <section className="anim-in anim-d4 card-hover rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-accent-500 p-6 text-white shadow-md">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
+                <Gift className="h-5 w-5" />
+              </span>
+              <h2 className="font-semibold">Programa de lealtad</h2>
+            </div>
+            <p className="text-3xl font-bold tabular-nums">{stats.recompensas}</p>
+            <p className="mt-1 text-sm text-white/80">
+              recompensas desbloqueadas · regla activa: 5 citas → 20% de descuento
+            </p>
+            <button className="card-hover mt-4 w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700">
+              Configurar recompensas
+            </button>
+          </section>
+
+          <section
+            className="anim-in anim-d5 rounded-3xl p-5 text-sm shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
+            style={{ background: "var(--card)" }}
+          >
+            <h3 className="mb-2 font-semibold">Demo interactiva</h3>
+            <p style={{ color: "var(--ink-muted)" }}>
+              Agenda una cita como paciente o márcala asistida como médico y verás
+              estos indicadores moverse.
+            </p>
+            <button
+              onClick={store.reiniciarDemo}
+              className="mt-3 rounded-full border border-slate-200 px-4 py-1.5 text-xs font-medium transition-colors hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5"
+              style={{ color: "var(--ink-muted)" }}
+            >
+              Restablecer datos de la demo
+            </button>
+          </section>
+        </div>
       </div>
-      <div>
-        <p className="text-xs" style={{ color: "var(--ink-muted)" }}>{label}</p>
-        <p className="text-lg font-semibold tabular-nums">{value}</p>
-      </div>
-    </div>
+    </PanelShell>
   );
 }

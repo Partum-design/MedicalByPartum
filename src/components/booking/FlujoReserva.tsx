@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, setHours, setMinutes } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, Clock, ShieldCheck, Smartphone, Video } from "lucide-react";
+import { CheckCircle2, Clock, MapPin, ShieldCheck, Smartphone, Video } from "lucide-react";
+import { calcularLealtad, useDemoStore } from "@/lib/demo-store";
 
 type Medico = {
   id: string;
@@ -20,9 +22,11 @@ type Paso = "medico" | "horario" | "otp" | "pago" | "confirmada";
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
 
 export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boolean }) {
+  const store = useDemoStore();
   const [paso, setPaso] = useState<Paso>("medico");
   const [medico, setMedico] = useState<Medico | null>(null);
   const [slot, setSlot] = useState<Date | null>(null);
+  const [modalidad, setModalidad] = useState<"presencial" | "telemedicina">("presencial");
   const [telefono, setTelefono] = useState("");
   const [codigo, setCodigo] = useState("");
   const [otpEnviado, setOtpEnviado] = useState(false);
@@ -101,7 +105,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
         medico_id: medico.id,
         inicio: slot.toISOString(),
         fin: fin.toISOString(),
-        modalidad: "presencial",
+        modalidad,
       }),
     });
     const data = await res.json();
@@ -225,9 +229,28 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
               <Clock className="h-4 w-4" /> {restante}
             </span>
           </div>
+          {medico.acepta_telemedicina && (
+            <div className="mb-4 flex gap-2">
+              {(["presencial", "telemedicina"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setModalidad(m)}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                    modalidad === m
+                      ? "border-accent-500 bg-accent-100/50 text-accent-600 dark:bg-accent-500/10"
+                      : "border-slate-200 dark:border-white/10"
+                  }`}
+                >
+                  {m === "presencial" ? <MapPin className="h-4 w-4" /> : <Video className="h-4 w-4" />}
+                  {m === "presencial" ? "Presencial" : "Videoconsulta"}
+                </button>
+              ))}
+            </div>
+          )}
           <dl className="mb-5 space-y-2 text-sm">
             <Fila k="Especialista" v={medico.nombre} />
             <Fila k="Fecha" v={format(slot, "EEEE d 'de' MMMM, HH:mm 'h'", { locale: es })} />
+            <Fila k="Modalidad" v={modalidad === "presencial" ? "Presencial" : "Videoconsulta"} />
             <Fila k="Total" v={mxn.format(medico.precio_consulta)} destacado />
           </dl>
           <p className="mb-4 flex items-start gap-2 text-xs" style={{ color: "var(--ink-muted)" }}>
@@ -236,8 +259,19 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
             automáticamente para otros pacientes.
           </p>
           <button
-            onClick={() => setPaso("confirmada")}
-            className="w-full rounded-xl bg-gradient-to-r from-brand-600 to-accent-500 py-2.5 font-medium text-white"
+            onClick={() => {
+              // En la demo el pago crea la cita en el almacén local: aparece
+              // al instante en la cuenta del paciente y en la agenda del médico.
+              const fin = new Date(slot.getTime() + medico.duracion_cita_min * 60_000);
+              store.crearCita({
+                medico_id: medico.id,
+                inicio: slot.toISOString(),
+                fin: fin.toISOString(),
+                modalidad,
+              });
+              setPaso("confirmada");
+            }}
+            className="card-hover w-full rounded-xl bg-gradient-to-r from-brand-600 to-accent-500 py-2.5 font-medium text-white"
           >
             {demo ? "Simular pago con Stripe" : "Pagar con Stripe"}
           </button>
@@ -245,18 +279,36 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
       )}
 
       {/* Paso 5: confirmación */}
-      {paso === "confirmada" && medico && slot && (
-        <div className="rounded-2xl p-8 text-center shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-          <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-accent-500" />
-          <h2 className="text-lg font-semibold">¡Cita confirmada!</h2>
-          <p className="mt-1 text-sm capitalize" style={{ color: "var(--ink-muted)" }}>
-            {medico.nombre} · {format(slot, "EEEE d 'de' MMMM, HH:mm 'h'", { locale: es })}
-          </p>
-          <p className="mx-auto mt-4 w-fit rounded-full bg-brand-50 px-4 py-1.5 text-xs font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-100">
-            🎁 Programa de lealtad: 1 de 5 citas — a 4 citas de tu recompensa
-          </p>
-        </div>
-      )}
+      {paso === "confirmada" && medico && slot && (() => {
+        const lealtad = calcularLealtad(store.citas, "pac-1");
+        return (
+          <div className="anim-pop rounded-2xl p-8 text-center shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
+            <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-accent-500" />
+            <h2 className="text-lg font-semibold">¡Cita confirmada!</h2>
+            <p className="mt-1 text-sm capitalize" style={{ color: "var(--ink-muted)" }}>
+              {medico.nombre} · {format(slot, "EEEE d 'de' MMMM, HH:mm 'h'", { locale: es })}
+            </p>
+            <p className="mx-auto mt-4 w-fit rounded-full bg-brand-50 px-4 py-1.5 text-xs font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-100">
+              🎁 Lealtad: {lealtad.progreso} de 5 citas asistidas — te faltan {lealtad.faltan} para tu recompensa
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                href={store.sesion?.rol === "paciente" ? "/cuenta" : "/login"}
+                className="card-hover rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md"
+              >
+                Ver en mi cuenta
+              </Link>
+              <Link
+                href="/"
+                className="rounded-full px-5 py-2.5 text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-white/5"
+                style={{ color: "var(--ink-muted)" }}
+              >
+                Volver al inicio
+              </Link>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

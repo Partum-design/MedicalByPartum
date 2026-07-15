@@ -4,24 +4,33 @@ import { Redis } from "@upstash/redis";
 
 // Rate limiting estricto en el Edge para endpoints sensibles a bots.
 // Límite por IP y por sesión (cookie sb-*) sobre búsqueda y reservas.
-const redis = Redis.fromEnv();
+const hasRedis =
+  !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN;
 
-const limiters = {
-  // Anti-scraping del directorio de médicos
-  search: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(30, "60 s"),
-    prefix: "rl:search",
-  }),
-  // Anti appointment-scalping
-  bookings: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(5, "60 s"),
-    prefix: "rl:bookings",
-  }),
-};
+const limiters = hasRedis
+  ? (() => {
+      const redis = Redis.fromEnv();
+      return {
+        // Anti-scraping del directorio de médicos
+        search: new Ratelimit({
+          redis,
+          limiter: Ratelimit.slidingWindow(30, "60 s"),
+          prefix: "rl:search",
+        }),
+        // Anti appointment-scalping
+        bookings: new Ratelimit({
+          redis,
+          limiter: Ratelimit.slidingWindow(5, "60 s"),
+          prefix: "rl:bookings",
+        }),
+      };
+    })()
+  : null;
 
 export async function middleware(req: NextRequest) {
+  // Sin Redis configurado (entorno demo/local) el middleware no limita.
+  if (!limiters) return NextResponse.next();
+
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "anon";
   const session = req.cookies.get("sb-access-token")?.value?.slice(0, 32) ?? "";
   const key = `${ip}:${session}`;

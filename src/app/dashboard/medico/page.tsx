@@ -1,10 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { AgendaMedico, type CitaAgenda } from "@/components/dashboard/AgendaMedico";
+import { DEMO_MODE, DEMO_CITAS } from "@/lib/demo";
 import { redirect } from "next/navigation";
 
 // Dashboard del Médico (Server Component).
 // RLS garantiza que la query solo devuelve citas del médico autenticado.
 export default async function DashboardMedicoPage() {
+  if (DEMO_MODE) {
+    return <AgendaMedico citas={DEMO_CITAS as CitaAgenda[]} />;
+  }
+
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();

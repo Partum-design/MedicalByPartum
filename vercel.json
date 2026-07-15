@@ -3,8 +3,7 @@
   "framework": "nextjs",
   "regions": ["iad1"],
   "functions": {
-    "src/app/api/webhooks/stripe/route.ts": { "maxDuration": 30 },
-    "src/app/api/calendar/sync/route.ts": { "maxDuration": 60 }
+    "src/app/api/webhooks/stripe/route.ts": { "maxDuration": 30 }
   },
   "headers": [
     {

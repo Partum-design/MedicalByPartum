@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* Paleta MedicalByPartum: azules (confianza) + cian/turquesa (salud tech) */
+@theme {
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-900: #1e3a8a;
+  --color-accent-100: #cffafe;
+  --color-accent-400: #22d3ee;
+  --color-accent-500: #06b6d4;
+  --color-accent-600: #0891b2;
+}
+
+:root {
+  --bg: #f6f8fb;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --ink-muted: #64748b;
+}
+
+.dark {
+  --bg: #0b1220;
+  --card: #101a2e;
+  --ink: #e2e8f0;
+  --ink-muted: #94a3b8;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-feature-settings: "cv02", "cv03";
+}

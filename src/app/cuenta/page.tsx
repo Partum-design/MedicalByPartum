@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarPlus, Gift, MapPin, Sparkles, Video } from "lucide-react";
+import { Banknote, CalendarPlus, CreditCard, Gift, MapPin, Sparkles, Video } from "lucide-react";
 import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
 import { calcularLealtad, useDemoStore } from "@/lib/demo-store";
 
@@ -119,6 +119,19 @@ export default function CuentaPage() {
                   )}
                   <span aria-hidden>·</span> {mxn.format(c.precio)}
                 </p>
+                <span
+                  className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                    c.estado_pago === "pagado"
+                      ? "bg-pastel-menta text-emerald-700"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+                  }`}
+                >
+                  {c.estado_pago === "pagado" ? (
+                    <><CreditCard className="h-3 w-3" /> Pagado</>
+                  ) : (
+                    <><Banknote className="h-3 w-3" /> Paga en efectivo al llegar</>
+                  )}
+                </span>
               </div>
               {c.modalidad === "telemedicina" && c.enlace_videollamada && (
                 <a

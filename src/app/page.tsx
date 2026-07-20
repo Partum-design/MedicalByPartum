@@ -47,8 +47,8 @@ export default function LandingPage() {
           <p className="anim-in anim-d3 mx-auto mt-5 max-w-2xl text-lg text-white/85">
             Cada cita a la que un paciente no llega es dinero perdido y tiempo médico
             desperdiciado. MedicalByPartum existe para resolver eso: agenda en línea con
-            pago anticipado, telemedicina automática y un programa de lealtad que premia
-            a quien sí regresa.
+            pago con tarjeta o en efectivo, telemedicina automática y un programa de
+            lealtad que premia a quien sí regresa.
           </p>
           <div className="anim-in anim-d4 mt-8 flex flex-wrap justify-center gap-3">
             <Link
@@ -110,8 +110,8 @@ export default function LandingPage() {
             n="1"
             delay="anim-d1"
             icon={<CreditCard className="h-5 w-5" />}
-            title="El paciente agenda y paga en línea"
-            text="Disponibilidad en tiempo real, verificación por WhatsApp y pago con tarjeta. El horario queda apartado solo 10 minutos: sin pago, se libera — adiós a los bloqueos fantasma."
+            title="El paciente agenda y elige cómo pagar"
+            text="Disponibilidad en tiempo real, verificación por WhatsApp y pago con tarjeta o en efectivo al llegar a la clínica. El horario queda apartado — sin confirmación, se libera — adiós a los bloqueos fantasma."
           />
           <Paso
             n="2"

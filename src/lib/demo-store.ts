@@ -10,6 +10,9 @@ import { useCallback, useEffect, useState } from "react";
 
 export type RolDemo = "paciente" | "medico" | "admin";
 
+export type MetodoPago = "tarjeta" | "efectivo";
+export type EstadoPago = "pagado" | "pendiente";
+
 export type SesionDemo = {
   rol: RolDemo;
   id: string;
@@ -30,6 +33,8 @@ export type CitaDemo = {
   estado: "confirmada" | "asistida" | "cancelada";
   precio: number;
   enlace_videollamada: string | null;
+  metodo_pago: MetodoPago;
+  estado_pago: EstadoPago;
 };
 
 export const CUENTAS_DEMO: Record<RolDemo, SesionDemo> = {
@@ -81,17 +86,17 @@ function iso(diasDesdeHoy: number, hora: number, min = 0) {
 function seedCitas(): CitaDemo[] {
   return [
     // Historial de Mariana con la Dra. Ortiz (3 asistidas → lealtad 3/5)
-    { id: "c-h1", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(-45, 10), fin: iso(-45, 10, 30), modalidad: "presencial", estado: "asistida", precio: 850, enlace_videollamada: null },
-    { id: "c-h2", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(-30, 11), fin: iso(-30, 11, 30), modalidad: "telemedicina", estado: "asistida", precio: 850, enlace_videollamada: "https://meet.google.com/demo" },
-    { id: "c-h3", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(-14, 9), fin: iso(-14, 9, 30), modalidad: "presencial", estado: "asistida", precio: 850, enlace_videollamada: null },
+    { id: "c-h1", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(-45, 10), fin: iso(-45, 10, 30), modalidad: "presencial", estado: "asistida", precio: 850, enlace_videollamada: null, metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-h2", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(-30, 11), fin: iso(-30, 11, 30), modalidad: "telemedicina", estado: "asistida", precio: 850, enlace_videollamada: "https://meet.google.com/demo", metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-h3", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(-14, 9), fin: iso(-14, 9, 30), modalidad: "presencial", estado: "asistida", precio: 850, enlace_videollamada: null, metodo_pago: "efectivo", estado_pago: "pagado" },
     // Hoy, agenda de la Dra. Ortiz
-    { id: "c-t1", paciente_id: "pac-2", paciente_nombre: "Carlos Reyna", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(0, 9), fin: iso(0, 9, 30), modalidad: "presencial", estado: "confirmada", precio: 850, enlace_videollamada: null },
-    { id: "c-t2", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(0, 10, 30), fin: iso(0, 11), modalidad: "telemedicina", estado: "confirmada", precio: 850, enlace_videollamada: "https://meet.google.com/demo" },
-    { id: "c-t3", paciente_id: "pac-3", paciente_nombre: "Lucía Mendoza", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(0, 12), fin: iso(0, 12, 30), modalidad: "presencial", estado: "confirmada", precio: 850, enlace_videollamada: null },
+    { id: "c-t1", paciente_id: "pac-2", paciente_nombre: "Carlos Reyna", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(0, 9), fin: iso(0, 9, 30), modalidad: "presencial", estado: "confirmada", precio: 850, enlace_videollamada: null, metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-t2", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(0, 10, 30), fin: iso(0, 11), modalidad: "telemedicina", estado: "confirmada", precio: 850, enlace_videollamada: "https://meet.google.com/demo", metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-t3", paciente_id: "pac-3", paciente_nombre: "Lucía Mendoza", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(0, 12), fin: iso(0, 12, 30), modalidad: "presencial", estado: "confirmada", precio: 850, enlace_videollamada: null, metodo_pago: "efectivo", estado_pago: "pendiente" },
     // Próximos días
-    { id: "c-f1", paciente_id: "pac-4", paciente_nombre: "Jorge Palacios", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(1, 9), fin: iso(1, 9, 30), modalidad: "telemedicina", estado: "confirmada", precio: 850, enlace_videollamada: "https://meet.google.com/demo" },
-    { id: "c-f2", paciente_id: "pac-5", paciente_nombre: "Ana Sosa", medico_id: "med-2", medico_nombre: "Dr. Andrés Lira", especialidad: "Pediatría", inicio: iso(1, 11), fin: iso(1, 11, 30), modalidad: "presencial", estado: "confirmada", precio: 700, enlace_videollamada: null },
-    { id: "c-f3", paciente_id: "pac-6", paciente_nombre: "Elena Michel", medico_id: "med-3", medico_nombre: "Dra. Sofía Cantú", especialidad: "Medicina Interna", inicio: iso(2, 10), fin: iso(2, 10, 45), modalidad: "presencial", estado: "confirmada", precio: 900, enlace_videollamada: null },
+    { id: "c-f1", paciente_id: "pac-4", paciente_nombre: "Jorge Palacios", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(1, 9), fin: iso(1, 9, 30), modalidad: "telemedicina", estado: "confirmada", precio: 850, enlace_videollamada: "https://meet.google.com/demo", metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-f2", paciente_id: "pac-5", paciente_nombre: "Ana Sosa", medico_id: "med-2", medico_nombre: "Dr. Andrés Lira", especialidad: "Pediatría", inicio: iso(1, 11), fin: iso(1, 11, 30), modalidad: "presencial", estado: "confirmada", precio: 700, enlace_videollamada: null, metodo_pago: "efectivo", estado_pago: "pendiente" },
+    { id: "c-f3", paciente_id: "pac-6", paciente_nombre: "Elena Michel", medico_id: "med-3", medico_nombre: "Dra. Sofía Cantú", especialidad: "Medicina Interna", inicio: iso(2, 10), fin: iso(2, 10, 45), modalidad: "presencial", estado: "confirmada", precio: 900, enlace_videollamada: null, metodo_pago: "tarjeta", estado_pago: "pagado" },
   ];
 }
 
@@ -156,6 +161,7 @@ export function useDemoStore() {
       inicio: string;
       fin: string;
       modalidad: "presencial" | "telemedicina";
+      metodo_pago: MetodoPago;
     }) => {
       const medico = MEDICOS_DEMO.find((m) => m.id === datos.medico_id);
       const paciente = leerSesion() ?? CUENTAS_DEMO.paciente;
@@ -174,9 +180,21 @@ export function useDemoStore() {
         precio: medico?.precio_consulta ?? 0,
         enlace_videollamada:
           datos.modalidad === "telemedicina" ? "https://meet.google.com/demo" : null,
+        metodo_pago: datos.metodo_pago,
+        estado_pago: datos.metodo_pago === "efectivo" ? "pendiente" : "pagado",
       };
       guardar([...leerCitas(), nueva]);
       return nueva;
+    },
+    [guardar]
+  );
+
+  // El médico o recepción confirma que el paciente pagó en efectivo.
+  const cobrarEfectivo = useCallback(
+    (id: string) => {
+      guardar(
+        leerCitas().map((c) => (c.id === id ? { ...c, estado_pago: "pagado" as const } : c))
+      );
     },
     [guardar]
   );
@@ -204,7 +222,18 @@ export function useDemoStore() {
     setCitas(leerCitas());
   }, []);
 
-  return { listo, citas, sesion, login, logout, crearCita, marcarAsistida, cancelarCita, reiniciarDemo };
+  return {
+    listo,
+    citas,
+    sesion,
+    login,
+    logout,
+    crearCita,
+    marcarAsistida,
+    cancelarCita,
+    cobrarEfectivo,
+    reiniciarDemo,
+  };
 }
 
 // Lealtad: 1 punto por cita asistida; cada 5 puntos se gana una recompensa.

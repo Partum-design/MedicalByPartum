@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Banknote, CalendarCheck, Gift, TrendingUp, Users } from "lucide-react";
+import { Banknote, CalendarCheck, CreditCard, Gift, TrendingUp, Users } from "lucide-react";
 import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
 import { MEDICOS_DEMO, useDemoStore } from "@/lib/demo-store";
 
@@ -18,12 +18,19 @@ export default function DashboardAdminPage() {
     const vivas = citas.filter((c) => c.estado !== "cancelada");
     const asistidas = citas.filter((c) => c.estado === "asistida");
     const pacientes = new Set(vivas.map((c) => c.paciente_id));
+    const pendientesEfectivo = vivas.filter((c) => c.estado_pago === "pendiente");
+    const pagadasTarjeta = vivas.filter((c) => c.metodo_pago === "tarjeta");
+    const pagadasEfectivo = vivas.filter((c) => c.metodo_pago === "efectivo" && c.estado_pago === "pagado");
     return {
       ingresos: vivas.reduce((s, c) => s + c.precio, 0),
       citas: vivas.length,
       asistencia: vivas.length ? asistidas.length / vivas.length : 0,
       pacientes: pacientes.size,
       recompensas: Math.floor(asistidas.length / 5),
+      porCobrarMonto: pendientesEfectivo.reduce((s, c) => s + c.precio, 0),
+      porCobrarCitas: pendientesEfectivo.length,
+      tarjetaCitas: pagadasTarjeta.length,
+      efectivoCitas: pagadasEfectivo.length + pendientesEfectivo.length,
       porMedico: MEDICOS_DEMO.map((m) => {
         const suyas = vivas.filter((c) => c.medico_id === m.id);
         return {
@@ -64,7 +71,18 @@ export default function DashboardAdminPage() {
 
       {/* KPIs pastel estilo referencia */}
       <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiPastel tono="lila" delay="anim-d1" icon={<Banknote className="h-4 w-4" />} label="Ingresos" value={mxn.format(stats.ingresos)} nota="Citas confirmadas y asistidas" />
+        <KpiPastel
+          tono="lila"
+          delay="anim-d1"
+          icon={<Banknote className="h-4 w-4" />}
+          label="Ingresos"
+          value={mxn.format(stats.ingresos)}
+          nota={
+            stats.porCobrarMonto > 0
+              ? `Incluye ${mxn.format(stats.porCobrarMonto)} pendientes en efectivo`
+              : "Citas confirmadas y asistidas"
+          }
+        />
         <KpiPastel tono="azul" delay="anim-d2" icon={<CalendarCheck className="h-4 w-4" />} label="Citas" value={String(stats.citas)} nota="Activas en la clínica" />
         <KpiPastel tono="menta" delay="anim-d3" icon={<TrendingUp className="h-4 w-4" />} label="Tasa de asistencia" value={`${Math.round(stats.asistencia * 100)}%`} nota="Asistidas vs. totales" />
         <KpiPastel tono="durazno" delay="anim-d4" icon={<Users className="h-4 w-4" />} label="Pacientes" value={String(stats.pacientes)} nota="Con citas activas" />
@@ -129,6 +147,33 @@ export default function DashboardAdminPage() {
             <button className="card-hover mt-4 w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700">
               Configurar recompensas
             </button>
+          </section>
+
+          <section
+            className="anim-in anim-d5 rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
+            style={{ background: "var(--card)" }}
+          >
+            <h2 className="mb-3 font-semibold">Métodos de pago</h2>
+            <div className="space-y-2.5 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2" style={{ color: "var(--ink-muted)" }}>
+                  <CreditCard className="h-4 w-4 text-brand-500" /> Tarjeta (Stripe)
+                </span>
+                <span className="font-medium tabular-nums">{stats.tarjetaCitas} citas</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2" style={{ color: "var(--ink-muted)" }}>
+                  <Banknote className="h-4 w-4 text-amber-500" /> Efectivo en clínica
+                </span>
+                <span className="font-medium tabular-nums">{stats.efectivoCitas} citas</span>
+              </div>
+              {stats.porCobrarCitas > 0 && (
+                <p className="mt-1 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+                  {stats.porCobrarCitas} {stats.porCobrarCitas === 1 ? "cita" : "citas"} por
+                  cobrar en recepción ({mxn.format(stats.porCobrarMonto)})
+                </p>
+              )}
+            </div>
           </section>
 
           <section

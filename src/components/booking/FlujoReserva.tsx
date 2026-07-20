@@ -4,8 +4,17 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, setHours, setMinutes } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, Clock, MapPin, ShieldCheck, Smartphone, Video } from "lucide-react";
-import { calcularLealtad, useDemoStore } from "@/lib/demo-store";
+import {
+  Banknote,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  MapPin,
+  ShieldCheck,
+  Smartphone,
+  Video,
+} from "lucide-react";
+import { calcularLealtad, useDemoStore, type MetodoPago } from "@/lib/demo-store";
 
 type Medico = {
   id: string;
@@ -27,6 +36,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
   const [medico, setMedico] = useState<Medico | null>(null);
   const [slot, setSlot] = useState<Date | null>(null);
   const [modalidad, setModalidad] = useState<"presencial" | "telemedicina">("presencial");
+  const [metodoPago, setMetodoPago] = useState<MetodoPago>("tarjeta");
   const [telefono, setTelefono] = useState("");
   const [codigo, setCodigo] = useState("");
   const [otpEnviado, setOtpEnviado] = useState(false);
@@ -253,11 +263,49 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
             <Fila k="Modalidad" v={modalidad === "presencial" ? "Presencial" : "Videoconsulta"} />
             <Fila k="Total" v={mxn.format(medico.precio_consulta)} destacado />
           </dl>
-          <p className="mb-4 flex items-start gap-2 text-xs" style={{ color: "var(--ink-muted)" }}>
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent-500" />
-            Tu horario está apartado por 10 minutos. Si el pago no se completa, se libera
-            automáticamente para otros pacientes.
+
+          <p className="mb-2 text-xs font-medium" style={{ color: "var(--ink-muted)" }}>
+            Método de pago
           </p>
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setMetodoPago("tarjeta")}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-sm font-medium transition-colors ${
+                metodoPago === "tarjeta"
+                  ? "border-accent-500 bg-accent-100/50 text-accent-600 dark:bg-accent-500/10"
+                  : "border-slate-200 dark:border-white/10"
+              }`}
+            >
+              <CreditCard className="h-4 w-4" />
+              Tarjeta (Stripe)
+            </button>
+            <button
+              onClick={() => setMetodoPago("efectivo")}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-sm font-medium transition-colors ${
+                metodoPago === "efectivo"
+                  ? "border-accent-500 bg-accent-100/50 text-accent-600 dark:bg-accent-500/10"
+                  : "border-slate-200 dark:border-white/10"
+              }`}
+            >
+              <Banknote className="h-4 w-4" />
+              Efectivo en clínica
+            </button>
+          </div>
+
+          {metodoPago === "tarjeta" ? (
+            <p className="mb-4 flex items-start gap-2 text-xs" style={{ color: "var(--ink-muted)" }}>
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent-500" />
+              Tu horario está apartado por 10 minutos. Si el pago no se completa, se libera
+              automáticamente para otros pacientes.
+            </p>
+          ) : (
+            <p className="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+              <Banknote className="mt-0.5 h-4 w-4 shrink-0" />
+              Tu horario queda apartado ahora mismo. Paga el total en recepción al llegar a
+              tu cita — si no te presentas, el horario se libera para otros pacientes.
+            </p>
+          )}
+
           <button
             onClick={() => {
               // En la demo el pago crea la cita en el almacén local: aparece
@@ -268,12 +316,17 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
                 inicio: slot.toISOString(),
                 fin: fin.toISOString(),
                 modalidad,
+                metodo_pago: metodoPago,
               });
               setPaso("confirmada");
             }}
             className="card-hover w-full rounded-xl bg-gradient-to-r from-brand-600 to-accent-500 py-2.5 font-medium text-white"
           >
-            {demo ? "Simular pago con Stripe" : "Pagar con Stripe"}
+            {metodoPago === "tarjeta"
+              ? demo
+                ? "Simular pago con Stripe"
+                : "Pagar con Stripe"
+              : "Confirmar cita — pago en efectivo"}
           </button>
         </div>
       )}
@@ -288,6 +341,13 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
             <p className="mt-1 text-sm capitalize" style={{ color: "var(--ink-muted)" }}>
               {medico.nombre} · {format(slot, "EEEE d 'de' MMMM, HH:mm 'h'", { locale: es })}
             </p>
+            {metodoPago === "efectivo" && (
+              <p className="mx-auto mt-4 flex w-fit items-center gap-2 rounded-xl bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+                <Banknote className="h-4 w-4 shrink-0" />
+                Recuerda llevar {mxn.format(medico.precio_consulta)} en efectivo el día de tu
+                cita
+              </p>
+            )}
             <p className="mx-auto mt-4 w-fit rounded-full bg-brand-50 px-4 py-1.5 text-xs font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-100">
               🎁 Lealtad: {lealtad.progreso} de 5 citas asistidas — te faltan {lealtad.faltan} para tu recompensa
             </p>

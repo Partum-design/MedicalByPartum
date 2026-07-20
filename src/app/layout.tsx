@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MedicalByPartum",
-  description: "Gestión inteligente de clínicas y consultorios médicos",
+  title: "Medical OS — Gestión inteligente para clínicas",
+  description: "El sistema operativo para clínicas y consultorios: agenda, pagos y fidelización de pacientes en un solo lugar.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -333,7 +333,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
 
       {/* Paso 5: confirmación */}
       {paso === "confirmada" && medico && slot && (() => {
-        const lealtad = calcularLealtad(store.citas, "pac-1");
+        const lealtad = calcularLealtad(store.citas, "pac-1", store.recompensasConfig.citas_requeridas);
         return (
           <div className="anim-pop rounded-2xl p-8 text-center shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
             <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-accent-500" />
@@ -349,7 +349,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
               </p>
             )}
             <p className="mx-auto mt-4 w-fit rounded-full bg-brand-50 px-4 py-1.5 text-xs font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-100">
-              🎁 Lealtad: {lealtad.progreso} de 5 citas asistidas — te faltan {lealtad.faltan} para tu recompensa
+              🎁 Lealtad: {lealtad.progreso} de {lealtad.requerido} citas asistidas — te faltan {lealtad.faltan} para tu recompensa
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link

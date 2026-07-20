@@ -1,5 +1,5 @@
 -- ============================================================================
--- MedicalByPartum — Migración 00002: pago en efectivo
+-- Medical OS — Migración 00002: pago en efectivo
 -- Agrega la opción de pagar la consulta en efectivo en la clínica, además
 -- del pago con tarjeta vía Stripe.
 -- ============================================================================

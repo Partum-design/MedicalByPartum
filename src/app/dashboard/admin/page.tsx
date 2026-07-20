@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Banknote, CalendarCheck, CreditCard, Gift, TrendingUp, Users } from "lucide-react";
 import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
-import { MEDICOS_DEMO, useDemoStore } from "@/lib/demo-store";
+import { useDemoStore } from "@/lib/demo-store";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
 
@@ -12,7 +12,7 @@ const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN",
 // atender o agendar citas en los otros paneles cambia estos números.
 export default function DashboardAdminPage() {
   const store = useDemoStore();
-  const { listo, citas, sesion } = store;
+  const { listo, citas, sesion, medicos, recompensasConfig } = store;
 
   const stats = useMemo(() => {
     const vivas = citas.filter((c) => c.estado !== "cancelada");
@@ -26,12 +26,12 @@ export default function DashboardAdminPage() {
       citas: vivas.length,
       asistencia: vivas.length ? asistidas.length / vivas.length : 0,
       pacientes: pacientes.size,
-      recompensas: Math.floor(asistidas.length / 5),
+      recompensas: Math.floor(asistidas.length / recompensasConfig.citas_requeridas),
       porCobrarMonto: pendientesEfectivo.reduce((s, c) => s + c.precio, 0),
       porCobrarCitas: pendientesEfectivo.length,
       tarjetaCitas: pagadasTarjeta.length,
       efectivoCitas: pagadasEfectivo.length + pendientesEfectivo.length,
-      porMedico: MEDICOS_DEMO.map((m) => {
+      porMedico: medicos.map((m) => {
         const suyas = vivas.filter((c) => c.medico_id === m.id);
         return {
           ...m,
@@ -40,7 +40,7 @@ export default function DashboardAdminPage() {
         };
       }),
     };
-  }, [citas]);
+  }, [citas, medicos, recompensasConfig]);
 
   if (!listo) return null;
 
@@ -96,9 +96,12 @@ export default function DashboardAdminPage() {
         >
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold">Equipo médico</h2>
-            <button className="card-hover rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-4 py-1.5 text-sm font-medium text-white shadow-sm">
+            <Link
+              href="/dashboard/admin/equipo"
+              className="card-hover rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-4 py-1.5 text-sm font-medium text-white shadow-sm"
+            >
               + Dar de alta
-            </button>
+            </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -115,10 +118,15 @@ export default function DashboardAdminPage() {
                   <tr key={m.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-white/5">
                     <td className="py-3">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-xs font-semibold text-white">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-xs font-semibold text-white">
                           {m.nombre.replace(/^Dra?\.\s*/, "").charAt(0)}
                         </span>
                         <span className="font-medium">{m.nombre}</span>
+                        {!m.activo && (
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-white/5">
+                            Inactivo
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="py-3" style={{ color: "var(--ink-muted)" }}>{m.especialidad}</td>
@@ -129,6 +137,12 @@ export default function DashboardAdminPage() {
               </tbody>
             </table>
           </div>
+          <Link
+            href="/dashboard/admin/equipo"
+            className="mt-4 inline-block text-sm font-medium text-brand-600 hover:text-brand-700"
+          >
+            Gestionar equipo médico →
+          </Link>
         </section>
 
         {/* Lealtad + acciones */}
@@ -142,11 +156,15 @@ export default function DashboardAdminPage() {
             </div>
             <p className="text-3xl font-bold tabular-nums">{stats.recompensas}</p>
             <p className="mt-1 text-sm text-white/80">
-              recompensas desbloqueadas · regla activa: 5 citas → 20% de descuento
+              recompensas desbloqueadas · regla activa: {recompensasConfig.citas_requeridas} citas
+              → {recompensasConfig.valor_descuento}% de descuento
             </p>
-            <button className="card-hover mt-4 w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700">
+            <Link
+              href="/dashboard/admin/configuracion"
+              className="card-hover mt-4 block w-full rounded-full bg-white px-4 py-2 text-center text-sm font-semibold text-brand-700"
+            >
               Configurar recompensas
-            </button>
+            </Link>
           </section>
 
           <section
@@ -174,6 +192,12 @@ export default function DashboardAdminPage() {
                 </p>
               )}
             </div>
+            <Link
+              href="/dashboard/admin/reportes"
+              className="mt-3 inline-block text-sm font-medium text-brand-600 hover:text-brand-700"
+            >
+              Ver reportes completos →
+            </Link>
           </section>
 
           <section

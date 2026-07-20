@@ -66,7 +66,7 @@ export function PanelShell({
             M
           </span>
           <span className="font-semibold tracking-tight">
-            Medical<span className="text-accent-600">ByPartum</span>
+            Medical<span className="text-accent-600">OS</span>
           </span>
         </Link>
 
@@ -125,7 +125,7 @@ export function PanelShell({
         {/* Barra superior móvil */}
         <div className="anim-in mb-4 flex items-center justify-between rounded-2xl px-4 py-3 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 md:hidden" style={{ background: "var(--card)" }}>
           <Link href="/" className="text-sm font-semibold">
-            Medical<span className="text-accent-600">ByPartum</span>
+            Medical<span className="text-accent-600">OS</span>
           </Link>
           <button
             onClick={() => {

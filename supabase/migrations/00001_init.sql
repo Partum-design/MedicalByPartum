@@ -1,5 +1,5 @@
 -- ============================================================================
--- MedicalByPartum — Inicialización de Base de Datos (Supabase / PostgreSQL)
+-- Medical OS — Inicialización de Base de Datos (Supabase / PostgreSQL)
 -- SaaS B2B para gestión de clínicas y consultorios médicos.
 --
 -- Incluye: esquema completo, llaves foráneas, índices, triggers de

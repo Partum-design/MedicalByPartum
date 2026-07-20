@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Paleta MedicalByPartum: azules (confianza) + cian/turquesa (salud tech)
+/* Paleta Medical OS: azules (confianza) + cian/turquesa (salud tech)
    + pasteles para tarjetas de panel (estilo dashboard de referencia) */
 @theme {
   --color-brand-50: #eff6ff;

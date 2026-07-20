@@ -1,4 +1,4 @@
-# MedicalByPartum
+# Medical OS
 
 SaaS B2B para la gestión de negocios médicos (clínicas y consultorios independientes), construido con **Next.js 15 (App Router)**, **Supabase** (PostgreSQL + Auth + RLS + Realtime) y desplegado en **Vercel**.
 

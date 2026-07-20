@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { FlujoReserva } from "@/components/booking/FlujoReserva";
-import { MEDICOS_DEMO } from "@/lib/demo-store";
+import { useDemoStore } from "@/lib/demo-store";
 
 // Nodo Paciente: búsqueda de médicos + reserva con bloqueo de slot.
 // En esta demo los médicos y las citas viven en el almacén local del navegador.
 export default function ReservarPage() {
+  const { listo, medicos } = useDemoStore();
+  const activos = useMemo(() => medicos.filter((m) => m.activo), [medicos]);
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">
       <header className="anim-in mb-8">
@@ -18,7 +22,7 @@ export default function ReservarPage() {
           Elige a tu especialista, verifica tu teléfono y asegura tu horario.
         </p>
       </header>
-      <FlujoReserva medicos={MEDICOS_DEMO} demo />
+      {listo && <FlujoReserva medicos={activos} demo />}
     </main>
   );
 }

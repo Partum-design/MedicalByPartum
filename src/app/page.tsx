@@ -1,15 +1,21 @@
 import Link from "next/link";
 import {
+  Banknote,
   CalendarCheck,
   CalendarX2,
   CreditCard,
   Gift,
   PhoneOff,
+  Quote,
   ShieldCheck,
   Stethoscope,
   User,
   UserX,
+  Video,
 } from "lucide-react";
+import { Hero3D } from "@/components/landing/Hero3D";
+import { PricingSection } from "@/components/landing/PricingSection";
+import { FaqSection } from "@/components/landing/FaqSection";
 
 // Landing: explica el porqué de la plataforma y da acceso a la demo por rol.
 export default function LandingPage() {
@@ -18,11 +24,15 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-accent-500 text-white">
         <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_70%_20%,white,transparent_45%)]" />
+        <Hero3D />
         <nav className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <span className="anim-in text-lg font-semibold tracking-tight">
-            Medical<span className="text-accent-100">ByPartum</span>
+            Medical<span className="text-accent-100">OS</span>
           </span>
-          <div className="anim-in anim-d1 flex items-center gap-2 text-sm">
+          <div className="anim-in anim-d1 flex items-center gap-1 text-sm">
+            <Link href="#precios" className="rounded-full px-4 py-2 transition-colors hover:bg-white/10">
+              Precios
+            </Link>
             <Link href="/login" className="rounded-full px-4 py-2 transition-colors hover:bg-white/10">
               Iniciar sesión
             </Link>
@@ -46,7 +56,7 @@ export default function LandingPage() {
           </h1>
           <p className="anim-in anim-d3 mx-auto mt-5 max-w-2xl text-lg text-white/85">
             Cada cita a la que un paciente no llega es dinero perdido y tiempo médico
-            desperdiciado. MedicalByPartum existe para resolver eso: agenda en línea con
+            desperdiciado. Medical OS existe para resolver eso: agenda en línea con
             pago con tarjeta o en efectivo, telemedicina automática y un programa de
             lealtad que premia a quien sí regresa.
           </p>
@@ -63,6 +73,19 @@ export default function LandingPage() {
             >
               Reservar una cita
             </Link>
+          </div>
+          <div className="anim-in anim-d5 mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/75">
+            <span className="flex items-center gap-1.5">
+              <CreditCard className="h-4 w-4" /> Pago con tarjeta
+            </span>
+            <span className="hidden opacity-50 sm:inline">·</span>
+            <span className="flex items-center gap-1.5">
+              <Banknote className="h-4 w-4" /> Pago en efectivo
+            </span>
+            <span className="hidden opacity-50 sm:inline">·</span>
+            <span className="flex items-center gap-1.5">
+              <Video className="h-4 w-4" /> Telemedicina incluida
+            </span>
           </div>
         </div>
       </section>
@@ -171,6 +194,72 @@ export default function LandingPage() {
           />
         </div>
       </section>
+
+      {/* Precios */}
+      <PricingSection />
+
+      {/* Testimonios (personajes de la propia demo) */}
+      <section className="mx-auto max-w-6xl px-6 pb-20">
+        <div className="anim-in mx-auto mb-10 max-w-2xl text-center">
+          <h2 className="text-2xl font-bold tracking-tight">Lo que dicen en Clínica Partum</h2>
+          <p className="mt-2 text-sm" style={{ color: "var(--ink-muted)" }}>
+            Testimonios de los mismos perfiles que puedes probar en la demo.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Testimonio
+            delay="anim-d1"
+            nombre="Dra. Valeria Ortiz"
+            rol="Ginecología y Obstetricia"
+            texto="Ya no reviso quién pagó antes de cada consulta: llego y mi agenda del día ya me dice quién está confirmado y quién paga en efectivo al llegar."
+          />
+          <Testimonio
+            delay="anim-d2"
+            nombre="Bruno Salas"
+            rol="Administrador, Clínica Partum"
+            texto="Ver los ingresos por médico y por método de pago en un solo panel nos ahorró la hoja de cálculo que llevábamos a mano cada semana."
+          />
+          <Testimonio
+            delay="anim-d3"
+            nombre="Mariana Gutiérrez"
+            rol="Paciente"
+            texto="Agendo, elijo si pago con tarjeta o en efectivo, y ya sé exactamente cuánto llevar el día de mi cita. Además veo mis recompensas acumuladas."
+          />
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <FaqSection />
+
+      {/* CTA final */}
+      <section className="mx-auto max-w-6xl px-6 pb-20">
+        <div className="anim-in card-hover relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-accent-500 px-8 py-14 text-center text-white shadow-lg">
+          <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_30%_20%,white,transparent_45%)]" />
+          <div className="relative">
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Deja de perder citas por falta de confirmación
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-white/85">
+              Explora la demo completa en menos de 2 minutos: agenda como paciente, atiende como
+              médico y revisa los números como administrador.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/login"
+                className="card-hover rounded-full bg-white px-6 py-3 font-semibold text-brand-700 shadow-lg"
+              >
+                Probar la demo interactiva
+              </Link>
+              <Link
+                href="#precios"
+                className="card-hover rounded-full border border-white/40 px-6 py-3 font-semibold backdrop-blur transition-colors hover:bg-white/10"
+              >
+                Ver planes y precios
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
@@ -206,6 +295,29 @@ function Paso({ n, icon, title, text, delay }: { n: string; icon: React.ReactNod
       <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--ink-muted)" }}>
         {text}
       </p>
+    </div>
+  );
+}
+
+function Testimonio({ nombre, rol, texto, delay }: { nombre: string; rol: string; texto: string; delay: string }) {
+  return (
+    <div
+      className={`anim-in ${delay} card-hover flex flex-col rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10`}
+      style={{ background: "var(--card)" }}
+    >
+      <Quote className="mb-3 h-6 w-6 text-accent-500" />
+      <p className="flex-1 text-sm leading-relaxed" style={{ color: "var(--ink-muted)" }}>
+        “{texto}”
+      </p>
+      <div className="mt-4 flex items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-sm font-semibold text-white">
+          {nombre.replace(/^(Dra?\.\s*)/, "").charAt(0)}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{nombre}</p>
+          <p className="truncate text-xs" style={{ color: "var(--ink-muted)" }}>{rol}</p>
+        </div>
+      </div>
     </div>
   );
 }

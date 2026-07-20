@@ -13,7 +13,7 @@ const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" 
 // Nodo Paciente: su cuenta con citas, historial y programa de recompensas.
 export default function CuentaPage() {
   const store = useDemoStore();
-  const { listo, citas, sesion } = store;
+  const { listo, citas, sesion, recompensasConfig } = store;
 
   const mias = useMemo(
     () => citas.filter((c) => c.paciente_id === "pac-1"),
@@ -26,7 +26,7 @@ export default function CuentaPage() {
   const historial = mias
     .filter((c) => c.estado !== "confirmada" || new Date(c.fin).getTime() < ahora)
     .sort((a, b) => b.inicio.localeCompare(a.inicio));
-  const lealtad = calcularLealtad(citas, "pac-1");
+  const lealtad = calcularLealtad(citas, "pac-1", recompensasConfig.citas_requeridas);
 
   if (!listo) return null;
 
@@ -193,12 +193,13 @@ export default function CuentaPage() {
               <h2 className="font-semibold">Tu recompensa</h2>
             </div>
             <p className="text-sm text-white/85">
-              Cada <strong>5 citas asistidas</strong> desbloqueas un{" "}
-              <strong>20% de descuento</strong> en tu siguiente consulta.
+              Cada <strong>{lealtad.requerido} citas asistidas</strong> desbloqueas un{" "}
+              <strong>{recompensasConfig.valor_descuento}% de descuento</strong> en tu siguiente
+              consulta.
             </p>
             {/* Progreso */}
             <div className="mt-5 flex items-center gap-1.5">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: lealtad.requerido }).map((_, i) => (
                 <span
                   key={i}
                   className={`h-2.5 flex-1 rounded-full transition-colors ${
@@ -208,7 +209,7 @@ export default function CuentaPage() {
               ))}
             </div>
             <p className="mt-2 text-xs text-white/80">
-              {lealtad.progreso} de 5 citas · te faltan {lealtad.faltan}
+              {lealtad.progreso} de {lealtad.requerido} citas · te faltan {lealtad.faltan}
             </p>
             {lealtad.recompensasGanadas > 0 && (
               <p className="anim-pop mt-4 rounded-xl bg-white/15 px-4 py-3 text-sm font-medium">
@@ -217,6 +218,12 @@ export default function CuentaPage() {
                 — se aplicará en tu próxima reserva.
               </p>
             )}
+            <Link
+              href="/cuenta/recompensas"
+              className="mt-4 inline-block text-sm font-medium text-white/90 underline-offset-4 hover:underline"
+            >
+              Ver mi historial de recompensas →
+            </Link>
           </div>
         </section>
       </div>

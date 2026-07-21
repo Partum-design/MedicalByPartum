@@ -27,7 +27,7 @@ export default function LandingPage() {
         <Hero3D />
         <nav className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <span className="anim-in text-lg font-semibold tracking-tight">
-            Medical<span className="text-accent-100">OS</span>
+            Medical <span className="text-accent-100">OS</span>
           </span>
           <div className="anim-in anim-d1 flex items-center gap-1 text-sm">
             <Link href="#precios" className="rounded-full px-4 py-2 transition-colors hover:bg-white/10">

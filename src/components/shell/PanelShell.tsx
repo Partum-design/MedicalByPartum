@@ -15,25 +15,25 @@ import {
 } from "lucide-react";
 import type { RolDemo, SesionDemo } from "@/lib/demo-store";
 
-type NavItem = { label: string; href?: string; icon: React.ReactNode };
+type NavItem = { label: string; href: string; icon: React.ReactNode };
 
 const NAV: Record<RolDemo, NavItem[]> = {
   medico: [
     { label: "Mi agenda", href: "/dashboard/medico", icon: <CalendarDays className="h-4 w-4" /> },
-    { label: "Expedientes", icon: <ClipboardList className="h-4 w-4" /> },
-    { label: "Horarios", icon: <Clock3 className="h-4 w-4" /> },
-    { label: "Configuración", icon: <Settings className="h-4 w-4" /> },
+    { label: "Expedientes", href: "/dashboard/medico/expedientes", icon: <ClipboardList className="h-4 w-4" /> },
+    { label: "Horarios", href: "/dashboard/medico/horarios", icon: <Clock3 className="h-4 w-4" /> },
+    { label: "Configuración", href: "/dashboard/medico/configuracion", icon: <Settings className="h-4 w-4" /> },
   ],
   admin: [
     { label: "Panel", href: "/dashboard/admin", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { label: "Equipo médico", icon: <Users className="h-4 w-4" /> },
-    { label: "Reportes", icon: <PieChart className="h-4 w-4" /> },
-    { label: "Configuración", icon: <Settings className="h-4 w-4" /> },
+    { label: "Equipo médico", href: "/dashboard/admin/equipo", icon: <Users className="h-4 w-4" /> },
+    { label: "Reportes", href: "/dashboard/admin/reportes", icon: <PieChart className="h-4 w-4" /> },
+    { label: "Configuración", href: "/dashboard/admin/configuracion", icon: <Settings className="h-4 w-4" /> },
   ],
   paciente: [
     { label: "Mi cuenta", href: "/cuenta", icon: <LayoutDashboard className="h-4 w-4" /> },
     { label: "Agendar cita", href: "/reservar", icon: <CalendarDays className="h-4 w-4" /> },
-    { label: "Recompensas", icon: <Sparkles className="h-4 w-4" /> },
+    { label: "Recompensas", href: "/cuenta/recompensas", icon: <Sparkles className="h-4 w-4" /> },
   ],
 };
 
@@ -66,36 +66,25 @@ export function PanelShell({
             M
           </span>
           <span className="font-semibold tracking-tight">
-            Medical<span className="text-accent-600">OS</span>
+            Medical <span className="text-accent-600">OS</span>
           </span>
         </Link>
 
         <nav className="flex-1 space-y-1">
-          {items.map((item) =>
-            item.href ? (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  item.label === activo
-                    ? "bg-gradient-to-r from-brand-600 to-accent-500 text-white shadow-sm"
-                    : "hover:bg-slate-100 dark:hover:bg-white/5"
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            ) : (
-              <span
-                key={item.label}
-                className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium opacity-40"
-                title="Disponible en la versión completa"
-              >
-                {item.icon}
-                {item.label}
-              </span>
-            )
-          )}
+          {items.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                item.label === activo
+                  ? "bg-gradient-to-r from-brand-600 to-accent-500 text-white shadow-sm"
+                  : "hover:bg-slate-100 dark:hover:bg-white/5"
+              }`}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         {/* Usuario + logout */}
@@ -125,7 +114,7 @@ export function PanelShell({
         {/* Barra superior móvil */}
         <div className="anim-in mb-4 flex items-center justify-between rounded-2xl px-4 py-3 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 md:hidden" style={{ background: "var(--card)" }}>
           <Link href="/" className="text-sm font-semibold">
-            Medical<span className="text-accent-600">OS</span>
+            Medical <span className="text-accent-600">OS</span>
           </Link>
           <button
             onClick={() => {

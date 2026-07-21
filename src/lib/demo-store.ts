@@ -133,6 +133,7 @@ const KEY_HORARIOS = "mbp-demo-horarios-v1";
 const KEY_EXPEDIENTES = "mbp-demo-expedientes-v1";
 const KEY_RECOMPENSAS = "mbp-demo-recompensas-v1";
 const KEY_CLINICA = "mbp-demo-clinica-v1";
+const KEY_CANJES = "mbp-demo-canjes-v1";
 
 function iso(diasDesdeHoy: number, hora: number, min = 0) {
   const d = new Date();
@@ -263,6 +264,14 @@ function guardarClinicaConfigLocal(cfg: ClinicaConfig) {
   window.localStorage.setItem(KEY_CLINICA, JSON.stringify(cfg));
 }
 
+function leerCanjes(): Record<string, number> {
+  return leerJSON(KEY_CANJES, () => ({}) as Record<string, number>);
+}
+
+function guardarCanjesLocal(mapa: Record<string, number>) {
+  window.localStorage.setItem(KEY_CANJES, JSON.stringify(mapa));
+}
+
 // Hook principal: estado reactivo + mutadores persistentes.
 export function useDemoStore() {
   const [listo, setListo] = useState(false);
@@ -280,6 +289,7 @@ export function useDemoStore() {
     direccion: "",
     telefono: "",
   });
+  const [canjes, setCanjes] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setCitas(leerCitas());
@@ -289,6 +299,7 @@ export function useDemoStore() {
     setExpedientes(leerExpedientes());
     setRecompensasConfig(leerRecompensasConfig());
     setClinicaConfig(leerClinicaConfig());
+    setCanjes(leerCanjes());
     setListo(true);
   }, []);
 
@@ -447,16 +458,36 @@ export function useDemoStore() {
     setClinicaConfig(nuevo);
   }, []);
 
+  // El paciente canjea una recompensa desbloqueada (tope: las que tenga ganadas).
+  const canjearRecompensa = useCallback(
+    (pacienteId: string, ganadas: number) => {
+      const mapa = leerCanjes();
+      const actual = mapa[pacienteId] ?? 0;
+      if (actual >= ganadas) return;
+      const nuevoMapa = { ...mapa, [pacienteId]: actual + 1 };
+      guardarCanjesLocal(nuevoMapa);
+      setCanjes(nuevoMapa);
+    },
+    []
+  );
+
   const reiniciarDemo = useCallback(() => {
-    [KEY_CITAS, KEY_MEDICOS, KEY_HORARIOS, KEY_EXPEDIENTES, KEY_RECOMPENSAS, KEY_CLINICA].forEach(
-      (k) => window.localStorage.removeItem(k)
-    );
+    [
+      KEY_CITAS,
+      KEY_MEDICOS,
+      KEY_HORARIOS,
+      KEY_EXPEDIENTES,
+      KEY_RECOMPENSAS,
+      KEY_CLINICA,
+      KEY_CANJES,
+    ].forEach((k) => window.localStorage.removeItem(k));
     setCitas(leerCitas());
     setMedicos(leerMedicos());
     setHorarios(leerHorarios());
     setExpedientes(leerExpedientes());
     setRecompensasConfig(leerRecompensasConfig());
     setClinicaConfig(leerClinicaConfig());
+    setCanjes(leerCanjes());
   }, []);
 
   return {
@@ -467,6 +498,7 @@ export function useDemoStore() {
     expedientes,
     recompensasConfig,
     clinicaConfig,
+    canjes,
     login,
     logout,
     crearCita,
@@ -481,6 +513,7 @@ export function useDemoStore() {
     agregarExpediente,
     actualizarRecompensasConfig,
     actualizarClinicaConfig,
+    canjearRecompensa,
     reiniciarDemo,
   };
 }

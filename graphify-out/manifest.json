@@ -1,0 +1,217 @@
+{
+  "next.config.ts": {
+    "mtime": 1784655692.1688097,
+    "ast_hash": "df2bb27b62d3e1aec512b25e9fd8672b",
+    "semantic_hash": "df2bb27b62d3e1aec512b25e9fd8672b"
+  },
+  "package.json": {
+    "mtime": 1784659747.5954597,
+    "ast_hash": "3edfd5f67315a3b7a091db507daea1db",
+    "semantic_hash": "3edfd5f67315a3b7a091db507daea1db"
+  },
+  "postcss.config.mjs": {
+    "mtime": 1784655692.1688097,
+    "ast_hash": "0f8aa602547b154dc06be77b007c51d2",
+    "semantic_hash": "0f8aa602547b154dc06be77b007c51d2"
+  },
+  "src/app/api/bookings/route.ts": {
+    "mtime": 1784657172.9595232,
+    "ast_hash": "44de495d917556f8fa62a78c3191a7d1",
+    "semantic_hash": "44de495d917556f8fa62a78c3191a7d1"
+  },
+  "src/app/api/otp/send/route.ts": {
+    "mtime": 1784655692.1708126,
+    "ast_hash": "dab3e67f27533347fb29c73e99b247ff",
+    "semantic_hash": "dab3e67f27533347fb29c73e99b247ff"
+  },
+  "src/app/api/otp/verify/route.ts": {
+    "mtime": 1784655692.1708126,
+    "ast_hash": "c8639cee0e75b7a17cd8915cd905416b",
+    "semantic_hash": "c8639cee0e75b7a17cd8915cd905416b"
+  },
+  "src/app/api/webhooks/stripe/route.ts": {
+    "mtime": 1784655692.1712604,
+    "ast_hash": "4d10e6c9c24dae3e6d153f9fc127339d",
+    "semantic_hash": "4d10e6c9c24dae3e6d153f9fc127339d"
+  },
+  "src/app/cuenta/page.tsx": {
+    "mtime": 1784658864.4735694,
+    "ast_hash": "14393fdc704d65108e19b41d4ed09761",
+    "semantic_hash": "14393fdc704d65108e19b41d4ed09761"
+  },
+  "src/app/cuenta/pagos/page.tsx": {
+    "mtime": 1784657665.8413491,
+    "ast_hash": "53200e1b33c285fbe460a6efcb7705f6",
+    "semantic_hash": "53200e1b33c285fbe460a6efcb7705f6"
+  },
+  "src/app/cuenta/recompensas/page.tsx": {
+    "mtime": 1784657172.9595232,
+    "ast_hash": "58f76bcbc9421904de7c9eab31f9de49",
+    "semantic_hash": "58f76bcbc9421904de7c9eab31f9de49"
+  },
+  "src/app/dashboard/admin/configuracion/page.tsx": {
+    "mtime": 1784657172.9595232,
+    "ast_hash": "e1730ba62ac74871340e3b75ddd5fbdb",
+    "semantic_hash": "e1730ba62ac74871340e3b75ddd5fbdb"
+  },
+  "src/app/dashboard/admin/equipo/page.tsx": {
+    "mtime": 1784658881.478323,
+    "ast_hash": "61cb09126d193db4926e257b1c4a0bb4",
+    "semantic_hash": "61cb09126d193db4926e257b1c4a0bb4"
+  },
+  "src/app/dashboard/admin/page.tsx": {
+    "mtime": 1784657335.7572215,
+    "ast_hash": "9f100f64a4d599de4877cdabd0512c6f",
+    "semantic_hash": "9f100f64a4d599de4877cdabd0512c6f"
+  },
+  "src/app/dashboard/admin/reportes/page.tsx": {
+    "mtime": 1784662693.0759063,
+    "ast_hash": "bf994874fe22c6059150fdc0e2b0d4dd",
+    "semantic_hash": "bf994874fe22c6059150fdc0e2b0d4dd"
+  },
+  "src/app/dashboard/medico/configuracion/page.tsx": {
+    "mtime": 1784657172.9605231,
+    "ast_hash": "90056872ded7d1398eb89aa85d9aaba6",
+    "semantic_hash": "90056872ded7d1398eb89aa85d9aaba6"
+  },
+  "src/app/dashboard/medico/expedientes/page.tsx": {
+    "mtime": 1784657172.9605231,
+    "ast_hash": "40603da58f5ab801a4a00ef0c0c2cc1d",
+    "semantic_hash": "40603da58f5ab801a4a00ef0c0c2cc1d"
+  },
+  "src/app/dashboard/medico/horarios/page.tsx": {
+    "mtime": 1784658874.8774185,
+    "ast_hash": "dd20aa06ea8f3b4e6ca07574003084dd",
+    "semantic_hash": "dd20aa06ea8f3b4e6ca07574003084dd"
+  },
+  "src/app/dashboard/medico/page.tsx": {
+    "mtime": 1784657310.4015799,
+    "ast_hash": "c97aca8b2fe77580625fa3cfa9f002a0",
+    "semantic_hash": "c97aca8b2fe77580625fa3cfa9f002a0"
+  },
+  "src/app/layout.tsx": {
+    "mtime": 1784662625.1638181,
+    "ast_hash": "94d86d315bf84945601abc1c12c4846a",
+    "semantic_hash": "94d86d315bf84945601abc1c12c4846a"
+  },
+  "src/app/login/page.tsx": {
+    "mtime": 1784662346.1825418,
+    "ast_hash": "e6057271e75f42d78c5897d159900915",
+    "semantic_hash": "e6057271e75f42d78c5897d159900915"
+  },
+  "src/app/page.tsx": {
+    "mtime": 1784662536.0540118,
+    "ast_hash": "283d68472bce09e427768bca90103ff7",
+    "semantic_hash": "283d68472bce09e427768bca90103ff7"
+  },
+  "src/app/reservar/page.tsx": {
+    "mtime": 1784662410.0416932,
+    "ast_hash": "46bcbb2f1e1934f2b8412c3c06e7cd1f",
+    "semantic_hash": "46bcbb2f1e1934f2b8412c3c06e7cd1f"
+  },
+  "src/components/booking/FlujoReserva.tsx": {
+    "mtime": 1784662410.0426931,
+    "ast_hash": "70bca5678c91c4d4f68cc250c776b132",
+    "semantic_hash": "70bca5678c91c4d4f68cc250c776b132"
+  },
+  "src/components/landing/FaqSection.tsx": {
+    "mtime": 1784662640.4816127,
+    "ast_hash": "3746a48d7ac3487bbf34cd736c30d01a",
+    "semantic_hash": "3746a48d7ac3487bbf34cd736c30d01a"
+  },
+  "src/components/landing/MedicalOSExperience.tsx": {
+    "mtime": 1784660235.0675905,
+    "ast_hash": "1b10d3fd5d00e1e5194a5b68c44b80cc",
+    "semantic_hash": "1b10d3fd5d00e1e5194a5b68c44b80cc"
+  },
+  "src/components/landing/PricingSection.tsx": {
+    "mtime": 1784662640.4816127,
+    "ast_hash": "97460b281cd6e40ded04adfb235fb10d",
+    "semantic_hash": "97460b281cd6e40ded04adfb235fb10d"
+  },
+  "src/components/marketing/ParallaxLayer.tsx": {
+    "mtime": 1784659902.3116937,
+    "ast_hash": "b92e352c3415f9cf5d18ab66691fc75a",
+    "semantic_hash": "b92e352c3415f9cf5d18ab66691fc75a"
+  },
+  "src/components/marketing/Reveal.tsx": {
+    "mtime": 1784656093.3627725,
+    "ast_hash": "55867ad7684eb7c6db6fe40e1aa512e5",
+    "semantic_hash": "55867ad7684eb7c6db6fe40e1aa512e5"
+  },
+  "src/components/marketing/SavedCard.tsx": {
+    "mtime": 1784662158.4700181,
+    "ast_hash": "0f638dc25ce3bb07507518b7cdcbc0a4",
+    "semantic_hash": "0f638dc25ce3bb07507518b7cdcbc0a4"
+  },
+  "src/components/marketing/ThreePulse.tsx": {
+    "mtime": 1784662158.468018,
+    "ast_hash": "273139f09a8edda50cb9c99d2e208807",
+    "semantic_hash": "273139f09a8edda50cb9c99d2e208807"
+  },
+  "src/components/shell/PanelShell.tsx": {
+    "mtime": 1784662255.1557462,
+    "ast_hash": "e81b9b428fb77a392197fafb04d60d53",
+    "semantic_hash": "e81b9b428fb77a392197fafb04d60d53"
+  },
+  "src/lib/demo-store.ts": {
+    "mtime": 1784657172.962342,
+    "ast_hash": "01a2d924fdf040d1a1a95720f871720e",
+    "semantic_hash": "01a2d924fdf040d1a1a95720f871720e"
+  },
+  "src/lib/demo.ts": {
+    "mtime": 1784655692.1744204,
+    "ast_hash": "22f9cc7f8d9d9d67459d340154f75c81",
+    "semantic_hash": "22f9cc7f8d9d9d67459d340154f75c81"
+  },
+  "src/lib/supabase/admin.ts": {
+    "mtime": 1784655692.1744204,
+    "ast_hash": "642d8ddd451d67fa9d0409c993a40a8f",
+    "semantic_hash": "642d8ddd451d67fa9d0409c993a40a8f"
+  },
+  "src/lib/supabase/server.ts": {
+    "mtime": 1784655692.1747057,
+    "ast_hash": "dfde4ea35dfc648e8961de1763cbd26f",
+    "semantic_hash": "dfde4ea35dfc648e8961de1763cbd26f"
+  },
+  "src/middleware.ts": {
+    "mtime": 1784655692.1747057,
+    "ast_hash": "4ca25f58ed83aeaacf8dc7c03fc5b03b",
+    "semantic_hash": "4ca25f58ed83aeaacf8dc7c03fc5b03b"
+  },
+  "supabase/migrations/00001_init.sql": {
+    "mtime": 1784657172.962342,
+    "ast_hash": "a48c377e114e5cb09c56860f7a53c304",
+    "semantic_hash": "a48c377e114e5cb09c56860f7a53c304"
+  },
+  "supabase/migrations/00002_metodo_pago.sql": {
+    "mtime": 1784657172.962342,
+    "ast_hash": "e8a1780ed5039e6042b6280d4d4be058",
+    "semantic_hash": "e8a1780ed5039e6042b6280d4d4be058"
+  },
+  "tsconfig.json": {
+    "mtime": 1784655692.1749926,
+    "ast_hash": "a86960a14f0658c1d827c3299241514b",
+    "semantic_hash": "a86960a14f0658c1d827c3299241514b"
+  },
+  "vercel.json": {
+    "mtime": 1784655692.1749926,
+    "ast_hash": "4eb930c69fa0b3a74b079dcea3b12947",
+    "semantic_hash": "4eb930c69fa0b3a74b079dcea3b12947"
+  },
+  "README.md": {
+    "mtime": 1784657172.9585233,
+    "ast_hash": "c10bde1e6f55915ece51eceba9ec9ba9",
+    "semantic_hash": "c10bde1e6f55915ece51eceba9ec9ba9"
+  },
+  "docs/DESPLIEGUE_VERCEL.md": {
+    "mtime": 1784657172.9585233,
+    "ast_hash": "4aacd0f4a327e88cb5ede57663051963",
+    "semantic_hash": "4aacd0f4a327e88cb5ede57663051963"
+  },
+  "docs/INTEGRACION_CALENDARIOS_OAUTH.md": {
+    "mtime": 1784655692.1688097,
+    "ast_hash": "e80fb6e2916f5516cf158ca765ddb7d5",
+    "semantic_hash": "e80fb6e2916f5516cf158ca765ddb7d5"
+  }
+}

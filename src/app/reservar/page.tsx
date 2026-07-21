@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { CalendarCheck, Clock3, ShieldCheck } from "lucide-react";
 import { FlujoReserva } from "@/components/booking/FlujoReserva";
 import { useDemoStore } from "@/lib/demo-store";
 
@@ -12,17 +13,40 @@ export default function ReservarPage() {
   const activos = useMemo(() => medicos.filter((m) => m.activo), [medicos]);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
-      <header className="anim-in mb-8">
-        <Link href="/" className="text-sm font-medium text-brand-600 hover:text-brand-700">
-          ← Inicio
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Agendar una cita</h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-          Elige a tu especialista, verifica tu teléfono y asegura tu horario.
-        </p>
+    <main className="booking-page">
+      <header className="booking-hero anim-in">
+        <nav className="booking-nav">
+          <Link href="/" className="login-brand">
+            <span className="login-brand-mark">M</span>
+            <span>Medical <strong>OS</strong></span>
+          </Link>
+          <Link href="/" className="booking-back">Volver al inicio</Link>
+        </nav>
+        <div className="booking-hero-copy">
+          <p className="login-kicker text-mint-raw">Reserva protegida</p>
+          <h1>Tu cita, lista en pocos minutos.</h1>
+          <p>Elige especialista y horario. Medical OS mantiene el espacio disponible mientras confirmas.</p>
+        </div>
+        <div className="booking-trust">
+          <span><Clock3 className="h-4 w-4" /> Bloqueo de 10 minutos</span>
+          <span><ShieldCheck className="h-4 w-4" /> Verificación segura</span>
+          <span><CalendarCheck className="h-4 w-4" /> Confirmación inmediata</span>
+        </div>
       </header>
-      {listo && <FlujoReserva medicos={activos} demo />}
+
+      <section className="booking-layout">
+        <aside className="booking-context anim-in anim-d1">
+          <p className="login-kicker text-brand-700">Así funciona</p>
+          <ol>
+            <li><span>1</span><div><strong>Elige especialista</strong><small>Consulta precio, duración y modalidad.</small></div></li>
+            <li><span>2</span><div><strong>Confirma tu identidad</strong><small>Protegemos la agenda contra reservas falsas.</small></div></li>
+            <li><span>3</span><div><strong>Asegura tu horario</strong><small>Paga con tarjeta o al llegar a la clínica.</small></div></li>
+          </ol>
+        </aside>
+        <div className="booking-panel anim-in anim-d2">
+          {listo && <FlujoReserva medicos={activos} demo />}
+        </div>
+      </section>
     </main>
   );
 }

@@ -73,7 +73,7 @@ export function SavedCard({
             className="relative overflow-hidden rounded-[1.75rem] p-6 text-white"
             style={{
               background:
-                "linear-gradient(135deg, #06283a 0%, #045d86 46%, #0075a7 72%, #00c896 100%)",
+                "linear-gradient(135deg, #213A58 0%, #0C6478 46%, #15919B 72%, #46DFB1 100%)",
             }}
           >
             <div className="card-shine pointer-events-none absolute inset-0" aria-hidden />

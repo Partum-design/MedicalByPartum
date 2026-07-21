@@ -39,8 +39,7 @@ const NAV: Record<RolDemo, NavItem[]> = {
   ],
 };
 
-// Shell de panel estilo referencia: sidebar blanco redondeado con logo,
-// navegación, tarjeta de usuario y logout; contenido sobre fondo gris claro.
+// Shell compartido: escritorio con sidebar fijo y móvil con navegación inferior.
 export function PanelShell({
   sesion,
   activo,
@@ -57,90 +56,96 @@ export function PanelShell({
   const inicial = sesion.nombre.replace(/^Dra?\.\s*/, "").charAt(0);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-7xl gap-6 p-4 sm:p-6">
-      {/* Sidebar */}
-      <aside
-        className="anim-in sticky top-6 hidden h-[calc(100vh-3rem)] w-60 shrink-0 flex-col rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 md:flex"
-        style={{ background: "var(--card)" }}
-      >
-        <Link href="/" className="mb-8 flex items-center gap-2 px-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-accent-400 text-sm font-bold text-white">
+    <div className="app-shell">
+      <aside className="app-sidebar anim-in">
+        <Link href="/" className="app-brand">
+          <span className="app-brand-mark">
+            <span className="app-brand-pulse" />
             M
           </span>
           <span className="font-display leading-none">
-            <span className="block text-sm font-bold tracking-tight">
-              Medical <span className="text-accent-600">OS</span>
+            <span className="block text-sm font-bold tracking-tight text-white">
+              Medical <span className="text-mint-raw">OS</span>
             </span>
-            <span className="block text-[10px] uppercase tracking-[0.2em]" style={{ color: "var(--ink-muted)" }}>
+            <span className="block text-[9px] uppercase tracking-[0.22em] text-white/40">
               by Partum
             </span>
           </span>
         </Link>
 
-        <nav className="flex-1 space-y-1">
+        <p className="app-nav-label">Espacio de trabajo</p>
+        <nav className="app-nav" aria-label="Navegación principal">
           {items.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                item.label === activo
-                  ? "bg-gradient-to-r from-brand-600 to-accent-500 text-white shadow-sm"
-                  : "hover:bg-slate-100 dark:hover:bg-white/5"
-              }`}
+              aria-current={item.label === activo ? "page" : undefined}
+              className={`app-nav-item ${item.label === activo ? "is-active" : ""}`}
             >
-              {item.icon}
+              <span className="app-nav-icon">{item.icon}</span>
               {item.label}
             </Link>
           ))}
         </nav>
 
-        {/* Usuario + logout */}
-        <div className="mt-6 border-t border-slate-100 pt-5 text-center dark:border-white/10">
-          <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-400 text-xl font-semibold text-white shadow-md">
-            {inicial}
+        <div className="app-user-card">
+          <div className="flex items-center gap-3">
+            <div className="app-user-avatar">{inicial}</div>
+            <div className="min-w-0 text-left">
+              <p className="truncate text-sm font-semibold text-white">{sesion.nombre}</p>
+              <p className="truncate text-[11px] text-white/48">{sesion.subtitulo}</p>
+            </div>
           </div>
-          <p className="text-sm font-semibold">{sesion.nombre}</p>
-          <p className="text-xs" style={{ color: "var(--ink-muted)" }}>
-            {sesion.subtitulo}
-          </p>
           <button
             onClick={() => {
               onLogout();
               router.push("/");
             }}
-            className="mx-auto mt-4 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-white/5"
-            style={{ color: "var(--ink-muted)" }}
+            className="app-logout"
           >
             <LogOut className="h-4 w-4" /> Cerrar sesión
           </button>
         </div>
       </aside>
 
-      {/* Contenido */}
-      <div className="min-w-0 flex-1">
-        {/* Barra superior móvil */}
-        <div className="anim-in mb-4 flex items-center justify-between rounded-2xl px-4 py-3 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 md:hidden" style={{ background: "var(--card)" }}>
-          <Link href="/" className="font-display text-sm font-semibold">
-            Medical <span className="text-accent-600">OS</span>
+      <div className="app-main">
+        <header className="app-mobile-header anim-in">
+          <Link href="/" className="flex items-center gap-2 font-display text-sm font-semibold text-white">
+            <span className="app-mobile-mark">M</span>
+            Medical <span className="text-mint-raw">OS</span>
           </Link>
           <button
             onClick={() => {
               onLogout();
               router.push("/");
             }}
-            className="flex items-center gap-1.5 text-sm font-medium"
-            style={{ color: "var(--ink-muted)" }}
+            className="flex items-center gap-1.5 text-xs font-medium text-white/70"
           >
             <LogOut className="h-4 w-4" /> Salir
           </button>
-        </div>
-        {children}
+        </header>
+
+        <div className="app-page">{children}</div>
+
+        <nav className="app-mobile-nav" aria-label="Navegación móvil">
+          {items.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              aria-current={item.label === activo ? "page" : undefined}
+              className={`app-mobile-item ${item.label === activo ? "is-active" : ""}`}
+            >
+              {item.icon}
+              <span>{item.label.replace("Configuración", "Ajustes").replace("Equipo médico", "Equipo")}</span>
+            </Link>
+          ))}
+        </nav>
       </div>
     </div>
   );
 }
 
-// Tarjeta KPI pastel (estilo referencia): fondo suave, chip de icono y cifra.
+// KPI basado en la misma escala de seis tonos de la marca.
 export function KpiPastel({
   icon,
   label,
@@ -157,21 +162,21 @@ export function KpiPastel({
   delay?: string;
 }) {
   const fondos = {
-    lila: "bg-pastel-lila",
-    azul: "bg-pastel-azul",
-    menta: "bg-pastel-menta",
-    durazno: "bg-pastel-durazno",
+    lila: "kpi-slate",
+    azul: "kpi-cyan",
+    menta: "kpi-mint",
+    durazno: "kpi-fog",
   } as const;
   return (
-    <div className={`anim-in ${delay} card-hover rounded-2xl ${fondos[tono]} p-5 text-slate-800`}>
+    <div className={`anim-in ${delay} kpi-card ${fondos[tono]}`}>
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/70 text-slate-700">
+        <span className="kpi-card-icon">
           {icon}
         </span>
-        <span className="text-xs font-medium text-slate-600">{label}</span>
+        <span className="text-xs font-medium text-ink-900/70">{label}</span>
       </div>
-      <p className="text-2xl font-bold tabular-nums tracking-tight">{value}</p>
-      {nota && <p className="mt-1 text-[11px] text-slate-500">{nota}</p>}
+      <p className="font-num text-2xl font-semibold tabular-nums tracking-tight text-ink-900">{value}</p>
+      {nota && <p className="mt-1 text-[11px] leading-relaxed text-ink-900/55">{nota}</p>}
     </div>
   );
 }

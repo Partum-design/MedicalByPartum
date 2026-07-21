@@ -23,12 +23,12 @@ const mxnCompact = new Intl.NumberFormat("es-MX", { style: "currency", currency:
 
 // Paleta categórica validada (dataviz skill): pasos claros para superficie
 // clara, pasos oscuros para superficie oscura — mismo orden, sin ciclarla.
-const CATEGORICAL_LIGHT = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"];
-const CATEGORICAL_DARK = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181"];
-const INK_MUTED_LIGHT = "#898781";
-const INK_MUTED_DARK = "#c3c2b7";
-const GRID_LIGHT = "#e1e0d9";
-const GRID_DARK = "#2c2c2a";
+const CATEGORICAL_LIGHT = ["#213A58", "#0C6478", "#15919B", "#09D1C7", "#46DFB1"];
+const CATEGORICAL_DARK = ["#80EE98", "#46DFB1", "#09D1C7", "#15919B", "#0C6478"];
+const INK_MUTED_LIGHT = "#617385";
+const INK_MUTED_DARK = "#B9EBE3";
+const GRID_LIGHT = "#DCE7E4";
+const GRID_DARK = "#0C6478";
 
 function useEsDark() {
   const [esOscuro, setEsOscuro] = useState(false);

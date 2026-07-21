@@ -128,7 +128,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
   }
 
   return (
-    <div className="space-y-4">
+    <div className="booking-flow space-y-4">
       <Stepper actual={paso} />
 
       {error && (

@@ -66,7 +66,7 @@ export function PricingSection() {
   const [anual, setAnual] = useState(false);
 
   return (
-    <section id="precios" className="bg-cyan-50 py-20">
+    <section id="precios" className="landing-pricing py-20">
       <div className="mx-auto max-w-6xl px-6">
         <Reveal className="mx-auto mb-10 max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">Precios</p>
@@ -78,7 +78,7 @@ export function PricingSection() {
             el día uno.
           </p>
 
-          <div className="mt-7 inline-flex items-center gap-1 rounded-full bg-white p-1 shadow-sm ring-1 ring-slate-900/5">
+          <div className="pricing-toggle mt-7 inline-flex items-center gap-1 rounded-full bg-white p-1">
             <button
               onClick={() => setAnual(false)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
@@ -104,7 +104,7 @@ export function PricingSection() {
             return (
               <Reveal key={plan.id} delay={i * 100} className="h-full">
                 <div
-                  className={`card-hover relative flex h-full flex-col overflow-hidden rounded-3xl p-7 shadow-sm ring-1 ${
+                  className={`pricing-card relative flex h-full flex-col overflow-hidden rounded-3xl p-7 ring-1 ${
                     plan.destacado
                       ? "text-white ring-transparent shadow-2xl shadow-brand-900/30 lg:-translate-y-3"
                       : "bg-white ring-slate-900/5"
@@ -113,7 +113,7 @@ export function PricingSection() {
                     plan.destacado
                       ? {
                           background:
-                            "linear-gradient(160deg, #06283a 0%, #045d86 55%, #0075a7 100%)",
+                            "linear-gradient(160deg, #213A58 0%, #0C6478 60%, #15919B 100%)",
                         }
                       : undefined
                   }
@@ -121,7 +121,7 @@ export function PricingSection() {
                   {plan.destacado && (
                     <div
                       className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-40 blur-3xl"
-                      style={{ background: "radial-gradient(circle, #00ffb3, transparent 65%)" }}
+                      style={{ background: "radial-gradient(circle, #80EE98, transparent 65%)" }}
                       aria-hidden
                     />
                   )}

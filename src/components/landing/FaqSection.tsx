@@ -32,7 +32,7 @@ export function FaqSection() {
   const [abierta, setAbierta] = useState<number | null>(0);
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-20">
+    <section className="landing-faq mx-auto max-w-3xl px-6 py-20">
       <Reveal className="mx-auto mb-10 max-w-2xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">Dudas</p>
         <h2 className="font-display mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
@@ -45,7 +45,7 @@ export function FaqSection() {
           return (
             <Reveal key={item.q} delay={i * 60}>
               <div
-                className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5 transition-shadow hover:shadow-md"
+                className="faq-item overflow-hidden rounded-2xl bg-white transition-shadow"
               >
                 <button
                   onClick={() => setAbierta(abierto ? null : i)}

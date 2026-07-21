@@ -1,5 +1,7 @@
 import Link from "next/link";
 import {
+  Activity,
+  ArrowRight,
   Banknote,
   CalendarCheck,
   CalendarX2,
@@ -17,7 +19,6 @@ import {
   Video,
 } from "lucide-react";
 import { Reveal } from "@/components/marketing/Reveal";
-import { SavedCard } from "@/components/marketing/SavedCard";
 import { ThreePulse } from "@/components/marketing/ThreePulse";
 import { MedicalOSExperience } from "@/components/landing/MedicalOSExperience";
 import { PricingSection } from "@/components/landing/PricingSection";
@@ -26,89 +27,101 @@ import { FaqSection } from "@/components/landing/FaqSection";
 // Landing: explica el porqué de la plataforma y da acceso a la demo por rol.
 export default function LandingPage() {
   return (
-    <main className="overflow-x-hidden">
+    <main className="landing-page overflow-x-hidden">
       {/* Hero */}
-      <section className="bg-grid-glow relative bg-ink-950 text-white">
-        <nav className="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 sm:py-6">
-          <Link href="/" className="anim-in flex shrink-0 items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-accent-400 text-sm font-bold sm:h-9 sm:w-9">
-              M
+      <section className="landing-hero">
+        <nav className="landing-nav">
+          <Link href="/" className="anim-in landing-logo">
+            <span className="landing-logo-mark">
+              <Activity className="h-4 w-4" />
             </span>
             <span className="font-display leading-none whitespace-nowrap">
               <span className="block text-sm font-bold tracking-tight sm:text-base">Medical OS</span>
-              <span className="hidden text-[10px] uppercase tracking-[0.25em] text-white/50 sm:block">
+              <span className="block text-[9px] uppercase tracking-[0.24em] text-ink-900/45">
                 by Partum
               </span>
             </span>
           </Link>
-          <div className="anim-in anim-d1 flex shrink-0 items-center gap-1.5 text-sm sm:gap-2">
-            <Link href="#experiencia" className="hidden rounded-full px-4 py-2 transition-colors hover:bg-white/10 sm:inline-block">
-              Cómo funciona
-            </Link>
-            <Link
-              href="/login"
-              className="hidden rounded-full px-4 py-2 transition-colors hover:bg-white/10 sm:inline-block"
-            >
-              Iniciar sesión
-            </Link>
-            <Link
-              href="/reservar"
-              className="card-hover whitespace-nowrap rounded-full bg-white px-3.5 py-2 text-sm font-medium text-brand-700 shadow-sm sm:px-4"
-            >
-              Agendar cita
+          <div className="anim-in anim-d1 landing-nav-links">
+            <Link href="#experiencia" className="hidden sm:inline-flex">Producto</Link>
+            <Link href="#precios" className="hidden sm:inline-flex">Precios</Link>
+            <Link href="/login" className="hidden sm:inline-flex">Iniciar sesión</Link>
+            <Link href="/reservar" className="landing-nav-cta">
+              Agendar cita <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </nav>
 
-        <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 pb-24 pt-8 lg:grid-cols-[1.05fr_0.95fr] lg:pb-28 lg:pt-14">
-          <div className="text-center lg:text-left">
-            <p className="anim-in anim-d1 mx-auto w-fit rounded-full border border-white/15 bg-white/5 px-4 py-1 text-xs font-medium tracking-wide backdrop-blur lg:mx-0">
-              Sistema núcleo para clínicas y consultorios
+        <div className="landing-hero-grid">
+          <div className="landing-hero-copy">
+            <p className="anim-in anim-d1 landing-eyebrow">
+              <span /> Operación clínica conectada
             </p>
-            <h1 className="font-display anim-in anim-d2 mx-auto mt-5 max-w-xl text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:mx-0">
-              Menos consultorio vacío.
+            <h1 className="anim-in anim-d2">
+              Tu clínica,
               <br />
-              <span className="shimmer-text">Más pacientes que regresan.</span>
+              <span>en un solo pulso.</span>
             </h1>
-            <p className="anim-in anim-d3 mx-auto mt-5 max-w-lg text-lg text-white/75 lg:mx-0">
-              Cada cita a la que un paciente no llega es dinero perdido y tiempo médico
-              desperdiciado. Medical OS resuelve eso: agenda en línea con pago con
-              tarjeta o en efectivo, telemedicina automática y un programa de lealtad
-              que premia a quien sí regresa.
+            <p className="anim-in anim-d3 landing-hero-lead">
+              Agenda, cobros, telemedicina y pacientes dejan de vivir separados. Medical OS pone el estado correcto frente a cada persona, justo cuando lo necesita.
             </p>
-            <div className="anim-in anim-d4 mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
-              <Link
-                href="/login"
-                className="card-hover rounded-full bg-white px-6 py-3 font-semibold text-brand-700 shadow-lg"
-              >
-                Probar la demo interactiva
+            <div className="anim-in anim-d4 landing-hero-actions">
+              <Link href="/login" className="landing-primary-action">
+                Explorar la demo <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link
-                href="/reservar"
-                className="card-hover rounded-full border border-white/25 px-6 py-3 font-semibold backdrop-blur transition-colors hover:bg-white/10"
-              >
-                Reservar una cita
+              <Link href="#experiencia" className="landing-secondary-action">
+                Ver cómo funciona
               </Link>
             </div>
-            <div className="anim-in anim-d5 mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs uppercase tracking-[0.15em] text-white/40 lg:justify-start">
-              <span className="flex items-center gap-1.5">
-                <CreditCard className="h-3.5 w-3.5" /> Tarjeta
-              </span>
-              <span aria-hidden>·</span>
-              <span className="flex items-center gap-1.5">
-                <Banknote className="h-3.5 w-3.5" /> Efectivo
-              </span>
-              <span aria-hidden>·</span>
-              <span className="flex items-center gap-1.5">
-                <Video className="h-3.5 w-3.5" /> Telemedicina
-              </span>
+            <div className="anim-in anim-d5 landing-hero-facts">
+              <span><CreditCard className="h-3.5 w-3.5" /> Tarjeta y efectivo</span>
+              <span><Video className="h-3.5 w-3.5" /> Telemedicina</span>
+              <span><ShieldCheck className="h-3.5 w-3.5" /> OTP y antifraude</span>
             </div>
           </div>
 
-          <div className="hero-visual anim-pop anim-d3">
+          <div className="landing-product-stage anim-pop anim-d3">
             <ThreePulse />
-            <SavedCard />
+            <div className="landing-console">
+              <div className="landing-console-top">
+                <div className="flex items-center gap-2">
+                  <span className="landing-console-mark">M</span>
+                  <span className="font-display text-xs font-semibold">Medical OS</span>
+                </div>
+                <span className="landing-live"><span /> En vivo</span>
+              </div>
+              <div className="landing-console-body">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Agenda de hoy</p>
+                    <p className="mt-1 font-display text-lg font-semibold text-ink-900">12 citas · 3 por atender</p>
+                  </div>
+                  <span className="landing-date">21 JUL</span>
+                </div>
+                <div className="landing-console-kpis">
+                  <div><span>Cobrado</span><strong>$8,460</strong><small>Conciliado</small></div>
+                  <div><span>Asistencia</span><strong>92%</strong><small>+8% este mes</small></div>
+                </div>
+                <div className="landing-agenda">
+                  <HeroAppointment time="09:30" name="Mariana Gutiérrez" detail="Ginecología · Pagada" state="Lista" />
+                  <HeroAppointment time="11:00" name="Sofía Ramírez" detail="Seguimiento · Efectivo" state="Confirmada" />
+                  <HeroAppointment time="13:30" name="Diego Torres" detail="Videoconsulta · Pagada" state="Enlace listo" />
+                </div>
+              </div>
+            </div>
+            <div className="landing-confirmation">
+              <CalendarCheck className="h-4 w-4" />
+              <span><strong>Cita confirmada</strong><small>Agenda y cobro sincronizados</small></span>
+            </div>
           </div>
+        </div>
+
+        <div className="landing-capability-strip">
+          <span>AGENDA ONLINE</span>
+          <span>PAGOS</span>
+          <span>TELEMEDICINA</span>
+          <span>EXPEDIENTES</span>
+          <span>LEALTAD</span>
         </div>
       </section>
 
@@ -116,7 +129,7 @@ export default function LandingPage() {
       <MedicalOSExperience />
 
       {/* Núcleo único — estadísticas reales del producto, no vanidad */}
-      <section className="bg-cyan-50">
+      <section className="landing-stats-band">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <Reveal className="mx-auto mb-10 max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
@@ -140,7 +153,7 @@ export default function LandingPage() {
       </section>
 
       {/* El problema */}
-      <section className="mx-auto max-w-6xl px-6 py-20">
+      <section className="landing-section mx-auto max-w-6xl px-6 py-20">
         <Reveal className="mx-auto mb-10 max-w-2xl text-center">
           <h2 className="font-display text-2xl font-bold tracking-tight">El problema que atacamos</h2>
           <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--ink-muted)" }}>
@@ -174,7 +187,7 @@ export default function LandingPage() {
       </section>
 
       {/* Cómo lo resolvemos */}
-      <section className="mx-auto max-w-6xl px-6 pb-20">
+      <section className="landing-workflow mx-auto max-w-6xl px-6 pb-20">
         <Reveal className="mx-auto mb-10 max-w-2xl text-center">
           <h2 className="font-display text-2xl font-bold tracking-tight">Cómo lo resolvemos</h2>
         </Reveal>
@@ -202,7 +215,7 @@ export default function LandingPage() {
       </section>
 
       {/* Demo por rol */}
-      <section className="mx-auto max-w-6xl px-6 pb-20">
+      <section className="landing-roles mx-auto max-w-6xl px-6 pb-20">
         <Reveal className="mx-auto mb-10 max-w-2xl text-center">
           <h2 className="font-display text-2xl font-bold tracking-tight">Recorre la demo</h2>
           <p className="mt-2 text-sm" style={{ color: "var(--ink-muted)" }}>
@@ -227,7 +240,7 @@ export default function LandingPage() {
       <PricingSection />
 
       {/* Testimonios (personajes de la propia demo) */}
-      <section className="mx-auto max-w-6xl px-6 py-20">
+      <section className="landing-testimonials mx-auto max-w-6xl px-6 py-20">
         <Reveal className="mx-auto mb-10 max-w-2xl text-center">
           <h2 className="font-display text-2xl font-bold tracking-tight">Lo que dicen en Clínica Partum</h2>
           <p className="mt-2 text-sm" style={{ color: "var(--ink-muted)" }}>
@@ -263,7 +276,7 @@ export default function LandingPage() {
       <FaqSection />
 
       {/* CTA final */}
-      <section className="bg-grid-glow relative bg-ink-950 text-white">
+      <section className="landing-final">
         <Reveal className="mx-auto max-w-3xl px-6 py-20 text-center">
           <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
             Un consultorio lleno empieza con una agenda que cobra sola.
@@ -286,6 +299,30 @@ export default function LandingPage() {
   );
 }
 
+function HeroAppointment({
+  time,
+  name,
+  detail,
+  state,
+}: {
+  time: string;
+  name: string;
+  detail: string;
+  state: string;
+}) {
+  return (
+    <div className="hero-appointment">
+      <span className="font-num text-[10px] text-ink-900/55">{time}</span>
+      <span className="hero-appointment-avatar">{name.charAt(0)}</span>
+      <span className="min-w-0 flex-1">
+        <strong>{name}</strong>
+        <small>{detail}</small>
+      </span>
+      <span className="hero-appointment-state">{state}</span>
+    </div>
+  );
+}
+
 function Stat({
   icon,
   value,
@@ -301,8 +338,8 @@ function Stat({
 }) {
   return (
     <Reveal delay={delay}>
-      <div className="card-hover h-full rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
-        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-accent-400 text-white">
+      <div className="landing-stat-card">
+        <div className="landing-card-icon">
           {icon}
         </div>
         <p className="font-num text-3xl font-semibold tracking-tight text-ink-900">{value}</p>
@@ -318,10 +355,10 @@ function Stat({
 function Problema({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
     <div
-      className="card-hover h-full rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
+      className="landing-problem-card"
       style={{ background: "var(--card)" }}
     >
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 text-white shadow-sm">
+      <div className="landing-problem-icon">
         {icon}
       </div>
       <h3 className="font-semibold">{title}</h3>
@@ -335,13 +372,13 @@ function Problema({ icon, title, text }: { icon: React.ReactNode; title: string;
 function Paso({ n, icon, title, text }: { n: string; icon: React.ReactNode; title: string; text: string }) {
   return (
     <div
-      className="card-hover relative h-full rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
+      className="landing-step-card"
       style={{ background: "var(--card)" }}
     >
       <span className="font-num absolute right-5 top-4 text-3xl font-semibold text-slate-100 dark:text-white/5">
         {n}
       </span>
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-accent-400 text-white">
+      <div className="landing-card-icon mb-3 h-10 w-10">
         {icon}
       </div>
       <h3 className="font-semibold">{title}</h3>
@@ -355,7 +392,7 @@ function Paso({ n, icon, title, text }: { n: string; icon: React.ReactNode; titl
 function Testimonio({ nombre, rol, texto }: { nombre: string; rol: string; texto: string }) {
   return (
     <div
-      className="card-hover flex h-full flex-col rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
+      className="landing-quote-card"
       style={{ background: "var(--card)" }}
     >
       <Quote className="mb-3 h-6 w-6 text-accent-500" />
@@ -379,10 +416,10 @@ function RolCard({ icon, titulo, texto, tono }: { icon: React.ReactNode; titulo:
   return (
     <Link
       href="/login"
-      className="card-hover group block h-full rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
+      className="landing-role-card group"
       style={{ background: "var(--card)" }}
     >
-      <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${tono} text-white shadow-md`}>
+      <div className={`landing-role-icon bg-gradient-to-br ${tono}`}>
         {icon}
       </div>
       <h3 className="font-semibold">{titulo}</h3>

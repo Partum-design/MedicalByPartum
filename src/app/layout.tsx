@@ -35,8 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="antialiased">
         {children}
-        <footer className="py-6 text-center text-xs" style={{ color: "var(--ink-muted)" }}>
-          Medical OS — construido por Partum Design
+        <footer className="site-footer">
+          <span>Medical OS</span>
+          <span>Operación clínica conectada · Partum Design</span>
         </footer>
       </body>
     </html>

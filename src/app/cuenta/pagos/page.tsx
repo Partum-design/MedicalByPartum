@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Banknote, CreditCard, Plus, ShieldCheck } from "lucide-react";
+import { Banknote, Check, Plus, ShieldCheck } from "lucide-react";
 import { PanelShell } from "@/components/shell/PanelShell";
 import { SavedCard } from "@/components/marketing/SavedCard";
+import { MastercardMark, MercadoPagoMark, StripeMark, VisaMark } from "@/components/payments/BrandMarks";
 import { useDemoStore } from "@/lib/demo-store";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
@@ -15,6 +16,8 @@ const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" 
 export default function PagosPage() {
   const store = useDemoStore();
   const { listo, citas, sesion } = store;
+  const [activeCard, setActiveCard] = useState<"visa" | "mastercard">("visa");
+  const [provider, setProvider] = useState<"stripe" | "mercado-pago">("stripe");
 
   const mias = useMemo(
     () =>
@@ -39,27 +42,36 @@ export default function PagosPage() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Tarjeta guardada */}
-        <section className="anim-in anim-d1 lg:col-span-1">
-          <div className="rounded-3xl bg-ink-950 p-8">
-            <SavedCard nombre={sesion.nombre} toast={false} trust={false} />
+      <div className="payments-layout">
+        <section className="payments-wallet anim-in anim-d1">
+          <div className="payments-section-heading">
+            <div><p>Métodos guardados</p><span>Selecciona tu tarjeta principal y tócala para girarla.</span></div>
+            <span className="payments-secure"><ShieldCheck /> Protegido</span>
           </div>
-          <p className="mt-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-xs" style={{ color: "var(--ink-muted)" }}>
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-accent-500" />
-            <span>Guardada de forma segura vía</span>
-            <span className="font-semibold text-ink-900 dark:text-white">Stripe</span>
-            <span aria-hidden>·</span>
-            <span className="font-semibold text-ink-900 dark:text-white">Mercado Pago</span>
-          </p>
-          <button className="card-hover mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-brand-500/40 px-5 py-2.5 text-sm font-medium text-brand-600">
-            <Plus className="h-4 w-4" /> Agregar otro método
-          </button>
+
+          <div className="payments-cards-grid">
+            <SavedCard nombre={sesion.nombre} toast={false} trust={false} brand="visa" last4="5521" active={activeCard === "visa"} onSelect={() => setActiveCard("visa")} />
+            <SavedCard nombre={sesion.nombre} toast={false} trust={false} brand="mastercard" last4="1084" active={activeCard === "mastercard"} onSelect={() => setActiveCard("mastercard")} />
+          </div>
+
+          <div className="payment-provider-panel">
+            <div><p>Procesar pagos con</p><span>Elige la pasarela que deseas usar en esta demo.</span></div>
+            <div className="payment-provider-options" role="radiogroup" aria-label="Procesador de pagos">
+              <button type="button" role="radio" aria-checked={provider === "stripe"} onClick={() => setProvider("stripe")} className={provider === "stripe" ? "is-active" : ""}>
+                <StripeMark /><span>{provider === "stripe" && <Check />} Stripe</span>
+              </button>
+              <button type="button" role="radio" aria-checked={provider === "mercado-pago"} onClick={() => setProvider("mercado-pago")} className={provider === "mercado-pago" ? "is-active" : ""}>
+                <MercadoPagoMark /><span>{provider === "mercado-pago" && <Check />} Mercado Pago</span>
+              </button>
+            </div>
+            <p className="payment-provider-note"><ShieldCheck /> Configuración visual de demostración; ningún cargo se procesa desde esta pantalla.</p>
+          </div>
+
+          <button className="add-payment-method"><Plus /> Agregar otro método</button>
         </section>
 
-        {/* Historial de cobros */}
-        <section className="anim-in anim-d2 space-y-3 lg:col-span-2">
-          <h2 className="font-semibold">Historial de cobros</h2>
+        <section className="payments-history anim-in anim-d2">
+          <div className="payments-section-heading"><div><p>Historial de cobros</p><span>Movimientos recientes vinculados a tus citas.</span></div></div>
           {mias.length === 0 && (
             <div
               className="rounded-2xl border border-dashed border-brand-500/30 p-8 text-center text-sm"
@@ -68,24 +80,22 @@ export default function PagosPage() {
               Aún no tienes cobros registrados.
             </div>
           )}
-          {mias.map((c) => (
+          <div className="payments-history-list">
+          {mias.map((c, index) => (
             <article
               key={c.id}
-              className="card-hover flex items-center gap-4 rounded-2xl p-4 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
-              style={{ background: "var(--card)" }}
+              className="payment-history-row"
             >
-              <div
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                  c.metodo_pago === "tarjeta" ? "bg-brand-50 text-brand-600" : "bg-pastel-durazno text-orange-700"
-                }`}
-              >
-                {c.metodo_pago === "tarjeta" ? <CreditCard className="h-4.5 w-4.5" /> : <Banknote className="h-4.5 w-4.5" />}
+              <div className={`payment-history-mark ${c.metodo_pago}`}>
+                {c.metodo_pago === "tarjeta"
+                  ? index % 2 === 0 ? <VisaMark /> : <MastercardMark compact />
+                  : <Banknote />}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{c.medico_nombre}</p>
                 <p className="text-xs" style={{ color: "var(--ink-muted)" }}>
                   {format(new Date(c.inicio), "d 'de' MMMM, yyyy", { locale: es })} ·{" "}
-                  {c.metodo_pago === "tarjeta" ? "Tarjeta ····5521" : "Efectivo en clínica"}
+                  {c.metodo_pago === "tarjeta" ? `${index % 2 === 0 ? "Visa" : "Mastercard"} ····${index % 2 === 0 ? "5521" : "1084"}` : "Efectivo en clínica"}
                 </p>
               </div>
               <div className="text-right">
@@ -100,6 +110,7 @@ export default function PagosPage() {
               </div>
             </article>
           ))}
+          </div>
         </section>
       </div>
     </PanelShell>

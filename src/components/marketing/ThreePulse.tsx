@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float } from "@react-three/drei";
 import * as THREE from "three";
@@ -46,12 +46,24 @@ function PulseObject() {
 
 // Decoración 3D sin OrbitControls: no captura el gesto del usuario y no hace scroll-jacking.
 export function ThreePulse() {
+  const [webglAvailable, setWebglAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    setWebglAvailable(Boolean(context));
+  }, []);
+
+  if (webglAvailable !== true) {
+    return <div className="three-pulse three-pulse-fallback pointer-events-none" aria-hidden="true" />;
+  }
+
   return (
     <div className="three-pulse pointer-events-none" aria-hidden="true">
       <Canvas
         dpr={[1, 1.5]}
         camera={{ position: [0, 0, 3.8], fov: 42 }}
-        gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+        gl={{ alpha: true, antialias: true, powerPreference: "default", failIfMajorPerformanceCaveat: false }}
       >
         <ambientLight intensity={0.35} />
         <Float speed={1.1} rotationIntensity={0.18} floatIntensity={0.35}>

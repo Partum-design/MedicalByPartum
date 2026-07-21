@@ -153,6 +153,28 @@ h1, h2, h3, .font-display {
   mix-blend-mode: overlay;
 }
 
+/* Tarjetas guardadas: giro independiente de la inclinación del escenario */
+.saved-card-glow { position: absolute; inset: 8% 4%; z-index: -1; border-radius: 3rem; background: rgb(9 209 199 / 0.28); filter: blur(38px); opacity: 0.7; }
+.saved-card-wrap.is-active .saved-card-glow { background: rgb(70 223 177 / 0.46); opacity: 1; }
+.saved-card-toast { position: absolute; right: -1rem; top: -1.4rem; z-index: 0; display: flex; align-items: center; gap: 0.45rem; border-radius: 1rem; background: rgb(255 255 255 / 0.96); padding: 0.7rem 0.9rem; color: #213a58; font-size: 0.7rem; font-weight: 650; box-shadow: 0 18px 35px -20px rgb(0 0 0 / 0.7); }
+.saved-card-toast svg { height: 1rem; width: 1rem; color: #15919b; }
+.saved-card-flipper { position: relative; aspect-ratio: 1.58; transform-style: preserve-3d; transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1); }
+.saved-card-flipper.is-flipped { transform: rotateY(180deg); }
+.saved-card-face { position: absolute; inset: 0; overflow: hidden; border: 1px solid rgb(255 255 255 / 0.14); border-radius: 1.55rem; padding: 1.4rem; color: white; backface-visibility: hidden; box-shadow: 0 28px 55px -28px rgb(0 29 45 / 0.9); }
+.saved-card-front { background: linear-gradient(135deg, #213a58 0%, #0c6478 44%, #15919b 72%, #46dfb1 115%); }
+.saved-card-back { transform: rotateY(180deg); background: linear-gradient(145deg, #152d49, #0c6478 68%, #15919b); }
+.saved-card-watermark { position: absolute; right: -1.2rem; bottom: -1.2rem; height: 8rem; width: 8rem; color: rgb(255 255 255 / 0.09); }
+.saved-card-chip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 2.5rem; height: 1.75rem; margin-top: 1.5rem; overflow: hidden; border-radius: 0.4rem; padding: 0.3rem; background: linear-gradient(135deg, #80ee98, #d8f4dc 65%, #46dfb1); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08); }
+.saved-card-chip i { border-right: 1px solid rgb(33 58 88 / 0.25); }
+.saved-card-strip { height: 2.7rem; margin: 1.2rem -1.4rem 0; background: #081724; }
+.saved-card-signature { display: flex; align-items: center; justify-content: space-between; gap: 1rem; height: 2rem; margin-top: 0.35rem; background: repeating-linear-gradient(-18deg, #e9f3ef 0 3px, #fff 3px 6px); padding-left: 0.7rem; color: #436172; }
+.saved-card-signature span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: cursive; font-size: 0.72rem; }
+.saved-card-signature b { align-self: stretch; display: flex; align-items: center; padding-inline: 0.65rem; background: white; color: #213a58; font-family: var(--font-num), monospace; font-size: 0.72rem; }
+.saved-card-actions { position: relative; z-index: 20; display: flex; justify-content: center; gap: 0.45rem; margin-top: 0.9rem; }
+.saved-card-actions button { display: inline-flex; min-height: 2.25rem; align-items: center; justify-content: center; gap: 0.4rem; border: 1px solid #d9e5e2; border-radius: 999px; background: white; padding: 0.45rem 0.8rem; color: #547080; font-size: 0.69rem; font-weight: 650; transition: border-color 180ms ease, background 180ms ease, color 180ms ease; }
+.saved-card-actions button:hover, .saved-card-actions button.is-selected { border-color: #15919b; background: #ecfbf6; color: #0c6478; }
+.saved-card-actions svg { height: 0.85rem; width: 0.85rem; }
+
 @keyframes float-idle {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
@@ -213,6 +235,12 @@ h1, h2, h3, .font-display {
   height: 100% !important;
   width: 100% !important;
 }
+.three-pulse-fallback {
+  background:
+    radial-gradient(circle at 50% 50%, rgb(70 223 177 / 0.18), transparent 24%),
+    radial-gradient(circle at 50% 50%, transparent 0 28%, rgb(9 209 199 / 0.24) 28.2% 28.7%, transparent 29%),
+    radial-gradient(circle at 50% 50%, transparent 0 39%, rgb(128 238 152 / 0.16) 39.2% 39.6%, transparent 40%);
+}
 
 /* --- Experiencia antes / después: centro de control clínico --- */
 .experience-section {
@@ -251,6 +279,137 @@ h1, h2, h3, .font-display {
   background: #f4faf8;
   color: #213a58;
   box-shadow: 0 8px 18px -12px rgb(0 0 0 / 0.8);
+}
+.comparison-control { border-radius: 1rem; background: rgb(255 255 255 / 0.055); padding: 0.9rem; }
+.comparison-labels, .comparison-track-labels { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.comparison-labels button { color: rgb(255 255 255 / 0.45); font-size: 0.75rem; font-weight: 700; transition: color 180ms ease; }
+.comparison-labels button.is-active { color: #80ee98; }
+.comparison-control input[type="range"] { width: 100%; height: 1.6rem; margin-top: 0.45rem; cursor: ew-resize; accent-color: #46dfb1; touch-action: pan-y; }
+.comparison-track-labels { color: rgb(255 255 255 / 0.33); font-size: 0.58rem; }
+.board-mark.is-before { background: #e5a332; color: #213a58; }
+
+/* Calendario compartido por paciente, médico y administración */
+.calendar-overview { display: grid; overflow: hidden; border: 1px solid #dce8e5; border-radius: 1.6rem; background: white; box-shadow: 0 24px 55px -42px rgb(33 58 88 / 0.55); }
+.calendar-main { min-width: 0; padding: 1.25rem; }
+.calendar-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+.calendar-kicker { color: #15919b; font-size: 0.62rem; font-weight: 750; letter-spacing: 0.13em; text-transform: uppercase; }
+.calendar-header h2 { margin-top: 0.15rem; color: #213a58; font-size: 1.05rem; font-weight: 750; }
+.calendar-nav { display: flex; align-items: center; gap: 0.6rem; }
+.calendar-nav span { min-width: 7.2rem; color: #213a58; text-align: center; font-size: 0.75rem; font-weight: 700; text-transform: capitalize; }
+.calendar-nav button { display: grid; height: 2rem; width: 2rem; place-items: center; border: 1px solid #dce8e5; border-radius: 0.7rem; color: #547080; transition: border-color 180ms ease, color 180ms ease; }
+.calendar-nav button:hover { border-color: #15919b; color: #15919b; }
+.calendar-nav svg { height: 0.95rem; width: 0.95rem; }
+.calendar-weekdays, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.calendar-weekdays span { padding-block: 0.4rem 0.6rem; color: #8a9aa5; text-align: center; font-size: 0.6rem; font-weight: 750; }
+.calendar-grid { overflow: hidden; border: 1px solid #e6efed; border-radius: 1rem; }
+.calendar-grid button { position: relative; min-height: 3.8rem; border-right: 1px solid #edf3f1; border-bottom: 1px solid #edf3f1; background: #fff; color: #213a58; text-align: left; transition: background 150ms ease, box-shadow 150ms ease; }
+.calendar-grid button:nth-child(7n) { border-right: 0; }
+.calendar-grid button:hover { z-index: 1; background: #f3fbf8; box-shadow: inset 0 0 0 1px #46dfb1; }
+.calendar-grid button.is-outside { background: #fafcfb; color: #b4c0c5; }
+.calendar-grid button.is-selected { z-index: 2; background: #213a58; color: white; box-shadow: inset 0 0 0 1px #213a58; }
+.calendar-grid button.is-today .calendar-day-number { box-shadow: 0 0 0 1px #15919b; }
+.calendar-day-number { position: absolute; left: 0.5rem; top: 0.45rem; display: grid; height: 1.35rem; min-width: 1.35rem; place-items: center; border-radius: 999px; font-size: 0.68rem; font-weight: 650; }
+.calendar-day-load { position: absolute; right: 0.45rem; bottom: 0.45rem; display: flex; align-items: center; gap: 0.25rem; color: #15919b; font-size: 0.6rem; font-weight: 750; }
+.calendar-day-load i { display: block; height: 0.38rem; width: 0.38rem; border-radius: 999px; background: #46dfb1; box-shadow: 0 0 0 3px rgb(70 223 177 / 0.15); }
+.calendar-grid button.is-selected .calendar-day-load { color: #b7f7cb; }
+.calendar-detail { background: #213a58; padding: 1.35rem; color: white; }
+.calendar-detail-date { font-size: 0.72rem; font-weight: 700; text-transform: capitalize; }
+.calendar-detail-count { margin-top: 0.25rem; color: #80ee98; font-size: 0.66rem; }
+.calendar-detail-list { display: grid; gap: 0.6rem; margin-top: 1rem; }
+.calendar-empty { display: flex; align-items: center; gap: 0.55rem; border: 1px dashed rgb(255 255 255 / 0.18); border-radius: 0.9rem; padding: 1rem; color: rgb(255 255 255 / 0.55); font-size: 0.69rem; line-height: 1.4; }
+.calendar-empty span { height: 0.45rem; width: 0.45rem; flex: none; border-radius: 999px; background: #46dfb1; }
+.calendar-appointment { position: relative; border: 1px solid rgb(255 255 255 / 0.09); border-radius: 0.9rem; background: rgb(255 255 255 / 0.07); padding: 0.75rem; }
+.calendar-appointment-time { display: flex; align-items: center; gap: 0.3rem; color: #80ee98; font-family: var(--font-num), monospace; font-size: 0.62rem; font-weight: 700; }
+.calendar-appointment-time svg, .calendar-appointment > span svg { height: 0.72rem; width: 0.72rem; }
+.calendar-appointment strong { display: block; margin-top: 0.35rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.72rem; }
+.calendar-appointment small { display: block; margin-top: 0.15rem; overflow: hidden; color: rgb(255 255 255 / 0.52); text-overflow: ellipsis; white-space: nowrap; font-size: 0.59rem; }
+.calendar-appointment > span { display: flex; align-items: center; gap: 0.25rem; margin-top: 0.5rem; color: rgb(255 255 255 / 0.67); font-size: 0.58rem; }
+
+/* Disponibilidad semanal */
+.schedule-layout { display: grid; overflow: hidden; border: 1px solid #dce8e5; border-radius: 1.6rem; background: white; box-shadow: 0 28px 60px -48px rgb(33 58 88 / 0.55); }
+.schedule-summary { position: relative; overflow: hidden; padding: 1.6rem; background: #213a58; color: white; }
+.schedule-summary::after { position: absolute; right: -3rem; bottom: -4rem; height: 11rem; width: 11rem; border: 2rem solid rgb(70 223 177 / 0.08); border-radius: 999px; content: ""; }
+.schedule-summary-icon { display: grid; height: 2.6rem; width: 2.6rem; place-items: center; border-radius: 0.85rem; background: linear-gradient(135deg, #15919b, #46dfb1); }
+.schedule-summary-icon svg { height: 1.2rem; width: 1.2rem; }
+.schedule-summary-label { margin-top: 2rem; color: rgb(255 255 255 / 0.52); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.schedule-summary > strong { display: flex; align-items: baseline; gap: 0.35rem; margin-top: 0.25rem; font-size: 2.8rem; line-height: 1; }
+.schedule-summary > strong small { color: rgb(255 255 255 / 0.45); font-size: 0.8rem; font-weight: 500; }
+.schedule-summary-line { height: 0.35rem; margin-top: 1.2rem; overflow: hidden; border-radius: 999px; background: rgb(255 255 255 / 0.12); }
+.schedule-summary-line span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #15919b, #80ee98); }
+.schedule-summary-stat { display: flex; align-items: center; gap: 0.65rem; margin-top: 1.3rem; color: rgb(255 255 255 / 0.65); font-size: 0.68rem; }
+.schedule-summary-stat svg { height: 1rem; width: 1rem; color: #80ee98; }
+.schedule-summary-stat b { display: block; color: white; font-size: 0.8rem; }
+.schedule-summary > p:last-child { position: relative; z-index: 1; margin-top: 2rem; max-width: 14rem; color: rgb(255 255 255 / 0.48); font-size: 0.67rem; line-height: 1.55; }
+.schedule-days { padding: 0.8rem 1.25rem 1.25rem; }
+.schedule-days-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 4rem; border-bottom: 1px solid #edf3f1; }
+.schedule-days-heading p { color: #213a58; font-size: 0.85rem; font-weight: 750; }
+.schedule-days-heading span { color: #80929e; font-size: 0.63rem; }
+.schedule-saved { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 999px; background: #e9fbf1; padding: 0.35rem 0.65rem; color: #15915d !important; font-weight: 700; }
+.schedule-saved svg { height: 0.7rem; width: 0.7rem; }
+.schedule-day { display: grid; min-height: 4.15rem; grid-template-columns: 9.5rem 1fr; align-items: center; border-bottom: 1px solid #edf3f1; opacity: 0.57; transition: opacity 180ms ease; }
+.schedule-day:last-child { border-bottom: 0; }
+.schedule-day.is-active { opacity: 1; }
+.schedule-day-name { display: flex; align-items: center; gap: 0.7rem; color: #213a58; font-size: 0.77rem; font-weight: 700; }
+.schedule-switch { position: relative; height: 1.55rem; width: 2.8rem; flex: none; border-radius: 999px; background: #dbe5e3; box-shadow: inset 0 0 0 1px rgb(33 58 88 / 0.06); transition: background 180ms ease; }
+.schedule-switch span { position: absolute; left: 0.2rem; top: 0.2rem; height: 1.15rem; width: 1.15rem; border-radius: 999px; background: white; box-shadow: 0 2px 5px rgb(33 58 88 / 0.2); transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1); }
+.schedule-day.is-active .schedule-switch { background: linear-gradient(90deg, #15919b, #46dfb1); }
+.schedule-day.is-active .schedule-switch span { transform: translateX(1.25rem); }
+.schedule-time-range { display: flex; align-items: center; gap: 0.65rem; }
+.schedule-time-range label { display: flex; align-items: center; gap: 0.45rem; }
+.schedule-time-range label > span { color: #8a9aa5; font-size: 0.58rem; }
+.schedule-time-range input { width: 7.3rem; border: 1px solid #dce8e5; border-radius: 0.65rem; padding: 0.5rem 0.65rem; color: #213a58; font-family: var(--font-num), monospace; font-size: 0.7rem; outline: 0; }
+.schedule-range-line { height: 1px; width: 0.8rem; background: #b5c6c3; }
+.schedule-unavailable { color: #8a9aa5; font-size: 0.68rem; }
+
+/* Centro de pagos */
+.payments-layout { display: grid; gap: 1rem; }
+.payments-wallet, .payments-history { border: 1px solid #dce8e5; border-radius: 1.6rem; background: white; padding: 1.25rem; box-shadow: 0 26px 55px -46px rgb(33 58 88 / 0.55); }
+.payments-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.payments-section-heading p { color: #213a58; font-size: 0.88rem; font-weight: 750; }
+.payments-section-heading span { color: #82939e; font-size: 0.65rem; }
+.payments-secure { display: inline-flex; flex: none; align-items: center; gap: 0.35rem; border-radius: 999px; background: #e9fbf1; padding: 0.4rem 0.65rem; color: #168257 !important; font-weight: 700; }
+.payments-secure svg { height: 0.8rem; width: 0.8rem; }
+.payments-cards-grid { display: grid; gap: 1.15rem; border-radius: 1.3rem; background: linear-gradient(145deg, #182f4b, #213a58); padding: 1.5rem; }
+.payment-provider-panel { margin-top: 1rem; border: 1px solid #e3ecea; border-radius: 1.1rem; padding: 1rem; }
+.payment-provider-panel > div:first-child p { color: #213a58; font-size: 0.76rem; font-weight: 750; }
+.payment-provider-panel > div:first-child span { color: #82939e; font-size: 0.62rem; }
+.payment-provider-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; margin-top: 0.8rem; }
+.payment-provider-options button { display: flex; min-height: 3.9rem; align-items: center; justify-content: space-between; gap: 0.5rem; border: 1px solid #dce8e5; border-radius: 0.85rem; padding: 0.65rem; color: #627687; transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease; }
+.payment-provider-options button.is-active { border-color: #15919b; background: #f0fbf8; box-shadow: 0 0 0 2px rgb(21 145 155 / 0.1); color: #213a58; }
+.payment-provider-options button > svg { height: 1.8rem; max-width: 6.5rem; width: auto; }
+.payment-provider-options button > span { display: flex; align-items: center; gap: 0.25rem; color: inherit; font-size: 0.6rem; font-weight: 700; }
+.payment-provider-options button > span svg { height: 0.7rem; width: 0.7rem; color: #15919b; }
+.payment-provider-note { display: flex; align-items: flex-start; gap: 0.4rem; margin-top: 0.75rem; color: #81919c; font-size: 0.59rem; line-height: 1.4; }
+.payment-provider-note svg { height: 0.75rem; width: 0.75rem; flex: none; color: #15919b; }
+.add-payment-method { display: flex; width: 100%; align-items: center; justify-content: center; gap: 0.4rem; margin-top: 0.8rem; border: 1px dashed #8fd8c4; border-radius: 999px; padding: 0.65rem; color: #0c6478; font-size: 0.7rem; font-weight: 700; }
+.add-payment-method svg { height: 0.9rem; width: 0.9rem; }
+.payments-history-list { display: grid; gap: 0.6rem; }
+.payment-history-row { display: flex; align-items: center; gap: 0.8rem; border: 1px solid #e4ecea; border-radius: 1rem; padding: 0.8rem; transition: border-color 180ms ease, transform 180ms ease; }
+.payment-history-row:hover { transform: translateY(-1px); border-color: #b5dcd4; }
+.payment-history-mark { display: grid; height: 2.6rem; width: 3.4rem; flex: none; place-items: center; border-radius: 0.75rem; background: #f2f8f6; color: #1434cb; }
+.payment-history-mark svg { max-height: 1.35rem; width: 2.4rem; }
+.payment-history-mark.efectivo { color: #b76514; }
+.payment-history-mark.efectivo svg { height: 1rem; width: 1rem; }
+.booking-provider-picker { margin-bottom: 1rem; border-radius: 0.85rem; background: #f4f9f7; padding: 0.8rem; }
+.booking-provider-picker > p { margin-bottom: 0.5rem; color: #70838f; font-size: 0.64rem; font-weight: 650; }
+.booking-provider-picker > div { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+.booking-provider-picker button { display: grid; height: 2.9rem; place-items: center; border: 1px solid #dce8e5; border-radius: 0.75rem; background: white; color: #5d6c78; }
+.booking-provider-picker button.is-active { border-color: #15919b; box-shadow: 0 0 0 2px rgb(21 145 155 / 0.1); color: #213a58; }
+.booking-provider-picker svg { height: 1.55rem; max-width: 6rem; }
+
+@media (min-width: 760px) {
+  .calendar-overview { grid-template-columns: minmax(0, 1fr) 15rem; }
+  .schedule-layout { grid-template-columns: 15rem minmax(0, 1fr); }
+}
+
+@media (min-width: 1100px) {
+  .payments-layout { grid-template-columns: minmax(0, 1.25fr) minmax(22rem, 0.75fr); align-items: start; }
+  .payments-cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .payments-cards-grid .saved-card-face { padding: 1rem; }
+  .payments-cards-grid .saved-card-chip { height: 1.55rem; width: 2.25rem; margin-top: 0.75rem; }
+  .payments-cards-grid .saved-card-front .font-num { margin-top: 0.7rem; font-size: 0.78rem; }
+  .payments-cards-grid .saved-card-front > div:last-child { margin-top: 0.75rem; }
+  .payments-cards-grid .saved-card-strip { margin-inline: -1rem; }
 }
 .operations-board {
   overflow: hidden;
@@ -659,6 +818,33 @@ h1, h2, h3, .font-display {
   .board-grid { grid-template-columns: 1fr; }
   .board-side-stack { grid-template-columns: 1fr; }
   .appointment-state { display: none; }
+  .saved-card-face { border-radius: 1.25rem; padding: 1.05rem; }
+  .saved-card-strip { margin-inline: -1.05rem; }
+  .saved-card-chip { margin-top: 1rem; }
+  .saved-card-front .font-num { margin-top: 0.75rem; font-size: 0.78rem; }
+  .saved-card-front > div:last-child { margin-top: 0.8rem; }
+  .calendar-main { padding: 0.75rem; }
+  .calendar-header { align-items: flex-start; flex-direction: column; }
+  .calendar-nav { width: 100%; justify-content: space-between; }
+  .calendar-grid button { min-height: 3rem; }
+  .calendar-day-number { left: 0.35rem; top: 0.35rem; }
+  .calendar-day-load { right: 0.3rem; bottom: 0.3rem; }
+  .calendar-detail { max-height: 20rem; overflow-y: auto; }
+  .schedule-summary { padding: 1.3rem; }
+  .schedule-summary-label { margin-top: 1.3rem; }
+  .schedule-summary > p:last-child { margin-top: 1.2rem; }
+  .schedule-days { padding: 0.65rem 0.85rem 1rem; }
+  .schedule-days-heading > div > span { display: none; }
+  .schedule-day { grid-template-columns: 1fr; gap: 0.6rem; padding-block: 0.8rem; }
+  .schedule-time-range { justify-content: space-between; }
+  .schedule-time-range label { flex: 1; flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+  .schedule-time-range input { width: 100%; }
+  .payments-wallet, .payments-history { border-radius: 1.25rem; padding: 0.75rem; }
+  .payments-cards-grid { padding: 1rem 0.7rem; }
+  .payment-provider-options { grid-template-columns: 1fr; }
+  .payment-history-row { gap: 0.55rem; padding: 0.7rem; }
+  .payment-history-mark { width: 2.8rem; }
+  .payment-history-row .text-right { min-width: 4rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -683,6 +869,10 @@ h1, h2, h3, .font-display {
     display: none;
   }
   .mode-tab,
+  .comparison-labels button,
+  .saved-card-flipper,
+  .schedule-switch,
+  .schedule-switch span,
   .operations-board,
   .loyalty-line span,
   .board-add,

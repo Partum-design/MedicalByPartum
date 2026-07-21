@@ -16,6 +16,7 @@ import {
   Video,
 } from "lucide-react";
 import { calcularLealtad, useDemoStore, type MetodoPago } from "@/lib/demo-store";
+import { MercadoPagoMark, StripeMark } from "@/components/payments/BrandMarks";
 
 type Medico = {
   id: string;
@@ -38,6 +39,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
   const [slot, setSlot] = useState<Date | null>(null);
   const [modalidad, setModalidad] = useState<"presencial" | "telemedicina">("presencial");
   const [metodoPago, setMetodoPago] = useState<MetodoPago>("tarjeta");
+  const [procesador, setProcesador] = useState<"stripe" | "mercado-pago">("stripe");
   const [telefono, setTelefono] = useState("");
   const [codigo, setCodigo] = useState("");
   const [otpEnviado, setOtpEnviado] = useState(false);
@@ -278,7 +280,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
               }`}
             >
               <CreditCard className="h-4 w-4" />
-              Tarjeta (Stripe)
+              Tarjeta en línea
             </button>
             <button
               onClick={() => setMetodoPago("efectivo")}
@@ -292,6 +294,16 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
               Efectivo en clínica
             </button>
           </div>
+
+          {metodoPago === "tarjeta" && (
+            <div className="booking-provider-picker">
+              <p>Procesador seguro</p>
+              <div role="radiogroup" aria-label="Procesador de pago">
+                <button type="button" role="radio" aria-checked={procesador === "stripe"} onClick={() => setProcesador("stripe")} className={procesador === "stripe" ? "is-active" : ""}><StripeMark /></button>
+                <button type="button" role="radio" aria-checked={procesador === "mercado-pago"} onClick={() => setProcesador("mercado-pago")} className={procesador === "mercado-pago" ? "is-active" : ""}><MercadoPagoMark /></button>
+              </div>
+            </div>
+          )}
 
           {metodoPago === "tarjeta" ? (
             <p className="mb-4 flex items-start gap-2 text-xs" style={{ color: "var(--ink-muted)" }}>
@@ -325,8 +337,8 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
           >
             {metodoPago === "tarjeta"
               ? demo
-                ? "Simular pago con Stripe"
-                : "Pagar con Stripe"
+                ? `Simular pago con ${procesador === "stripe" ? "Stripe" : "Mercado Pago"}`
+                : `Pagar con ${procesador === "stripe" ? "Stripe" : "Mercado Pago"}`
               : "Confirmar cita — pago en efectivo"}
           </button>
         </div>

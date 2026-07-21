@@ -6,6 +6,7 @@ import { format, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 import { Banknote, CalendarDays, CheckCircle2, CreditCard, MapPin, Users, Video } from "lucide-react";
 import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
+import { CalendarOverview } from "@/components/calendar/CalendarOverview";
 import { useDemoStore } from "@/lib/demo-store";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
@@ -91,6 +92,10 @@ export default function DashboardMedicoPage() {
         />
         <KpiPastel tono="durazno" delay="anim-d4" icon={<CheckCircle2 className="h-4 w-4" />} label="Atendidas" value={`${stats.asistidas}/${stats.hoy}`} nota="Marcadas como asistidas" />
       </section>
+
+      <div className="mb-6">
+        <CalendarOverview citas={propias} perspective="medico" title="Agenda mensual" />
+      </div>
 
       {/* Lista de citas */}
       <section className="anim-in anim-d3 space-y-3">

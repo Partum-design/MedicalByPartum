@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Banknote, CalendarPlus, CreditCard, Gift, MapPin, Sparkles, Video } from "lucide-react";
 import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
+import { CalendarOverview } from "@/components/calendar/CalendarOverview";
 import { calcularLealtad, useDemoStore } from "@/lib/demo-store";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
@@ -80,6 +81,10 @@ export default function CuentaPage() {
           nota={`Te faltan ${lealtad.faltan} citas para la siguiente`}
         />
       </section>
+
+      <div className="mb-6">
+        <CalendarOverview citas={mias} perspective="paciente" title="Mis citas" />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Próximas citas */}

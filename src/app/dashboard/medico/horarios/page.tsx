@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, Stethoscope } from "lucide-react";
+import { CalendarClock, Check, Clock3, Stethoscope } from "lucide-react";
 import { PanelShell } from "@/components/shell/PanelShell";
 import { DIAS_SEMANA, useDemoStore } from "@/lib/demo-store";
 
@@ -19,6 +19,12 @@ export default function HorariosPage() {
   }
 
   const horario = store.horarioDeMedico(sesion.id);
+  const activos = DIAS_SEMANA.filter((dia) => horario[dia.id].activo);
+  const horasSemanales = activos.reduce((total, dia) => {
+    const [ih, im] = horario[dia.id].inicio.split(":").map(Number);
+    const [fh, fm] = horario[dia.id].fin.split(":").map(Number);
+    return total + Math.max(0, fh + fm / 60 - ih - im / 60);
+  }, 0);
 
   return (
     <PanelShell sesion={sesion} activo="Horarios" onLogout={store.logout}>
@@ -30,68 +36,68 @@ export default function HorariosPage() {
         </p>
       </header>
 
-      <section className="anim-in anim-d1 overflow-hidden rounded-3xl shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-        <div className="divide-y divide-slate-100 dark:divide-white/5">
+      <section className="schedule-layout anim-in anim-d1">
+        <aside className="schedule-summary">
+          <span className="schedule-summary-icon"><CalendarClock /></span>
+          <p className="schedule-summary-label">Semana activa</p>
+          <strong>{activos.length}<small>/ 7 días</small></strong>
+          <div className="schedule-summary-line"><span style={{ width: `${(activos.length / 7) * 100}%` }} /></div>
+          <div className="schedule-summary-stat"><Clock3 /><span><b>{horasSemanales.toFixed(horasSemanales % 1 ? 1 : 0)} h</b> disponibles por semana</span></div>
+          <p>Los cambios se aplican al instante en los horarios visibles para tus pacientes.</p>
+        </aside>
+
+        <div className="schedule-days">
+          <div className="schedule-days-heading">
+            <div><p>Disponibilidad regular</p><span>Activa cada día y define la ventana de consulta.</span></div>
+            <span className="schedule-saved"><Check /> Guardado</span>
+          </div>
           {DIAS_SEMANA.map((dia, i) => {
             const bloque = horario[dia.id];
             return (
               <div
                 key={dia.id}
-                className={`anim-in anim-d${Math.min(i + 1, 6)} flex flex-wrap items-center gap-4 p-4 transition-opacity ${
-                  bloque.activo ? "" : "opacity-50"
-                }`}
+                className={`schedule-day anim-in anim-d${Math.min(i + 1, 6)} ${bloque.activo ? "is-active" : ""}`}
               >
-                <label className="flex w-36 shrink-0 items-center gap-4">
+                <div className="schedule-day-name">
                   <button
+                    type="button"
                     role="switch"
                     aria-checked={bloque.activo}
+                    aria-label={`${bloque.activo ? "Desactivar" : "Activar"} ${dia.label}`}
                     onClick={() => store.guardarHorarioDia(sesion.id, dia.id, { activo: !bloque.activo })}
-                    className={`relative h-6 w-11 shrink-0 rounded-full ring-1 ring-inset transition-colors ${
-                      bloque.activo
-                        ? "bg-gradient-to-r from-brand-600 to-accent-500 ring-transparent"
-                        : "bg-slate-300 ring-slate-300 dark:bg-white/15 dark:ring-white/15"
-                    }`}
+                    className="schedule-switch"
                   >
-                    <span
-                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ring-1 ring-black/5 transition-transform ${
-                        bloque.activo ? "translate-x-5" : "translate-x-0.5"
-                      }`}
-                    />
+                    <span />
                   </button>
-                  <span className="font-medium">{dia.label}</span>
-                </label>
+                  <span>{dia.label}</span>
+                </div>
 
                 {bloque.activo ? (
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="schedule-time-range">
+                    <label><span>Desde</span>
                     <input
                       type="time"
                       value={bloque.inicio}
                       onChange={(e) => store.guardarHorarioDia(sesion.id, dia.id, { inicio: e.target.value })}
-                      className="rounded-lg border border-slate-300/70 bg-transparent px-3 py-1.5 outline-none focus:border-accent-500 dark:border-white/15"
                     />
-                    <span style={{ color: "var(--ink-muted)" }}>a</span>
+                    </label>
+                    <span className="schedule-range-line" />
+                    <label><span>Hasta</span>
                     <input
                       type="time"
                       value={bloque.fin}
                       onChange={(e) => store.guardarHorarioDia(sesion.id, dia.id, { fin: e.target.value })}
-                      className="rounded-lg border border-slate-300/70 bg-transparent px-3 py-1.5 outline-none focus:border-accent-500 dark:border-white/15"
                     />
+                    </label>
                   </div>
                 ) : (
-                  <span className="text-sm" style={{ color: "var(--ink-muted)" }}>
-                    No disponible
-                  </span>
+                  <span className="schedule-unavailable">Sin consultas</span>
                 )}
               </div>
             );
           })}
         </div>
       </section>
-
-      <p className="anim-in anim-d2 mx-auto mt-6 flex w-fit items-center gap-2 rounded-full px-5 py-2.5 text-sm shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)", color: "var(--ink-muted)" }}>
-        <CalendarClock className="h-4 w-4 text-accent-500" />
-        Los cambios se guardan al instante y persisten en este navegador.
-      </p>
     </PanelShell>
   );
 }

@@ -55,25 +55,17 @@ export function MedicalOSExperience() {
           <Reveal className="lg:sticky lg:top-8">
             <div className="mode-card">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-mint-raw">Vista de operación</p>
-              <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl bg-white/5 p-1.5" role="tablist" aria-label="Comparar operación">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={!isAfter}
-                  onClick={() => changeMode("antes")}
-                  className={`mode-tab ${!isAfter ? "is-active" : ""}`}
-                >
-                  Antes
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={isAfter}
-                  onClick={() => changeMode("despues")}
-                  className={`mode-tab ${isAfter ? "is-active" : ""}`}
-                >
-                  Con Medical OS
-                </button>
+              <div className="comparison-control mt-5">
+                <div className="comparison-labels"><button type="button" onClick={() => changeMode("antes")} className={!isAfter ? "is-active" : ""}>Antes</button><button type="button" onClick={() => changeMode("despues")} className={isAfter ? "is-active" : ""}>Con Medical OS</button></div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={isAfter ? 100 : 0}
+                  onChange={(event) => changeMode(Number(event.target.value) >= 50 ? "despues" : "antes")}
+                  aria-label="Desliza para comparar antes y después"
+                />
+                <div className="comparison-track-labels"><span>Operación fragmentada</span><span>Sistema centralizado</span></div>
               </div>
 
               <div className="mt-8 min-h-[150px]">
@@ -105,10 +97,10 @@ export function MedicalOSExperience() {
             <div className={`operations-board ${isAfter ? "is-after" : "is-before"}`}>
               <div className="board-topbar">
                 <div className="flex items-center gap-2">
-                  <span className="board-mark">M</span>
-                  <span className="font-display text-sm font-semibold text-white">Medical OS</span>
+                  <span className={`board-mark ${!isAfter ? "is-before" : ""}`}>{isAfter ? "M" : "!"}</span>
+                  <span className="font-display text-sm font-semibold text-white">{isAfter ? "Medical OS" : "Operación fragmentada"}</span>
                   <span className="board-divider" />
-                  <span className="hidden text-xs text-white/45 sm:inline">Centro de operación</span>
+                  <span className="hidden text-xs text-white/45 sm:inline">{isAfter ? "Centro de operación" : "Vista manual"}</span>
                 </div>
                 <span className={`board-status ${isAfter ? "is-live" : ""}`}>
                   <span className="status-dot" /> {isAfter ? "Sincronizado" : "Pendientes"}

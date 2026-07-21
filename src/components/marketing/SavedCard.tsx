@@ -1,23 +1,30 @@
 "use client";
 
-import { useRef } from "react";
-import { Activity, CheckCircle2, ShieldCheck, Wifi } from "lucide-react";
+import { useRef, useState } from "react";
+import { Activity, Check, CheckCircle2, RotateCcw, ShieldCheck, Wifi } from "lucide-react";
+import { MastercardMark, VisaMark } from "@/components/payments/BrandMarks";
 
-// Elemento firma de la landing (y de "Mi cuenta › Pagos"): la tarjeta
-// guardada del paciente, el método de pago que sostiene todo el modelo de
-// "pago anticipado" del producto. Se inclina en 3D siguiendo el puntero; en
-// móvil flota con una animación suave. Los procesadores se muestran como
-// texto informativo, no como logotipos oficiales.
+type SavedCardProps = {
+  nombre?: string;
+  toast?: boolean;
+  trust?: boolean;
+  brand?: "visa" | "mastercard";
+  last4?: string;
+  active?: boolean;
+  onSelect?: () => void;
+};
+
 export function SavedCard({
   nombre = "Mariana Gutiérrez",
   toast = true,
   trust = true,
-}: {
-  nombre?: string;
-  toast?: boolean;
-  trust?: boolean;
-}) {
+  brand = "visa",
+  last4 = "5521",
+  active = false,
+  onSelect,
+}: SavedCardProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
+  const [flipped, setFlipped] = useState(false);
 
   function onMove(e: React.PointerEvent<HTMLDivElement>) {
     if (e.pointerType !== "mouse") return;
@@ -26,101 +33,93 @@ export function SavedCard({
     const r = el.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width;
     const py = (e.clientY - r.top) / r.height;
-    el.style.setProperty("--rx", `${(px - 0.5) * 16}deg`);
-    el.style.setProperty("--ry", `${(0.5 - py) * -14}deg`);
+    el.style.setProperty("--rx", `${(px - 0.5) * 12}deg`);
+    el.style.setProperty("--ry", `${(0.5 - py) * -10}deg`);
     el.style.setProperty("--mx", `${px * 100}%`);
     el.style.setProperty("--my", `${py * 100}%`);
   }
 
-  function onLeave() {
+  function resetTilt() {
     const el = sceneRef.current;
     if (!el) return;
-    el.style.setProperty("--rx", `0deg`);
-    el.style.setProperty("--ry", `0deg`);
+    el.style.setProperty("--rx", "0deg");
+    el.style.setProperty("--ry", "0deg");
   }
 
-  return (
-    <div className="relative mx-auto w-full max-w-sm">
-      {/* resplandor ambiental */}
-      <div
-        className="absolute -inset-10 -z-10 rounded-[3rem] opacity-70 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 20%, rgb(0 255 179 / 0.35), transparent 60%), radial-gradient(circle at 80% 80%, rgb(15 135 181 / 0.45), transparent 55%)",
-        }}
-        aria-hidden
-      />
+  const cardMark = brand === "visa"
+    ? <VisaMark className="h-7 w-auto text-white" />
+    : <MastercardMark compact className="h-8 w-auto text-white" />;
 
-      {/* toast flotante detrás */}
+  return (
+    <div className={`saved-card-wrap relative mx-auto w-full max-w-sm ${active ? "is-active" : ""}`}>
+      <div className="saved-card-glow" aria-hidden />
+
       {toast && (
-        <div
-          className="anim-pop anim-d3 absolute -right-3 -top-6 z-0 flex items-center gap-2 rounded-2xl bg-white/95 px-4 py-3 text-xs font-medium text-ink-900 shadow-xl sm:-right-8"
-          role="status"
-        >
-          <CheckCircle2 className="h-4 w-4 text-accent-500" />
-          Pago confirmado · horario asegurado
+        <div className="anim-pop anim-d3 saved-card-toast" role="status">
+          <CheckCircle2 /> Pago confirmado · horario asegurado
         </div>
       )}
 
-      <div
-        ref={sceneRef}
-        onPointerMove={onMove}
-        onPointerLeave={onLeave}
-        className="card-3d-scene relative z-10"
-      >
-        <div className="card-3d animate-float rounded-[1.75rem] p-6 shadow-2xl shadow-black/40">
-          <div
-            className="relative overflow-hidden rounded-[1.75rem] p-6 text-white"
-            style={{
-              background:
-                "linear-gradient(135deg, #213A58 0%, #0C6478 46%, #15919B 72%, #46DFB1 100%)",
-            }}
-          >
-            <div className="card-shine pointer-events-none absolute inset-0" aria-hidden />
-            <Activity
-              className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 text-white/10"
-              strokeWidth={1.25}
-              aria-hidden
-            />
-
-            <div className="relative flex items-start justify-between">
-              <div>
-                <p className="font-display text-sm font-bold tracking-tight">Medical OS</p>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">by Partum</p>
+      <div ref={sceneRef} onPointerMove={onMove} onPointerLeave={resetTilt} className="card-3d-scene relative z-10">
+        <div className="card-3d">
+          <div className={`saved-card-flipper ${flipped ? "is-flipped" : ""}`}>
+            <div className="saved-card-face saved-card-front">
+              <div className="card-shine pointer-events-none absolute inset-0" aria-hidden />
+              <Activity className="saved-card-watermark" strokeWidth={1.25} aria-hidden />
+              <div className="relative flex items-start justify-between">
+                <div>
+                  <p className="font-display text-sm font-bold tracking-tight">Medical OS</p>
+                  <p className="text-[9px] uppercase tracking-[0.22em] text-white/60">by Partum</p>
+                </div>
+                <Wifi className="h-5 w-5 rotate-90 text-white/75" aria-hidden />
               </div>
-              <Wifi className="h-5 w-5 rotate-90 text-white/70" aria-hidden />
+              <div className="saved-card-chip" aria-hidden><i /><i /><i /></div>
+              <div className="font-num relative mt-5 flex items-center gap-2 text-base text-white sm:text-lg">
+                <span className="tracking-[0.18em]">••••</span><span className="tracking-[0.18em]">••••</span>
+                <span className="tracking-[0.18em]">••••</span><span className="tracking-[0.1em]">{last4}</span>
+              </div>
+              <div className="relative mt-5 flex items-end justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[9px] uppercase tracking-wide text-white/55">Titular</p>
+                  <p className="truncate text-sm font-medium">{nombre}</p>
+                </div>
+                <div className="flex shrink-0 items-end gap-4">
+                  <div className="text-right"><p className="text-[9px] uppercase tracking-wide text-white/55">Vence</p><p className="font-num text-sm">09/29</p></div>
+                  {cardMark}
+                </div>
+              </div>
             </div>
 
-            <div className="relative mt-8 h-7 w-10 rounded-md bg-gradient-to-br from-mint-raw/80 to-white/40" aria-hidden />
-
-            <div className="font-num relative mt-4 flex items-center gap-2.5 text-base text-white/95 sm:text-lg">
-              <span className="tracking-[0.2em]">••••</span>
-              <span className="tracking-[0.2em]">••••</span>
-              <span className="tracking-[0.2em]">••••</span>
-              <span className="tracking-[0.12em]">5521</span>
-            </div>
-
-            <div className="relative mt-4 flex items-end justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-white/55">Titular</p>
-                <p className="text-sm font-medium">{nombre}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] uppercase tracking-wide text-white/55">Vence</p>
-                <p className="font-num text-sm">09/29</p>
+            <div className="saved-card-face saved-card-back">
+              <div className="saved-card-strip" />
+              <div className="mt-5 px-1">
+                <p className="text-[9px] uppercase tracking-[0.16em] text-white/50">Firma autorizada</p>
+                <div className="saved-card-signature"><span>{nombre}</span><b>482</b></div>
+                <div className="mt-5 flex items-end justify-between">
+                  <div><p className="text-[9px] uppercase tracking-[0.16em] text-white/50">Método protegido</p><p className="mt-1 text-xs text-white/75">Tokenizado · datos cifrados</p></div>
+                  {cardMark}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      <div className="saved-card-actions">
+        {onSelect && (
+          <button type="button" onClick={onSelect} className={active ? "is-selected" : ""} aria-pressed={active}>
+            {active ? <><Check /> Activa</> : "Usar esta tarjeta"}
+          </button>
+        )}
+        <button type="button" onClick={() => setFlipped((value) => !value)} aria-pressed={flipped}>
+          <RotateCcw /> {flipped ? "Ver frente" : "Girar tarjeta"}
+        </button>
+      </div>
+
       {trust && (
-        <p className="mt-6 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-xs text-white/55">
+        <p className="mt-5 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-xs text-white/55">
           <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-accent-400" />
-          <span>Guardada de forma segura vía</span>
-          <span className="font-semibold text-white/90">Stripe</span>
-          <span aria-hidden>·</span>
-          <span className="font-semibold text-white/90">Mercado Pago</span>
+          Método tokenizado; Medical OS no almacena el número completo.
         </p>
       )}
     </div>

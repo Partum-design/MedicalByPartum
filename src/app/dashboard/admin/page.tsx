@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Banknote, CalendarCheck, CreditCard, Gift, TrendingUp, Users } from "lucide-react";
 import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
+import { CalendarOverview } from "@/components/calendar/CalendarOverview";
 import { useDemoStore } from "@/lib/demo-store";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
@@ -87,6 +88,10 @@ export default function DashboardAdminPage() {
         <KpiPastel tono="menta" delay="anim-d3" icon={<TrendingUp className="h-4 w-4" />} label="Tasa de asistencia" value={`${Math.round(stats.asistencia * 100)}%`} nota="Asistidas vs. totales" />
         <KpiPastel tono="durazno" delay="anim-d4" icon={<Users className="h-4 w-4" />} label="Pacientes" value={String(stats.pacientes)} nota="Con citas activas" />
       </section>
+
+      <div className="mb-6">
+        <CalendarOverview citas={citas} perspective="admin" title="Agenda de la clínica" />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Equipo médico */}

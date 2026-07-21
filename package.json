@@ -10,6 +10,8 @@
     "db:types": "supabase gen types typescript --linked > src/lib/database.types.ts"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.0",
     "@upstash/ratelimit": "^2.0.5",
@@ -20,12 +22,14 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^3.10.0",
-    "stripe": "^17.6.0"
+    "stripe": "^17.6.0",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
+    "@types/three": "^0.185.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0"
   }

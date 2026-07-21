@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { Reveal } from "@/components/marketing/Reveal";
 import { SavedCard } from "@/components/marketing/SavedCard";
+import { ThreePulse } from "@/components/marketing/ThreePulse";
+import { MedicalOSExperience } from "@/components/landing/MedicalOSExperience";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 
@@ -40,8 +42,8 @@ export default function LandingPage() {
             </span>
           </Link>
           <div className="anim-in anim-d1 flex shrink-0 items-center gap-1.5 text-sm sm:gap-2">
-            <Link href="#precios" className="hidden rounded-full px-4 py-2 transition-colors hover:bg-white/10 sm:inline-block">
-              Precios
+            <Link href="#experiencia" className="hidden rounded-full px-4 py-2 transition-colors hover:bg-white/10 sm:inline-block">
+              Cómo funciona
             </Link>
             <Link
               href="/login"
@@ -103,11 +105,15 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="anim-pop anim-d3">
+          <div className="hero-visual anim-pop anim-d3">
+            <ThreePulse />
             <SavedCard />
           </div>
         </div>
       </section>
+
+      {/* Experiencia interactiva antes / después */}
+      <MedicalOSExperience />
 
       {/* Núcleo único — estadísticas reales del producto, no vanidad */}
       <section className="bg-cyan-50">
@@ -315,7 +321,7 @@ function Problema({ icon, title, text }: { icon: React.ReactNode; title: string;
       className="card-hover h-full rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
       style={{ background: "var(--card)" }}
     >
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 text-white shadow-sm">
         {icon}
       </div>
       <h3 className="font-semibold">{title}</h3>

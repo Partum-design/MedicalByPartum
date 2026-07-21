@@ -38,8 +38,8 @@ export default function CuentaPage() {
     <PanelShell sesion={sesion} activo="Mi cuenta" onLogout={store.logout}>
       <header className="anim-in mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Hola, {sesion.nombre.split(" ")[0]} 👋
+          <h1 className="font-display text-2xl font-bold tracking-tight">
+            Hola, {sesion.nombre.split(" ")[0]}
           </h1>
           <p className="mt-1 text-sm capitalize" style={{ color: "var(--ink-muted)" }}>
             {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
@@ -198,8 +198,9 @@ export default function CuentaPage() {
               {lealtad.progreso} de 5 citas · te faltan {lealtad.faltan}
             </p>
             {lealtad.recompensasGanadas > 0 && (
-              <p className="anim-pop mt-4 rounded-xl bg-white/15 px-4 py-3 text-sm font-medium">
-                🎉 Tienes {lealtad.recompensasGanadas}{" "}
+              <p className="anim-pop mt-4 flex items-center gap-2 rounded-xl bg-white/15 px-4 py-3 text-sm font-medium">
+                <Sparkles className="h-4 w-4 shrink-0 text-mint-raw" />
+                Tienes {lealtad.recompensasGanadas}{" "}
                 {lealtad.recompensasGanadas === 1 ? "descuento disponible" : "descuentos disponibles"}{" "}
                 — se aplicará en tu próxima reserva.
               </p>

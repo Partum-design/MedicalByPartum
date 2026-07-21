@@ -1,66 +1,91 @@
 @import "tailwindcss";
 
-/* Paleta MedicalByPartum: azules (confianza) + cian/turquesa (salud tech)
-   + pasteles para tarjetas de panel (estilo dashboard de referencia) */
+/* ============================================================================
+   Medical OS by Partum — sistema de color
+   Base: Cerulean #0075A7 (confianza clínica) · Tropical Mint #00FFB3 (energía,
+   reservado para acentos/fondos oscuros — nunca como texto sobre blanco) ·
+   Light Cyan #DFFDFF (superficies). El resto de la escala se deriva de ahí.
+   ============================================================================ */
 @theme {
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
-  --color-brand-900: #1e3a8a;
-  --color-accent-100: #cffafe;
-  --color-accent-400: #22d3ee;
-  --color-accent-500: #06b6d4;
-  --color-accent-600: #0891b2;
-  --color-pastel-lila: #e7ddfb;
-  --color-pastel-azul: #d7e2fe;
-  --color-pastel-menta: #d2f2de;
-  --color-pastel-durazno: #fde8d7;
-  --color-teal-panel: #0e9488;
+  /* Cerulean — marca primaria */
+  --color-brand-50: #eaf6fb;
+  --color-brand-100: #cfeaf4;
+  --color-brand-200: #a3d8ea;
+  --color-brand-400: #2696c4;
+  --color-brand-500: #0f87b5;
+  --color-brand-600: #0075a7;
+  --color-brand-700: #045d86;
+  --color-brand-900: #06283a;
+
+  /* Tropical Mint — acento. accent-400/500/600 están oscurecidos para poder
+     usarse como texto/ícono con contraste real; el mint puro vive en
+     --mint-raw para glows, degradados y fondos oscuros. */
+  --color-accent-100: #cdfaec;
+  --color-accent-400: #00c896;
+  --color-accent-500: #00a67e;
+  --color-accent-600: #067d5f;
+  --color-mint-raw: #00ffb3;
+
+  /* Light Cyan — superficies */
+  --color-cyan-50: #f3fcfd;
+  --color-cyan-100: #dffdff;
+  --color-cyan-200: #bdf3f5;
+
+  /* Pasteles de panel (derivados de la paleta, no genéricos) */
+  --color-pastel-lila: #e6e7fb;
+  --color-pastel-azul: #dcefFA;
+  --color-pastel-menta: #d3fbf0;
+  --color-pastel-durazno: #fde9da;
+  --color-teal-panel: #045d86;
+
+  /* Tinta / superficie oscura de marca (hero, tarjeta, footer) */
+  --color-ink-950: #03121c;
+  --color-ink-900: #06283a;
+
+  --font-display: var(--font-outfit), "Outfit", ui-sans-serif, sans-serif;
+  --font-body: var(--font-plex), "IBM Plex Sans", ui-sans-serif, sans-serif;
+  --font-num: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
 }
 
 :root {
-  --bg: #eef1f6;
+  --bg: #f3fbfc;
   --card: #ffffff;
-  --ink: #0f172a;
-  --ink-muted: #64748b;
+  --ink: #071e29;
+  --ink-muted: #4f6b78;
 }
 
 .dark {
-  --bg: #0b1220;
-  --card: #101a2e;
-  --ink: #e2e8f0;
-  --ink-muted: #94a3b8;
+  --bg: #04121c;
+  --card: #0a2233;
+  --ink: #e8fbf5;
+  --ink-muted: #8fb4c2;
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
+  font-family: var(--font-body);
   font-feature-settings: "cv02", "cv03";
 }
 
-/* --- Animaciones coquetas (sutiles, una sola vez al entrar) --- */
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+}
+
+.font-num {
+  font-family: var(--font-num);
+  font-feature-settings: "tnum";
+}
+
+/* --- Animaciones (sutiles, una sola vez al entrar / al hacer scroll) --- */
 @keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes pop-in {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
 }
 
 .anim-in {
@@ -76,6 +101,17 @@ body {
 .anim-d5 { animation-delay: 0.3s; }
 .anim-d6 { animation-delay: 0.36s; }
 
+/* Scroll-reveal: usado por <Reveal> en la landing */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
 /* Hover con elevación suave para tarjetas interactivas */
 .card-hover {
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
@@ -85,13 +121,80 @@ body {
   box-shadow: 0 12px 28px -12px rgb(15 23 42 / 0.18);
 }
 
+/* --- Tarjeta 3D (hero) --- */
+.card-3d-scene {
+  perspective: 1400px;
+}
+.card-3d {
+  transform: rotateX(var(--ry, 0deg)) rotateY(var(--rx, 0deg));
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.card-3d-scene:hover .card-3d,
+.card-3d-scene:focus-within .card-3d {
+  transition: transform 0.08s linear;
+}
+.card-shine {
+  background: radial-gradient(
+    480px circle at var(--mx, 50%) var(--my, 30%),
+    rgb(255 255 255 / 0.35),
+    transparent 55%
+  );
+  mix-blend-mode: overlay;
+}
+
+@keyframes float-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: float-idle 6s ease-in-out infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% { background-position: -140% 0; }
+  100% { background-position: 240% 0; }
+}
+.shimmer-text {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-mint-raw) 0%,
+    #fff 20%,
+    var(--color-mint-raw) 40%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-sweep 5s ease-in-out infinite;
+}
+
+/* Malla de fondo tipo instrumento clínico — sustituye a foto de stock */
+.bg-grid-glow {
+  background-image:
+    radial-gradient(circle at 15% 8%, rgb(0 255 179 / 0.16), transparent 42%),
+    radial-gradient(circle at 88% 20%, rgb(15 135 181 / 0.35), transparent 45%),
+    linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+  background-size: auto, auto, 44px 44px, 44px 44px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .anim-in,
-  .anim-pop {
+  .anim-pop,
+  .animate-float,
+  .shimmer-text {
     animation: none;
   }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
   .card-hover,
-  .card-hover:hover {
+  .card-hover:hover,
+  .card-3d {
     transition: none;
     transform: none;
   }

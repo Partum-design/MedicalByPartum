@@ -62,11 +62,16 @@ export function PanelShell({
         style={{ background: "var(--card)" }}
       >
         <Link href="/" className="mb-8 flex items-center gap-2 px-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-accent-500 text-sm font-bold text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-accent-400 text-sm font-bold text-white">
             M
           </span>
-          <span className="font-semibold tracking-tight">
-            Medical<span className="text-accent-600">ByPartum</span>
+          <span className="font-display leading-none">
+            <span className="block text-sm font-bold tracking-tight">
+              Medical <span className="text-accent-600">OS</span>
+            </span>
+            <span className="block text-[10px] uppercase tracking-[0.2em]" style={{ color: "var(--ink-muted)" }}>
+              by Partum
+            </span>
           </span>
         </Link>
 
@@ -100,7 +105,7 @@ export function PanelShell({
 
         {/* Usuario + logout */}
         <div className="mt-6 border-t border-slate-100 pt-5 text-center dark:border-white/10">
-          <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-xl font-semibold text-white shadow-md">
+          <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-400 text-xl font-semibold text-white shadow-md">
             {inicial}
           </div>
           <p className="text-sm font-semibold">{sesion.nombre}</p>
@@ -124,8 +129,8 @@ export function PanelShell({
       <div className="min-w-0 flex-1">
         {/* Barra superior móvil */}
         <div className="anim-in mb-4 flex items-center justify-between rounded-2xl px-4 py-3 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 md:hidden" style={{ background: "var(--card)" }}>
-          <Link href="/" className="text-sm font-semibold">
-            Medical<span className="text-accent-600">ByPartum</span>
+          <Link href="/" className="font-display text-sm font-semibold">
+            Medical <span className="text-accent-600">OS</span>
           </Link>
           <button
             onClick={() => {

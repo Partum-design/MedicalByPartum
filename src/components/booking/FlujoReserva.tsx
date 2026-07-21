@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { addDays, format, setHours, setMinutes } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, Clock, MapPin, ShieldCheck, Smartphone, Video } from "lucide-react";
+import { CheckCircle2, Clock, Gift, MapPin, ShieldCheck, Smartphone, Video } from "lucide-react";
 import { calcularLealtad, useDemoStore } from "@/lib/demo-store";
 
 type Medico = {
@@ -225,7 +225,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
         <div className="rounded-2xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold">Confirma tu pago</h2>
-            <span className="flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
+            <span className="font-num flex items-center gap-1.5 rounded-full bg-ink-900 px-3 py-1 text-sm font-medium text-mint-raw">
               <Clock className="h-4 w-4" /> {restante}
             </span>
           </div>
@@ -288,8 +288,9 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
             <p className="mt-1 text-sm capitalize" style={{ color: "var(--ink-muted)" }}>
               {medico.nombre} · {format(slot, "EEEE d 'de' MMMM, HH:mm 'h'", { locale: es })}
             </p>
-            <p className="mx-auto mt-4 w-fit rounded-full bg-brand-50 px-4 py-1.5 text-xs font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-100">
-              🎁 Lealtad: {lealtad.progreso} de 5 citas asistidas — te faltan {lealtad.faltan} para tu recompensa
+            <p className="mx-auto mt-4 flex w-fit items-center gap-1.5 rounded-full bg-brand-50 px-4 py-1.5 text-xs font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-100">
+              <Gift className="h-3.5 w-3.5" />
+              Lealtad: {lealtad.progreso} de 5 citas asistidas — te faltan {lealtad.faltan} para tu recompensa
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link

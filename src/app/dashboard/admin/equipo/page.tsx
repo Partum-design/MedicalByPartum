@@ -118,12 +118,14 @@ export default function EquipoMedicoPage() {
                 <Video className="h-4 w-4" /> Ofrece videoconsultas
               </span>
               <span
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                  form.acepta_telemedicina ? "bg-gradient-to-r from-brand-600 to-accent-500" : "bg-slate-200 dark:bg-white/10"
+                className={`relative h-6 w-11 shrink-0 rounded-full ring-1 ring-inset transition-colors ${
+                  form.acepta_telemedicina
+                    ? "bg-gradient-to-r from-brand-600 to-accent-500 ring-transparent"
+                    : "bg-slate-300 ring-slate-300 dark:bg-white/15 dark:ring-white/15"
                 }`}
               >
                 <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ring-1 ring-black/5 transition-transform ${
                     form.acepta_telemedicina ? "translate-x-5" : "translate-x-0.5"
                   }`}
                 />
@@ -170,7 +172,7 @@ export default function EquipoMedicoPage() {
               onClick={() => store.toggleActivoMedico(m.id)}
               className={`w-full rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
                 m.activo
-                  ? "border border-red-200 text-red-500 hover:bg-red-50 dark:border-red-900/40 dark:hover:bg-red-950/40"
+                  ? "border border-red-200 text-red-500 hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/40"
                   : "bg-gradient-to-r from-brand-600 to-accent-500 text-white"
               }`}
             >

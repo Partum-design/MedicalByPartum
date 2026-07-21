@@ -315,7 +315,7 @@ function Problema({ icon, title, text }: { icon: React.ReactNode; title: string;
       className="card-hover h-full rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
       style={{ background: "var(--card)" }}
     >
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/40">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300">
         {icon}
       </div>
       <h3 className="font-semibold">{title}</h3>

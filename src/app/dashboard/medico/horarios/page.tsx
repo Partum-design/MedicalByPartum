@@ -46,12 +46,14 @@ export default function HorariosPage() {
                     role="switch"
                     aria-checked={bloque.activo}
                     onClick={() => store.guardarHorarioDia(sesion.id, dia.id, { activo: !bloque.activo })}
-                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                      bloque.activo ? "bg-gradient-to-r from-brand-600 to-accent-500" : "bg-slate-200 dark:bg-white/10"
+                    className={`relative h-6 w-11 shrink-0 rounded-full ring-1 ring-inset transition-colors ${
+                      bloque.activo
+                        ? "bg-gradient-to-r from-brand-600 to-accent-500 ring-transparent"
+                        : "bg-slate-300 ring-slate-300 dark:bg-white/15 dark:ring-white/15"
                     }`}
                   >
                     <span
-                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ring-1 ring-black/5 transition-transform ${
                         bloque.activo ? "translate-x-5" : "translate-x-0.5"
                       }`}
                     />

@@ -145,7 +145,7 @@ export default function CuentaPage() {
               )}
               <button
                 onClick={() => store.cancelarCita(c.id)}
-                className="rounded-full px-3 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-950/40"
+                className="rounded-full px-3 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
               >
                 Cancelar
               </button>
@@ -173,7 +173,7 @@ export default function CuentaPage() {
                   c.estado === "asistida"
                     ? "bg-pastel-menta text-emerald-700"
                     : c.estado === "cancelada"
-                      ? "bg-red-50 text-red-500 dark:bg-red-950/40"
+                      ? "bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-300"
                       : "bg-slate-100 text-slate-500 dark:bg-white/5"
                 }`}
               >

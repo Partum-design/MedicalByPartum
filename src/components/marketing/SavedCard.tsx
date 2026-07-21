@@ -3,12 +3,20 @@
 import { useRef } from "react";
 import { Activity, CheckCircle2, ShieldCheck, Wifi } from "lucide-react";
 
-// Elemento firma de la landing: la tarjeta guardada del paciente (el método
-// de pago que sostiene todo el modelo de "pago anticipado" del producto).
-// Se inclina en 3D siguiendo el puntero; en móvil flota con una animación
-// suave. Los procesadores se muestran como texto informativo, no como
-// logotipos oficiales.
-export function SavedCard() {
+// Elemento firma de la landing (y de "Mi cuenta › Pagos"): la tarjeta
+// guardada del paciente, el método de pago que sostiene todo el modelo de
+// "pago anticipado" del producto. Se inclina en 3D siguiendo el puntero; en
+// móvil flota con una animación suave. Los procesadores se muestran como
+// texto informativo, no como logotipos oficiales.
+export function SavedCard({
+  nombre = "Mariana Gutiérrez",
+  toast = true,
+  trust = true,
+}: {
+  nombre?: string;
+  toast?: boolean;
+  trust?: boolean;
+}) {
   const sceneRef = useRef<HTMLDivElement>(null);
 
   function onMove(e: React.PointerEvent<HTMLDivElement>) {
@@ -44,13 +52,15 @@ export function SavedCard() {
       />
 
       {/* toast flotante detrás */}
-      <div
-        className="anim-pop anim-d3 absolute -right-3 -top-6 z-0 flex items-center gap-2 rounded-2xl bg-white/95 px-4 py-3 text-xs font-medium text-ink-900 shadow-xl sm:-right-8"
-        role="status"
-      >
-        <CheckCircle2 className="h-4 w-4 text-accent-500" />
-        Pago confirmado · horario asegurado
-      </div>
+      {toast && (
+        <div
+          className="anim-pop anim-d3 absolute -right-3 -top-6 z-0 flex items-center gap-2 rounded-2xl bg-white/95 px-4 py-3 text-xs font-medium text-ink-900 shadow-xl sm:-right-8"
+          role="status"
+        >
+          <CheckCircle2 className="h-4 w-4 text-accent-500" />
+          Pago confirmado · horario asegurado
+        </div>
+      )}
 
       <div
         ref={sceneRef}
@@ -93,7 +103,7 @@ export function SavedCard() {
             <div className="relative mt-4 flex items-end justify-between">
               <div>
                 <p className="text-[10px] uppercase tracking-wide text-white/55">Titular</p>
-                <p className="text-sm font-medium">Mariana Gutiérrez</p>
+                <p className="text-sm font-medium">{nombre}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] uppercase tracking-wide text-white/55">Vence</p>
@@ -104,13 +114,15 @@ export function SavedCard() {
         </div>
       </div>
 
-      <p className="mt-6 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-xs text-white/55">
-        <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-accent-400" />
-        <span>Guardada de forma segura vía</span>
-        <span className="font-semibold text-white/90">Stripe</span>
-        <span aria-hidden>·</span>
-        <span className="font-semibold text-white/90">Mercado Pago</span>
-      </p>
+      {trust && (
+        <p className="mt-6 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-xs text-white/55">
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-accent-400" />
+          <span>Guardada de forma segura vía</span>
+          <span className="font-semibold text-white/90">Stripe</span>
+          <span aria-hidden>·</span>
+          <span className="font-semibold text-white/90">Mercado Pago</span>
+        </p>
+      )}
     </div>
   );
 }

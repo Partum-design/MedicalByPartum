@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { format, isToday } from "date-fns";
 import { es } from "date-fns/locale";
-import { Banknote, CalendarDays, CheckCircle2, MapPin, Users, Video } from "lucide-react";
+import { Banknote, CalendarDays, CheckCircle2, CreditCard, MapPin, Users, Video } from "lucide-react";
 import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
 import { useDemoStore } from "@/lib/demo-store";
 
@@ -31,10 +31,12 @@ export default function DashboardMedicoPage() {
     vista === "hoy" ? propias.filter((c) => isToday(new Date(c.inicio))) : futurasOHoy;
 
   const deHoy = propias.filter((c) => isToday(new Date(c.inicio)));
+  const pendientesEfectivo = deHoy.filter((c) => c.estado_pago === "pendiente");
   const stats = {
     hoy: deHoy.length,
     tele: deHoy.filter((c) => c.modalidad === "telemedicina").length,
     ingresos: deHoy.reduce((s, c) => s + c.precio, 0),
+    porCobrar: pendientesEfectivo.reduce((s, c) => s + c.precio, 0),
     asistidas: deHoy.filter((c) => c.estado === "asistida").length,
   };
 
@@ -48,7 +50,7 @@ export default function DashboardMedicoPage() {
     <PanelShell sesion={sesion} activo="Mi agenda" onLogout={store.logout}>
       <header className="anim-in mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Mi agenda</h1>
+          <h1 className="font-display text-2xl font-bold tracking-tight">Mi agenda</h1>
           <p className="mt-1 text-sm capitalize" style={{ color: "var(--ink-muted)" }}>
             {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
           </p>
@@ -75,7 +77,18 @@ export default function DashboardMedicoPage() {
       <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiPastel tono="lila" delay="anim-d1" icon={<Users className="h-4 w-4" />} label="Citas de hoy" value={String(stats.hoy)} nota="Agenda del día" />
         <KpiPastel tono="azul" delay="anim-d2" icon={<Video className="h-4 w-4" />} label="Telemedicina" value={String(stats.tele)} nota="Con enlace de video" />
-        <KpiPastel tono="menta" delay="anim-d3" icon={<Banknote className="h-4 w-4" />} label="Ingresos del día" value={mxn.format(stats.ingresos)} nota="Citas pagadas" />
+        <KpiPastel
+          tono="menta"
+          delay="anim-d3"
+          icon={<Banknote className="h-4 w-4" />}
+          label="Ingresos del día"
+          value={mxn.format(stats.ingresos)}
+          nota={
+            stats.porCobrar > 0
+              ? `Incluye ${mxn.format(stats.porCobrar)} por cobrar en efectivo`
+              : "Todo pagado"
+          }
+        />
         <KpiPastel tono="durazno" delay="anim-d4" icon={<CheckCircle2 className="h-4 w-4" />} label="Atendidas" value={`${stats.asistidas}/${stats.hoy}`} nota="Marcadas como asistidas" />
       </section>
 
@@ -116,8 +129,29 @@ export default function DashboardMedicoPage() {
                 )}
                 <span aria-hidden>·</span> {mxn.format(cita.precio)}
               </p>
+              <span
+                className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                  cita.estado_pago === "pagado"
+                    ? "bg-pastel-menta text-emerald-700"
+                    : "bg-pastel-durazno text-orange-800"
+                }`}
+              >
+                {cita.estado_pago === "pagado" ? (
+                  <><CreditCard className="h-3 w-3" /> Pagado</>
+                ) : (
+                  <><Banknote className="h-3 w-3" /> Efectivo pendiente</>
+                )}
+              </span>
             </div>
             <div className="flex items-center gap-2">
+              {cita.estado_pago === "pendiente" && (
+                <button
+                  onClick={() => store.cobrarEfectivo(cita.id)}
+                  className="card-hover rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm"
+                >
+                  Cobrar efectivo
+                </button>
+              )}
               {cita.modalidad === "telemedicina" &&
                 cita.enlace_videollamada &&
                 cita.estado === "confirmada" && (

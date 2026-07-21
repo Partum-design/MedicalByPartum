@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
     p_inicio: body.inicio,
     p_fin: body.fin,
     p_modalidad: body.modalidad ?? "presencial",
+    p_metodo_pago: body.metodo_pago ?? "tarjeta",
   });
 
   if (error) {

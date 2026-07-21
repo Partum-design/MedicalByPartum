@@ -1,20 +1,25 @@
 import Link from "next/link";
 import {
+  Banknote,
   CalendarCheck,
   CalendarX2,
   CreditCard,
   Gift,
   Layers,
   PhoneOff,
+  Quote,
   ShieldCheck,
   Stethoscope,
   Timer,
   User,
   UserCog,
   UserX,
+  Video,
 } from "lucide-react";
 import { Reveal } from "@/components/marketing/Reveal";
 import { SavedCard } from "@/components/marketing/SavedCard";
+import { PricingSection } from "@/components/landing/PricingSection";
+import { FaqSection } from "@/components/landing/FaqSection";
 
 // Landing: explica el porqué de la plataforma y da acceso a la demo por rol.
 export default function LandingPage() {
@@ -35,6 +40,9 @@ export default function LandingPage() {
             </span>
           </Link>
           <div className="anim-in anim-d1 flex shrink-0 items-center gap-1.5 text-sm sm:gap-2">
+            <Link href="#precios" className="hidden rounded-full px-4 py-2 transition-colors hover:bg-white/10 sm:inline-block">
+              Precios
+            </Link>
             <Link
               href="/login"
               className="hidden rounded-full px-4 py-2 transition-colors hover:bg-white/10 sm:inline-block"
@@ -62,9 +70,9 @@ export default function LandingPage() {
             </h1>
             <p className="anim-in anim-d3 mx-auto mt-5 max-w-lg text-lg text-white/75 lg:mx-0">
               Cada cita a la que un paciente no llega es dinero perdido y tiempo médico
-              desperdiciado. Medical OS resuelve eso: agenda en línea con pago
-              anticipado, telemedicina automática y un programa de lealtad que premia a
-              quien sí regresa.
+              desperdiciado. Medical OS resuelve eso: agenda en línea con pago con
+              tarjeta o en efectivo, telemedicina automática y un programa de lealtad
+              que premia a quien sí regresa.
             </p>
             <div className="anim-in anim-d4 mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
               <Link
@@ -80,9 +88,19 @@ export default function LandingPage() {
                 Reservar una cita
               </Link>
             </div>
-            <p className="anim-in anim-d5 mt-8 text-xs uppercase tracking-[0.2em] text-white/40">
-              Pagos procesados vía Stripe · Mercado Pago
-            </p>
+            <div className="anim-in anim-d5 mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs uppercase tracking-[0.15em] text-white/40 lg:justify-start">
+              <span className="flex items-center gap-1.5">
+                <CreditCard className="h-3.5 w-3.5" /> Tarjeta
+              </span>
+              <span aria-hidden>·</span>
+              <span className="flex items-center gap-1.5">
+                <Banknote className="h-3.5 w-3.5" /> Efectivo
+              </span>
+              <span aria-hidden>·</span>
+              <span className="flex items-center gap-1.5">
+                <Video className="h-3.5 w-3.5" /> Telemedicina
+              </span>
+            </div>
           </div>
 
           <div className="anim-pop anim-d3">
@@ -129,7 +147,7 @@ export default function LandingPage() {
             <Problema
               icon={<CalendarX2 className="h-5 w-5" />}
               title="Citas que no llegan"
-              text="Sin pago anticipado, cancelar a última hora no le cuesta nada al paciente — y el hueco en la agenda ya no se llena."
+              text="Sin confirmación de pago, cancelar a última hora no le cuesta nada al paciente — y el hueco en la agenda ya no se llena."
             />
           </Reveal>
           <Reveal delay={100}>
@@ -156,7 +174,7 @@ export default function LandingPage() {
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-3">
           <Reveal delay={0}>
-            <Paso n="01" icon={<CreditCard className="h-5 w-5" />} title="El paciente agenda y paga en línea" text="Disponibilidad en tiempo real, verificación por WhatsApp y pago con tarjeta. El horario queda apartado solo 10 minutos: sin pago, se libera — adiós a los bloqueos fantasma." />
+            <Paso n="01" icon={<CreditCard className="h-5 w-5" />} title="El paciente agenda y elige cómo pagar" text="Disponibilidad en tiempo real, verificación por WhatsApp y pago con tarjeta o en efectivo al llegar. El horario queda apartado 10 minutos: sin confirmación, se libera — adiós a los bloqueos fantasma." />
           </Reveal>
           <Reveal delay={100}>
             <Paso n="02" icon={<CalendarCheck className="h-5 w-5" />} title="El médico solo atiende" text="La cita cae directo en su Google Calendar u Outlook con enlace de Meet o Teams si es videoconsulta. Su agenda del día vive en un panel limpio." />
@@ -199,6 +217,45 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Precios */}
+      <PricingSection />
+
+      {/* Testimonios (personajes de la propia demo) */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <Reveal className="mx-auto mb-10 max-w-2xl text-center">
+          <h2 className="font-display text-2xl font-bold tracking-tight">Lo que dicen en Clínica Partum</h2>
+          <p className="mt-2 text-sm" style={{ color: "var(--ink-muted)" }}>
+            Testimonios de los mismos perfiles que puedes probar en la demo.
+          </p>
+        </Reveal>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Reveal delay={0}>
+            <Testimonio
+              nombre="Dra. Valeria Ortiz"
+              rol="Ginecología y Obstetricia"
+              texto="Ya no reviso quién pagó antes de cada consulta: llego y mi agenda del día ya me dice quién está confirmado y quién paga en efectivo al llegar."
+            />
+          </Reveal>
+          <Reveal delay={100}>
+            <Testimonio
+              nombre="Bruno Salas"
+              rol="Administrador, Clínica Partum"
+              texto="Ver los ingresos por médico y por método de pago en un solo panel nos ahorró la hoja de cálculo que llevábamos a mano cada semana."
+            />
+          </Reveal>
+          <Reveal delay={200}>
+            <Testimonio
+              nombre="Mariana Gutiérrez"
+              rol="Paciente"
+              texto="Agendo, elijo si pago con tarjeta o en efectivo, y ya sé exactamente cuánto llevar el día de mi cita. Además veo mis recompensas acumuladas."
+            />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <FaqSection />
+
       {/* CTA final */}
       <section className="bg-grid-glow relative bg-ink-950 text-white">
         <Reveal className="mx-auto max-w-3xl px-6 py-20 text-center">
@@ -213,8 +270,8 @@ export default function LandingPage() {
             <Link href="/login" className="card-hover rounded-full bg-white px-6 py-3 font-semibold text-brand-700 shadow-lg">
               Probar la demo interactiva
             </Link>
-            <Link href="/reservar" className="card-hover rounded-full border border-white/25 px-6 py-3 font-semibold backdrop-blur transition-colors hover:bg-white/10">
-              Reservar una cita
+            <Link href="#precios" className="card-hover rounded-full border border-white/25 px-6 py-3 font-semibold backdrop-blur transition-colors hover:bg-white/10">
+              Ver planes y precios
             </Link>
           </div>
         </Reveal>
@@ -285,6 +342,29 @@ function Paso({ n, icon, title, text }: { n: string; icon: React.ReactNode; titl
       <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--ink-muted)" }}>
         {text}
       </p>
+    </div>
+  );
+}
+
+function Testimonio({ nombre, rol, texto }: { nombre: string; rol: string; texto: string }) {
+  return (
+    <div
+      className="card-hover flex h-full flex-col rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
+      style={{ background: "var(--card)" }}
+    >
+      <Quote className="mb-3 h-6 w-6 text-accent-500" />
+      <p className="flex-1 text-sm leading-relaxed" style={{ color: "var(--ink-muted)" }}>
+        “{texto}”
+      </p>
+      <div className="mt-4 flex items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-400 text-sm font-semibold text-white">
+          {nombre.replace(/^(Dra?\.\s*)/, "").charAt(0)}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{nombre}</p>
+          <p className="truncate text-xs" style={{ color: "var(--ink-muted)" }}>{rol}</p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-# Guía de Despliegue en Vercel — MedicalByPartum
+# Guía de Despliegue en Vercel — Medical OS
 
 ## 1. Variables de entorno requeridas
 

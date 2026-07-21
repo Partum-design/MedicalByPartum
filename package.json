@@ -1,5 +1,5 @@
 {
-  "name": "medicalbypartum",
+  "name": "medical-os",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -19,6 +19,7 @@
     "next": "^15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "recharts": "^3.10.0",
     "stripe": "^17.6.0"
   },
   "devDependencies": {

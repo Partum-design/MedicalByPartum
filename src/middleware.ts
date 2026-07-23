@@ -11,7 +11,7 @@ const limiters = hasRedis
   ? (() => {
       const redis = Redis.fromEnv();
       return {
-        // Anti-scraping del directorio de médicos
+        // Anti-scraping del directorio de barberos
         search: new Ratelimit({
           redis,
           limiter: Ratelimit.slidingWindow(30, "60 s"),

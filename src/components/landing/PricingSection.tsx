@@ -20,38 +20,38 @@ const PLANES: Plan[] = [
   {
     id: "esencial",
     nombre: "Esencial",
-    descripcion: "Para el consultorio de un solo médico que quiere dejar de agendar por teléfono.",
+    descripcion: "Para el barbero independiente que quiere dejar de agendar por teléfono.",
     precioMensual: 990,
     features: [
-      "1 médico activo",
+      "1 barbero activo",
       "Agenda en línea con bloqueo anti-scalping",
-      "Pago con tarjeta (Stripe) y efectivo en clínica",
-      "Verificación de pacientes por WhatsApp/SMS",
+      "Pago con tarjeta (Stripe) y efectivo en barbería",
+      "Verificación de clientes por WhatsApp/SMS",
       "Recordatorios automáticos de cita",
     ],
   },
   {
     id: "profesional",
     nombre: "Profesional",
-    descripcion: "Para clínicas con varios especialistas que quieren fidelizar pacientes.",
+    descripcion: "Para barberías con varios especialistas que quieren fidelizar clientes.",
     precioMensual: 1990,
     destacado: true,
     features: [
-      "Hasta 5 médicos activos",
+      "Hasta 5 barberos activos",
       "Todo lo del plan Esencial",
-      "Telemedicina con videollamada automática",
+      "Servicio a domicilio con dirección y ruta automática",
       "Programa de lealtad configurable",
       "Panel de administrador con reportes",
       "Sincronización con Google/Outlook Calendar",
     ],
   },
   {
-    id: "clinica",
-    nombre: "Clínica",
-    descripcion: "Para clínicas multi-sucursal con necesidades a la medida.",
+    id: "barberia",
+    nombre: "Barbería",
+    descripcion: "Para barberías multi-sucursal con necesidades a la medida.",
     precioMensual: 3990,
     features: [
-      "Médicos y sucursales ilimitados",
+      "Barberos y sucursales ilimitados",
       "Todo lo del plan Profesional",
       "Roles y permisos por sucursal",
       "Soporte prioritario y onboarding dedicado",
@@ -113,7 +113,7 @@ export function PricingSection() {
                     plan.destacado
                       ? {
                           background:
-                            "linear-gradient(160deg, #213A58 0%, #0C6478 60%, #15919B 100%)",
+                            "linear-gradient(160deg, #583B21 0%, #780C19 60%, #9B1525 100%)",
                         }
                       : undefined
                   }
@@ -121,7 +121,7 @@ export function PricingSection() {
                   {plan.destacado && (
                     <div
                       className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-40 blur-3xl"
-                      style={{ background: "radial-gradient(circle, #80EE98, transparent 65%)" }}
+                      style={{ background: "radial-gradient(circle, #EEC980, transparent 65%)" }}
                       aria-hidden
                     />
                   )}

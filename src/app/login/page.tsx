@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, CreditCard, ShieldCheck, Stethoscope, User } from "lucide-react";
+import { ArrowRight, CalendarCheck, CreditCard, Scissors, ShieldCheck, User } from "lucide-react";
 import { CUENTAS_DEMO, useDemoStore, type RolDemo } from "@/lib/demo-store";
 
 function GoogleIcon() {
@@ -17,8 +17,8 @@ function GoogleIcon() {
 }
 
 const DESTINOS: Record<RolDemo, string> = {
-  paciente: "/cuenta",
-  medico: "/dashboard/medico",
+  cliente: "/cuenta",
+  barbero: "/dashboard/barbero",
   admin: "/dashboard/admin",
 };
 
@@ -33,26 +33,26 @@ export default function LoginPage() {
 
   function entrarConGoogle() {
     // Demo: sin Supabase Auth conectado no hay OAuth real que ejecutar.
-    // Entra como paciente — el flujo que en producción usaría este botón.
-    login("paciente");
-    router.push(DESTINOS.paciente);
+    // Entra como cliente — el flujo que en producción usaría este botón.
+    login("cliente");
+    router.push(DESTINOS.cliente);
   }
 
   const cuentas: { rol: RolDemo; icon: React.ReactNode; desc: string }[] = [
     {
-      rol: "paciente",
+      rol: "cliente",
       icon: <User className="h-6 w-6" />,
       desc: "Consulta tus citas, agenda nuevas y revisa tu programa de recompensas.",
     },
     {
-      rol: "medico",
-      icon: <Stethoscope className="h-6 w-6" />,
-      desc: "Revisa tu agenda del día, atiende videoconsultas y marca citas como asistidas.",
+      rol: "barbero",
+      icon: <Scissors className="h-6 w-6" />,
+      desc: "Revisa tu agenda del día, atiende a domicilio y marca citas como asistidas.",
     },
     {
       rol: "admin",
       icon: <ShieldCheck className="h-6 w-6" />,
-      desc: "Supervisa ingresos, equipo médico y el programa de fidelización de la clínica.",
+      desc: "Supervisa ingresos, equipo barbero y el programa de fidelización de la barbería.",
     },
   ];
 
@@ -61,14 +61,14 @@ export default function LoginPage() {
       <div className="login-shell anim-in">
         <section className="login-story">
           <Link href="/" className="login-brand">
-            <span className="login-brand-mark">M</span>
-            <span>Medical <strong>OS</strong></span>
+            <span className="login-brand-mark">B</span>
+            <span>Barber <strong>OS</strong></span>
           </Link>
           <div className="login-story-copy">
-            <p className="login-kicker">Demo clínica conectada</p>
+            <p className="login-kicker">Demo barbería conectada</p>
             <h1>Una cita cambia todo el sistema.</h1>
             <p>
-              Agenda como paciente, atiende como médico y mira cómo se actualiza la clínica desde administración.
+              Agenda como cliente, atiende como barbero y mira cómo se actualiza la barbería desde administración.
             </p>
           </div>
           <div className="login-flow" aria-label="Flujo conectado de la demo">

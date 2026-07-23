@@ -4,12 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 
 // ============================================================================
 // Almacén local de la demo: los datos viven en localStorage del navegador,
-// por lo que agendar, cancelar, cobrar o dar de alta un médico funciona de
+// por lo que agendar, cancelar, cobrar o dar de alta un barbero funciona de
 // verdad y persiste entre recargas. En producción este módulo se sustituye
 // por Supabase.
 // ============================================================================
 
-export type RolDemo = "paciente" | "medico" | "admin";
+export type RolDemo = "cliente" | "barbero" | "admin";
 
 export type MetodoPago = "tarjeta" | "efectivo";
 export type EstadoPago = "pagado" | "pendiente";
@@ -23,28 +23,28 @@ export type SesionDemo = {
 
 export type CitaDemo = {
   id: string;
-  paciente_id: string;
-  paciente_nombre: string;
-  medico_id: string;
-  medico_nombre: string;
+  cliente_id: string;
+  cliente_nombre: string;
+  barbero_id: string;
+  barbero_nombre: string;
   especialidad: string;
   inicio: string; // ISO
   fin: string;
-  modalidad: "presencial" | "telemedicina";
+  modalidad: "presencial" | "domicilio";
   estado: "confirmada" | "asistida" | "cancelada";
   precio: number;
-  enlace_videollamada: string | null;
+  direccion_domicilio: string | null;
   metodo_pago: MetodoPago;
   estado_pago: EstadoPago;
 };
 
-export type MedicoDemo = {
+export type BarberoDemo = {
   id: string;
   nombre: string;
   especialidad: string;
-  precio_consulta: number;
+  precio_servicio: number;
   duracion_cita_min: number;
-  acepta_telemedicina: boolean;
+  acepta_domicilio: boolean;
   biografia: string;
   activo: boolean;
 };
@@ -64,12 +64,12 @@ export const DIAS_SEMANA: { id: DiaSemana; label: string }[] = [
 export type BloqueHorario = { activo: boolean; inicio: string; fin: string };
 export type HorarioSemanal = Record<DiaSemana, BloqueHorario>;
 
-export type ExpedienteDemo = {
+export type FichaDemo = {
   id: string;
-  paciente_id: string;
-  paciente_nombre: string;
-  medico_id: string;
-  diagnostico: string;
+  cliente_id: string;
+  cliente_nombre: string;
+  barbero_id: string;
+  servicio: string;
   notas: string;
   creado_en: string; // ISO
 };
@@ -79,61 +79,61 @@ export type RecompensasConfig = {
   valor_descuento: number;
 };
 
-export type ClinicaConfig = {
+export type BarberiaConfig = {
   nombre: string;
   direccion: string;
   telefono: string;
 };
 
 export const CUENTAS_DEMO: Record<RolDemo, SesionDemo> = {
-  paciente: { rol: "paciente", id: "pac-1", nombre: "Mariana Gutiérrez", subtitulo: "Paciente" },
-  medico: { rol: "medico", id: "med-1", nombre: "Dra. Valeria Ortiz", subtitulo: "Ginecología y Obstetricia" },
-  admin: { rol: "admin", id: "adm-1", nombre: "Bruno Salas", subtitulo: "Administrador · Clínica Partum" },
+  cliente: { rol: "cliente", id: "cli-1", nombre: "Mariana Gutiérrez", subtitulo: "Cliente" },
+  barbero: { rol: "barbero", id: "bar-1", nombre: "Iván Rosales", subtitulo: "Fades y diseño de barba" },
+  admin: { rol: "admin", id: "adm-1", nombre: "Bruno Salas", subtitulo: "Administrador · Barbería Partum" },
 };
 
-// Semilla inicial de médicos. Tras la primera carga viven en localStorage,
-// así que dar de alta o desactivar un médico desde el panel persiste de verdad.
-export const MEDICOS_DEMO: MedicoDemo[] = [
+// Semilla inicial de barberos. Tras la primera carga viven en localStorage,
+// así que dar de alta o desactivar un barbero desde el panel persiste de verdad.
+export const BARBEROS_DEMO: BarberoDemo[] = [
   {
-    id: "med-1",
-    nombre: "Dra. Valeria Ortiz",
-    especialidad: "Ginecología y Obstetricia",
-    precio_consulta: 850,
+    id: "bar-1",
+    nombre: "Iván Rosales",
+    especialidad: "Fades y diseño de barba",
+    precio_servicio: 250,
     duracion_cita_min: 30,
-    acepta_telemedicina: true,
-    biografia: "15 años de experiencia. Certificada por el Consejo Mexicano de Ginecología.",
+    acepta_domicilio: true,
+    biografia: "12 años de experiencia. Especialista en fades y degradados de precisión.",
     activo: true,
   },
   {
-    id: "med-2",
-    nombre: "Dr. Andrés Lira",
-    especialidad: "Pediatría",
-    precio_consulta: 700,
+    id: "bar-2",
+    nombre: "Andrés Lira",
+    especialidad: "Cortes infantiles",
+    precio_servicio: 200,
     duracion_cita_min: 30,
-    acepta_telemedicina: true,
-    biografia: "Especialista en desarrollo infantil y lactancia.",
+    acepta_domicilio: true,
+    biografia: "Especialista en cortes para niños y primeras visitas.",
     activo: true,
   },
   {
-    id: "med-3",
-    nombre: "Dra. Sofía Cantú",
-    especialidad: "Medicina Interna",
-    precio_consulta: 900,
+    id: "bar-3",
+    nombre: "Sofía Cantú",
+    especialidad: "Afeitado clásico y barbería tradicional",
+    precio_servicio: 300,
     duracion_cita_min: 45,
-    acepta_telemedicina: false,
-    biografia: "Enfoque en pacientes con padecimientos crónicos.",
+    acepta_domicilio: false,
+    biografia: "Enfoque en rituales de afeitado con navaja y toalla caliente.",
     activo: true,
   },
 ];
 
-const KEY_CITAS = "mbp-demo-citas-v1";
-const KEY_SESION = "mbp-demo-sesion-v1";
-const KEY_MEDICOS = "mbp-demo-medicos-v1";
-const KEY_HORARIOS = "mbp-demo-horarios-v1";
-const KEY_EXPEDIENTES = "mbp-demo-expedientes-v1";
-const KEY_RECOMPENSAS = "mbp-demo-recompensas-v1";
-const KEY_CLINICA = "mbp-demo-clinica-v1";
-const KEY_CANJES = "mbp-demo-canjes-v1";
+const KEY_CITAS = "bbp-demo-citas-v1";
+const KEY_SESION = "bbp-demo-sesion-v1";
+const KEY_BARBEROS = "bbp-demo-barberos-v1";
+const KEY_HORARIOS = "bbp-demo-horarios-v1";
+const KEY_FICHAS = "bbp-demo-fichas-v1";
+const KEY_RECOMPENSAS = "bbp-demo-recompensas-v1";
+const KEY_BARBERIA = "bbp-demo-barberia-v1";
+const KEY_CANJES = "bbp-demo-canjes-v1";
 
 function iso(diasDesdeHoy: number, hora: number, min = 0) {
   const d = new Date();
@@ -144,39 +144,39 @@ function iso(diasDesdeHoy: number, hora: number, min = 0) {
 
 function seedCitas(): CitaDemo[] {
   return [
-    // Historial de Mariana con la Dra. Ortiz (3 asistidas → lealtad 3/5)
-    { id: "c-h1", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(-45, 10), fin: iso(-45, 10, 30), modalidad: "presencial", estado: "asistida", precio: 850, enlace_videollamada: null, metodo_pago: "tarjeta", estado_pago: "pagado" },
-    { id: "c-h2", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(-30, 11), fin: iso(-30, 11, 30), modalidad: "telemedicina", estado: "asistida", precio: 850, enlace_videollamada: "https://meet.google.com/demo", metodo_pago: "tarjeta", estado_pago: "pagado" },
-    { id: "c-h3", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(-14, 9), fin: iso(-14, 9, 30), modalidad: "presencial", estado: "asistida", precio: 850, enlace_videollamada: null, metodo_pago: "efectivo", estado_pago: "pagado" },
-    // Hoy, agenda de la Dra. Ortiz
-    { id: "c-t1", paciente_id: "pac-2", paciente_nombre: "Carlos Reyna", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(0, 9), fin: iso(0, 9, 30), modalidad: "presencial", estado: "confirmada", precio: 850, enlace_videollamada: null, metodo_pago: "tarjeta", estado_pago: "pagado" },
-    { id: "c-t2", paciente_id: "pac-1", paciente_nombre: "Mariana Gutiérrez", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(0, 10, 30), fin: iso(0, 11), modalidad: "telemedicina", estado: "confirmada", precio: 850, enlace_videollamada: "https://meet.google.com/demo", metodo_pago: "tarjeta", estado_pago: "pagado" },
-    { id: "c-t3", paciente_id: "pac-3", paciente_nombre: "Lucía Mendoza", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(0, 12), fin: iso(0, 12, 30), modalidad: "presencial", estado: "confirmada", precio: 850, enlace_videollamada: null, metodo_pago: "efectivo", estado_pago: "pendiente" },
+    // Historial de Mariana con Iván (3 asistidas → lealtad 3/5)
+    { id: "c-h1", cliente_id: "cli-1", cliente_nombre: "Mariana Gutiérrez", barbero_id: "bar-1", barbero_nombre: "Iván Rosales", especialidad: "Fades y diseño de barba", inicio: iso(-45, 10), fin: iso(-45, 10, 30), modalidad: "presencial", estado: "asistida", precio: 250, direccion_domicilio: null, metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-h2", cliente_id: "cli-1", cliente_nombre: "Mariana Gutiérrez", barbero_id: "bar-1", barbero_nombre: "Iván Rosales", especialidad: "Fades y diseño de barba", inicio: iso(-30, 11), fin: iso(-30, 11, 30), modalidad: "domicilio", estado: "asistida", precio: 400, direccion_domicilio: "Av. Insurgentes Sur 1421, CDMX", metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-h3", cliente_id: "cli-1", cliente_nombre: "Mariana Gutiérrez", barbero_id: "bar-1", barbero_nombre: "Iván Rosales", especialidad: "Fades y diseño de barba", inicio: iso(-14, 9), fin: iso(-14, 9, 30), modalidad: "presencial", estado: "asistida", precio: 250, direccion_domicilio: null, metodo_pago: "efectivo", estado_pago: "pagado" },
+    // Hoy, agenda de Iván
+    { id: "c-t1", cliente_id: "cli-2", cliente_nombre: "Carlos Reyna", barbero_id: "bar-1", barbero_nombre: "Iván Rosales", especialidad: "Fades y diseño de barba", inicio: iso(0, 9), fin: iso(0, 9, 30), modalidad: "presencial", estado: "confirmada", precio: 250, direccion_domicilio: null, metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-t2", cliente_id: "cli-1", cliente_nombre: "Mariana Gutiérrez", barbero_id: "bar-1", barbero_nombre: "Iván Rosales", especialidad: "Fades y diseño de barba", inicio: iso(0, 10, 30), fin: iso(0, 11), modalidad: "domicilio", estado: "confirmada", precio: 400, direccion_domicilio: "Av. Insurgentes Sur 1421, CDMX", metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-t3", cliente_id: "cli-3", cliente_nombre: "Lucía Mendoza", barbero_id: "bar-1", barbero_nombre: "Iván Rosales", especialidad: "Fades y diseño de barba", inicio: iso(0, 12), fin: iso(0, 12, 30), modalidad: "presencial", estado: "confirmada", precio: 250, direccion_domicilio: null, metodo_pago: "efectivo", estado_pago: "pendiente" },
     // Próximos días
-    { id: "c-f1", paciente_id: "pac-4", paciente_nombre: "Jorge Palacios", medico_id: "med-1", medico_nombre: "Dra. Valeria Ortiz", especialidad: "Ginecología y Obstetricia", inicio: iso(1, 9), fin: iso(1, 9, 30), modalidad: "telemedicina", estado: "confirmada", precio: 850, enlace_videollamada: "https://meet.google.com/demo", metodo_pago: "tarjeta", estado_pago: "pagado" },
-    { id: "c-f2", paciente_id: "pac-5", paciente_nombre: "Ana Sosa", medico_id: "med-2", medico_nombre: "Dr. Andrés Lira", especialidad: "Pediatría", inicio: iso(1, 11), fin: iso(1, 11, 30), modalidad: "presencial", estado: "confirmada", precio: 700, enlace_videollamada: null, metodo_pago: "efectivo", estado_pago: "pendiente" },
-    { id: "c-f3", paciente_id: "pac-6", paciente_nombre: "Elena Michel", medico_id: "med-3", medico_nombre: "Dra. Sofía Cantú", especialidad: "Medicina Interna", inicio: iso(2, 10), fin: iso(2, 10, 45), modalidad: "presencial", estado: "confirmada", precio: 900, enlace_videollamada: null, metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-f1", cliente_id: "cli-4", cliente_nombre: "Jorge Palacios", barbero_id: "bar-1", barbero_nombre: "Iván Rosales", especialidad: "Fades y diseño de barba", inicio: iso(1, 9), fin: iso(1, 9, 30), modalidad: "domicilio", estado: "confirmada", precio: 400, direccion_domicilio: "Calle Amsterdam 88, CDMX", metodo_pago: "tarjeta", estado_pago: "pagado" },
+    { id: "c-f2", cliente_id: "cli-5", cliente_nombre: "Ana Sosa", barbero_id: "bar-2", barbero_nombre: "Andrés Lira", especialidad: "Cortes infantiles", inicio: iso(1, 11), fin: iso(1, 11, 30), modalidad: "presencial", estado: "confirmada", precio: 200, direccion_domicilio: null, metodo_pago: "efectivo", estado_pago: "pendiente" },
+    { id: "c-f3", cliente_id: "cli-6", cliente_nombre: "Elena Michel", barbero_id: "bar-3", barbero_nombre: "Sofía Cantú", especialidad: "Afeitado clásico y barbería tradicional", inicio: iso(2, 10), fin: iso(2, 10, 45), modalidad: "presencial", estado: "confirmada", precio: 300, direccion_domicilio: null, metodo_pago: "tarjeta", estado_pago: "pagado" },
   ];
 }
 
-function seedExpedientes(): ExpedienteDemo[] {
+function seedFichas(): FichaDemo[] {
   return [
     {
-      id: "exp-1",
-      paciente_id: "pac-1",
-      paciente_nombre: "Mariana Gutiérrez",
-      medico_id: "med-1",
-      diagnostico: "Control prenatal — 2° trimestre sin complicaciones",
-      notas: "Presión arterial normal. Se indica ácido fólico y control en 4 semanas.",
+      id: "ficha-1",
+      cliente_id: "cli-1",
+      cliente_nombre: "Mariana Gutiérrez",
+      barbero_id: "bar-1",
+      servicio: "Corte + diseño de barba",
+      notas: "Tijera en los costados, máquina #2 en la nuca. Barba con línea recta, sin navaja en el cuello.",
       creado_en: iso(-30, 11, 30),
     },
     {
-      id: "exp-2",
-      paciente_id: "pac-1",
-      paciente_nombre: "Mariana Gutiérrez",
-      medico_id: "med-1",
-      diagnostico: "Revisión de rutina",
-      notas: "Paciente asintomática. Se solicita panel de laboratorio de rutina.",
+      id: "ficha-2",
+      cliente_id: "cli-1",
+      cliente_nombre: "Mariana Gutiérrez",
+      barbero_id: "bar-1",
+      servicio: "Retoque de fade",
+      notas: "Fade bajo. Piel sensible: usar loción after-shave sin alcohol.",
       creado_en: iso(-14, 9, 30),
     },
   ];
@@ -220,12 +220,12 @@ function leerSesion(): SesionDemo | null {
   }
 }
 
-function leerMedicos(): MedicoDemo[] {
-  return leerJSON(KEY_MEDICOS, () => MEDICOS_DEMO);
+function leerBarberos(): BarberoDemo[] {
+  return leerJSON(KEY_BARBEROS, () => BARBEROS_DEMO);
 }
 
-function guardarMedicosLocal(lista: MedicoDemo[]) {
-  window.localStorage.setItem(KEY_MEDICOS, JSON.stringify(lista));
+function guardarBarberosLocal(lista: BarberoDemo[]) {
+  window.localStorage.setItem(KEY_BARBEROS, JSON.stringify(lista));
 }
 
 function leerHorarios(): Record<string, HorarioSemanal> {
@@ -236,12 +236,12 @@ function guardarHorariosLocal(mapa: Record<string, HorarioSemanal>) {
   window.localStorage.setItem(KEY_HORARIOS, JSON.stringify(mapa));
 }
 
-function leerExpedientes(): ExpedienteDemo[] {
-  return leerJSON(KEY_EXPEDIENTES, seedExpedientes);
+function leerFichas(): FichaDemo[] {
+  return leerJSON(KEY_FICHAS, seedFichas);
 }
 
-function guardarExpedientesLocal(lista: ExpedienteDemo[]) {
-  window.localStorage.setItem(KEY_EXPEDIENTES, JSON.stringify(lista));
+function guardarFichasLocal(lista: FichaDemo[]) {
+  window.localStorage.setItem(KEY_FICHAS, JSON.stringify(lista));
 }
 
 function leerRecompensasConfig(): RecompensasConfig {
@@ -252,16 +252,16 @@ function guardarRecompensasConfigLocal(cfg: RecompensasConfig) {
   window.localStorage.setItem(KEY_RECOMPENSAS, JSON.stringify(cfg));
 }
 
-function leerClinicaConfig(): ClinicaConfig {
-  return leerJSON(KEY_CLINICA, () => ({
-    nombre: "Clínica Partum",
+function leerBarberiaConfig(): BarberiaConfig {
+  return leerJSON(KEY_BARBERIA, () => ({
+    nombre: "Barbería Partum",
     direccion: "Av. Reforma 123, Col. Juárez, CDMX",
     telefono: "+52 55 1234 5678",
   }));
 }
 
-function guardarClinicaConfigLocal(cfg: ClinicaConfig) {
-  window.localStorage.setItem(KEY_CLINICA, JSON.stringify(cfg));
+function guardarBarberiaConfigLocal(cfg: BarberiaConfig) {
+  window.localStorage.setItem(KEY_BARBERIA, JSON.stringify(cfg));
 }
 
 function leerCanjes(): Record<string, number> {
@@ -277,15 +277,15 @@ export function useDemoStore() {
   const [listo, setListo] = useState(false);
   const [citas, setCitas] = useState<CitaDemo[]>([]);
   const [sesion, setSesion] = useState<SesionDemo | null>(null);
-  const [medicos, setMedicos] = useState<MedicoDemo[]>([]);
+  const [barberos, setBarberos] = useState<BarberoDemo[]>([]);
   const [horarios, setHorarios] = useState<Record<string, HorarioSemanal>>({});
-  const [expedientes, setExpedientes] = useState<ExpedienteDemo[]>([]);
+  const [fichas, setFichas] = useState<FichaDemo[]>([]);
   const [recompensasConfig, setRecompensasConfig] = useState<RecompensasConfig>({
     citas_requeridas: 5,
     valor_descuento: 20,
   });
-  const [clinicaConfig, setClinicaConfig] = useState<ClinicaConfig>({
-    nombre: "Clínica Partum",
+  const [barberiaConfig, setBarberiaConfig] = useState<BarberiaConfig>({
+    nombre: "Barbería Partum",
     direccion: "",
     telefono: "",
   });
@@ -294,11 +294,11 @@ export function useDemoStore() {
   useEffect(() => {
     setCitas(leerCitas());
     setSesion(leerSesion());
-    setMedicos(leerMedicos());
+    setBarberos(leerBarberos());
     setHorarios(leerHorarios());
-    setExpedientes(leerExpedientes());
+    setFichas(leerFichas());
     setRecompensasConfig(leerRecompensasConfig());
-    setClinicaConfig(leerClinicaConfig());
+    setBarberiaConfig(leerBarberiaConfig());
     setCanjes(leerCanjes());
     setListo(true);
   }, []);
@@ -322,29 +322,29 @@ export function useDemoStore() {
 
   const crearCita = useCallback(
     (datos: {
-      medico_id: string;
+      barbero_id: string;
       inicio: string;
       fin: string;
-      modalidad: "presencial" | "telemedicina";
+      modalidad: "presencial" | "domicilio";
       metodo_pago: MetodoPago;
     }) => {
-      const medico = leerMedicos().find((m) => m.id === datos.medico_id);
-      const paciente = leerSesion() ?? CUENTAS_DEMO.paciente;
+      const barbero = leerBarberos().find((m) => m.id === datos.barbero_id);
+      const cliente = leerSesion() ?? CUENTAS_DEMO.cliente;
       const nueva: CitaDemo = {
         id: `c-${crypto.randomUUID().slice(0, 8)}`,
-        paciente_id: paciente.rol === "paciente" ? paciente.id : CUENTAS_DEMO.paciente.id,
-        paciente_nombre:
-          paciente.rol === "paciente" ? paciente.nombre : CUENTAS_DEMO.paciente.nombre,
-        medico_id: datos.medico_id,
-        medico_nombre: medico?.nombre ?? "Médico",
-        especialidad: medico?.especialidad ?? "",
+        cliente_id: cliente.rol === "cliente" ? cliente.id : CUENTAS_DEMO.cliente.id,
+        cliente_nombre:
+          cliente.rol === "cliente" ? cliente.nombre : CUENTAS_DEMO.cliente.nombre,
+        barbero_id: datos.barbero_id,
+        barbero_nombre: barbero?.nombre ?? "Barbero",
+        especialidad: barbero?.especialidad ?? "",
         inicio: datos.inicio,
         fin: datos.fin,
         modalidad: datos.modalidad,
         estado: "confirmada",
-        precio: medico?.precio_consulta ?? 0,
-        enlace_videollamada:
-          datos.modalidad === "telemedicina" ? "https://meet.google.com/demo" : null,
+        precio: barbero?.precio_servicio ?? 0,
+        direccion_domicilio:
+          datos.modalidad === "domicilio" ? "Domicilio del cliente" : null,
         metodo_pago: datos.metodo_pago,
         estado_pago: datos.metodo_pago === "efectivo" ? "pendiente" : "pagado",
       };
@@ -354,7 +354,7 @@ export function useDemoStore() {
     [guardar]
   );
 
-  // El médico o recepción confirma que el paciente pagó en efectivo.
+  // El barbero o recepción confirma que el cliente pagó en efectivo.
   const cobrarEfectivo = useCallback(
     (id: string) => {
       guardar(
@@ -382,37 +382,37 @@ export function useDemoStore() {
     [guardar]
   );
 
-  const agregarMedico = useCallback((datos: Omit<MedicoDemo, "id" | "activo">) => {
-    const nuevo: MedicoDemo = {
-      id: `med-${crypto.randomUUID().slice(0, 8)}`,
+  const agregarBarbero = useCallback((datos: Omit<BarberoDemo, "id" | "activo">) => {
+    const nuevo: BarberoDemo = {
+      id: `bar-${crypto.randomUUID().slice(0, 8)}`,
       activo: true,
       ...datos,
     };
-    const lista = [...leerMedicos(), nuevo];
-    guardarMedicosLocal(lista);
-    setMedicos(lista);
+    const lista = [...leerBarberos(), nuevo];
+    guardarBarberosLocal(lista);
+    setBarberos(lista);
     return nuevo;
   }, []);
 
-  const actualizarMedico = useCallback((id: string, cambios: Partial<MedicoDemo>) => {
-    const lista = leerMedicos().map((m) => (m.id === id ? { ...m, ...cambios } : m));
-    guardarMedicosLocal(lista);
-    setMedicos(lista);
+  const actualizarBarbero = useCallback((id: string, cambios: Partial<BarberoDemo>) => {
+    const lista = leerBarberos().map((m) => (m.id === id ? { ...m, ...cambios } : m));
+    guardarBarberosLocal(lista);
+    setBarberos(lista);
   }, []);
 
-  const toggleActivoMedico = useCallback((id: string) => {
-    const lista = leerMedicos().map((m) => (m.id === id ? { ...m, activo: !m.activo } : m));
-    guardarMedicosLocal(lista);
-    setMedicos(lista);
+  const toggleActivoBarbero = useCallback((id: string) => {
+    const lista = leerBarberos().map((m) => (m.id === id ? { ...m, activo: !m.activo } : m));
+    guardarBarberosLocal(lista);
+    setBarberos(lista);
   }, []);
 
   const guardarHorarioDia = useCallback(
-    (medicoId: string, dia: DiaSemana, cambios: Partial<BloqueHorario>) => {
+    (barberoId: string, dia: DiaSemana, cambios: Partial<BloqueHorario>) => {
       const mapa = leerHorarios();
-      const actual = mapa[medicoId] ?? horarioPorDefecto();
+      const actual = mapa[barberoId] ?? horarioPorDefecto();
       const nuevoMapa = {
         ...mapa,
-        [medicoId]: { ...actual, [dia]: { ...actual[dia], ...cambios } },
+        [barberoId]: { ...actual, [dia]: { ...actual[dia], ...cambios } },
       };
       guardarHorariosLocal(nuevoMapa);
       setHorarios(nuevoMapa);
@@ -420,27 +420,27 @@ export function useDemoStore() {
     []
   );
 
-  const horarioDeMedico = useCallback(
-    (medicoId: string): HorarioSemanal => horarios[medicoId] ?? horarioPorDefecto(),
+  const horarioDeBarbero = useCallback(
+    (barberoId: string): HorarioSemanal => horarios[barberoId] ?? horarioPorDefecto(),
     [horarios]
   );
 
-  const agregarExpediente = useCallback(
+  const agregarFicha = useCallback(
     (datos: {
-      paciente_id: string;
-      paciente_nombre: string;
-      medico_id: string;
-      diagnostico: string;
+      cliente_id: string;
+      cliente_nombre: string;
+      barbero_id: string;
+      servicio: string;
       notas: string;
     }) => {
-      const nuevo: ExpedienteDemo = {
-        id: `exp-${crypto.randomUUID().slice(0, 8)}`,
+      const nuevo: FichaDemo = {
+        id: `ficha-${crypto.randomUUID().slice(0, 8)}`,
         creado_en: new Date().toISOString(),
         ...datos,
       };
-      const lista = [nuevo, ...leerExpedientes()];
-      guardarExpedientesLocal(lista);
-      setExpedientes(lista);
+      const lista = [nuevo, ...leerFichas()];
+      guardarFichasLocal(lista);
+      setFichas(lista);
       return nuevo;
     },
     []
@@ -452,19 +452,19 @@ export function useDemoStore() {
     setRecompensasConfig(nuevo);
   }, []);
 
-  const actualizarClinicaConfig = useCallback((cambios: Partial<ClinicaConfig>) => {
-    const nuevo = { ...leerClinicaConfig(), ...cambios };
-    guardarClinicaConfigLocal(nuevo);
-    setClinicaConfig(nuevo);
+  const actualizarBarberiaConfig = useCallback((cambios: Partial<BarberiaConfig>) => {
+    const nuevo = { ...leerBarberiaConfig(), ...cambios };
+    guardarBarberiaConfigLocal(nuevo);
+    setBarberiaConfig(nuevo);
   }, []);
 
-  // El paciente canjea una recompensa desbloqueada (tope: las que tenga ganadas).
+  // El cliente canjea una recompensa desbloqueada (tope: las que tenga ganadas).
   const canjearRecompensa = useCallback(
-    (pacienteId: string, ganadas: number) => {
+    (clienteId: string, ganadas: number) => {
       const mapa = leerCanjes();
-      const actual = mapa[pacienteId] ?? 0;
+      const actual = mapa[clienteId] ?? 0;
       if (actual >= ganadas) return;
-      const nuevoMapa = { ...mapa, [pacienteId]: actual + 1 };
+      const nuevoMapa = { ...mapa, [clienteId]: actual + 1 };
       guardarCanjesLocal(nuevoMapa);
       setCanjes(nuevoMapa);
     },
@@ -474,19 +474,19 @@ export function useDemoStore() {
   const reiniciarDemo = useCallback(() => {
     [
       KEY_CITAS,
-      KEY_MEDICOS,
+      KEY_BARBEROS,
       KEY_HORARIOS,
-      KEY_EXPEDIENTES,
+      KEY_FICHAS,
       KEY_RECOMPENSAS,
-      KEY_CLINICA,
+      KEY_BARBERIA,
       KEY_CANJES,
     ].forEach((k) => window.localStorage.removeItem(k));
     setCitas(leerCitas());
-    setMedicos(leerMedicos());
+    setBarberos(leerBarberos());
     setHorarios(leerHorarios());
-    setExpedientes(leerExpedientes());
+    setFichas(leerFichas());
     setRecompensasConfig(leerRecompensasConfig());
-    setClinicaConfig(leerClinicaConfig());
+    setBarberiaConfig(leerBarberiaConfig());
     setCanjes(leerCanjes());
   }, []);
 
@@ -494,10 +494,10 @@ export function useDemoStore() {
     listo,
     citas,
     sesion,
-    medicos,
-    expedientes,
+    barberos,
+    fichas,
     recompensasConfig,
-    clinicaConfig,
+    barberiaConfig,
     canjes,
     login,
     logout,
@@ -505,25 +505,25 @@ export function useDemoStore() {
     marcarAsistida,
     cancelarCita,
     cobrarEfectivo,
-    agregarMedico,
-    actualizarMedico,
-    toggleActivoMedico,
+    agregarBarbero,
+    actualizarBarbero,
+    toggleActivoBarbero,
     guardarHorarioDia,
-    horarioDeMedico,
-    agregarExpediente,
+    horarioDeBarbero,
+    agregarFicha,
     actualizarRecompensasConfig,
-    actualizarClinicaConfig,
+    actualizarBarberiaConfig,
     canjearRecompensa,
     reiniciarDemo,
   };
 }
 
-// Lealtad: 1 punto por cita asistida; cada N puntos (config de la clínica,
+// Lealtad: 1 punto por cita asistida; cada N puntos (config de la barbería,
 // 5 por defecto) se gana una recompensa.
-export function calcularLealtad(citas: CitaDemo[], pacienteId: string, citasRequeridas = 5) {
+export function calcularLealtad(citas: CitaDemo[], clienteId: string, citasRequeridas = 5) {
   const requerido = citasRequeridas > 0 ? citasRequeridas : 5;
   const puntos = citas.filter(
-    (c) => c.paciente_id === pacienteId && c.estado === "asistida"
+    (c) => c.cliente_id === clienteId && c.estado === "asistida"
   ).length;
   return {
     puntos,

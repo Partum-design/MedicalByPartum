@@ -13,12 +13,12 @@ import {
   startOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Clock3, MapPin, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock3, Home, MapPin } from "lucide-react";
 import type { CitaDemo } from "@/lib/demo-store";
 
 type CalendarOverviewProps = {
   citas: CitaDemo[];
-  perspective: "paciente" | "medico" | "admin";
+  perspective: "cliente" | "barbero" | "admin";
   title?: string;
 };
 
@@ -99,9 +99,9 @@ export function CalendarOverview({ citas, perspective, title = "Calendario" }: C
           ) : selectedAppointments.map((cita) => (
             <article key={cita.id} className="calendar-appointment">
               <div className="calendar-appointment-time"><Clock3 />{format(new Date(cita.inicio), "HH:mm")}</div>
-              <strong>{perspective === "paciente" ? cita.medico_nombre : cita.paciente_nombre}</strong>
-              <small>{perspective === "admin" ? `${cita.medico_nombre} · ` : ""}{cita.especialidad}</small>
-              <span>{cita.modalidad === "telemedicina" ? <Video /> : <MapPin />}{cita.modalidad === "telemedicina" ? "Video" : "Consultorio"}</span>
+              <strong>{perspective === "cliente" ? cita.barbero_nombre : cita.cliente_nombre}</strong>
+              <small>{perspective === "admin" ? `${cita.barbero_nombre} · ` : ""}{cita.especialidad}</small>
+              <span>{cita.modalidad === "domicilio" ? <Home /> : <MapPin />}{cita.modalidad === "domicilio" ? "Domicilio" : "En barbería"}</span>
             </article>
           ))}
         </div>

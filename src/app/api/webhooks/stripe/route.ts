@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     case "invoice.paid": {
-      // Suscripción SaaS de la clínica al corriente
+      // Suscripción SaaS de la barbería al corriente
       const invoice = event.data.object;
       const subId =
         typeof invoice.subscription === "string"
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
           : invoice.subscription?.id;
       if (subId) {
         await admin
-          .from("clinicas")
+          .from("barberias")
           .update({ suscripcion_activa: true })
           .eq("stripe_subscription_id", subId);
       }

@@ -19,19 +19,19 @@ import type { RolDemo, SesionDemo } from "@/lib/demo-store";
 type NavItem = { label: string; href: string; icon: React.ReactNode };
 
 const NAV: Record<RolDemo, NavItem[]> = {
-  medico: [
-    { label: "Mi agenda", href: "/dashboard/medico", icon: <CalendarDays className="h-4 w-4" /> },
-    { label: "Expedientes", href: "/dashboard/medico/expedientes", icon: <ClipboardList className="h-4 w-4" /> },
-    { label: "Horarios", href: "/dashboard/medico/horarios", icon: <Clock3 className="h-4 w-4" /> },
-    { label: "Configuración", href: "/dashboard/medico/configuracion", icon: <Settings className="h-4 w-4" /> },
+  barbero: [
+    { label: "Mi agenda", href: "/dashboard/barbero", icon: <CalendarDays className="h-4 w-4" /> },
+    { label: "Fichas", href: "/dashboard/barbero/fichas", icon: <ClipboardList className="h-4 w-4" /> },
+    { label: "Horarios", href: "/dashboard/barbero/horarios", icon: <Clock3 className="h-4 w-4" /> },
+    { label: "Configuración", href: "/dashboard/barbero/configuracion", icon: <Settings className="h-4 w-4" /> },
   ],
   admin: [
     { label: "Panel", href: "/dashboard/admin", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { label: "Equipo médico", href: "/dashboard/admin/equipo", icon: <Users className="h-4 w-4" /> },
+    { label: "Equipo de barberos", href: "/dashboard/admin/equipo", icon: <Users className="h-4 w-4" /> },
     { label: "Reportes", href: "/dashboard/admin/reportes", icon: <PieChart className="h-4 w-4" /> },
     { label: "Configuración", href: "/dashboard/admin/configuracion", icon: <Settings className="h-4 w-4" /> },
   ],
-  paciente: [
+  cliente: [
     { label: "Mi cuenta", href: "/cuenta", icon: <LayoutDashboard className="h-4 w-4" /> },
     { label: "Agendar cita", href: "/reservar", icon: <CalendarDays className="h-4 w-4" /> },
     { label: "Pagos", href: "/cuenta/pagos", icon: <CreditCard className="h-4 w-4" /> },
@@ -61,11 +61,11 @@ export function PanelShell({
         <Link href="/" className="app-brand">
           <span className="app-brand-mark">
             <span className="app-brand-pulse" />
-            M
+            B
           </span>
           <span className="font-display leading-none">
             <span className="block text-sm font-bold tracking-tight text-white">
-              Medical <span className="text-mint-raw">OS</span>
+              Barber <span className="text-mint-raw">OS</span>
             </span>
             <span className="block text-[9px] uppercase tracking-[0.22em] text-white/40">
               by Partum
@@ -111,8 +111,8 @@ export function PanelShell({
       <div className="app-main">
         <header className="app-mobile-header anim-in">
           <Link href="/" className="flex items-center gap-2 font-display text-sm font-semibold text-white">
-            <span className="app-mobile-mark">M</span>
-            Medical <span className="text-mint-raw">OS</span>
+            <span className="app-mobile-mark">B</span>
+            Barber <span className="text-mint-raw">OS</span>
           </Link>
           <button
             onClick={() => {
@@ -136,7 +136,7 @@ export function PanelShell({
               className={`app-mobile-item ${item.label === activo ? "is-active" : ""}`}
             >
               {item.icon}
-              <span>{item.label.replace("Configuración", "Ajustes").replace("Equipo médico", "Equipo")}</span>
+              <span>{item.label.replace("Configuración", "Ajustes").replace("Equipo barbero", "Equipo")}</span>
             </Link>
           ))}
         </nav>

@@ -23,12 +23,12 @@ const mxnCompact = new Intl.NumberFormat("es-MX", { style: "currency", currency:
 
 // Paleta categórica validada (dataviz skill): pasos claros para superficie
 // clara, pasos oscuros para superficie oscura — mismo orden, sin ciclarla.
-const CATEGORICAL_LIGHT = ["#213A58", "#0C6478", "#15919B", "#09D1C7", "#46DFB1"];
-const CATEGORICAL_DARK = ["#80EE98", "#46DFB1", "#09D1C7", "#15919B", "#0C6478"];
-const INK_MUTED_LIGHT = "#617385";
-const INK_MUTED_DARK = "#B9EBE3";
-const GRID_LIGHT = "#DCE7E4";
-const GRID_DARK = "#0C6478";
+const CATEGORICAL_LIGHT = ["#583B21", "#780C19", "#9B1525", "#D10920", "#DFAC46"];
+const CATEGORICAL_DARK = ["#EEC980", "#DFAC46", "#D10920", "#9B1525", "#780C19"];
+const INK_MUTED_LIGHT = "#857261";
+const INK_MUTED_DARK = "#EBB9BF";
+const GRID_LIGHT = "#E7E3DC";
+const GRID_DARK = "#780C19";
 
 function useEsDark() {
   const [esOscuro, setEsOscuro] = useState(false);
@@ -58,10 +58,10 @@ function TooltipCard({ active, payload, label, formatter }: { active?: boolean; 
   );
 }
 
-// Nodo Administrador: reportes financieros y operativos de la clínica.
+// Nodo Administrador: reportes financieros y operativos de la barbería.
 export default function ReportesPage() {
   const store = useDemoStore();
-  const { listo, sesion, citas, medicos } = store;
+  const { listo, sesion, citas, barberos } = store;
   const esOscuro = useEsDark();
   const cat = esOscuro ? CATEGORICAL_DARK : CATEGORICAL_LIGHT;
   const inkMuted = esOscuro ? INK_MUTED_DARK : INK_MUTED_LIGHT;
@@ -71,9 +71,9 @@ export default function ReportesPage() {
     const vivas = citas.filter((c) => c.estado !== "cancelada");
     const asistidas = citas.filter((c) => c.estado === "asistida");
 
-    const porMedico = medicos
+    const porBarbero = barberos
       .map((m) => {
-        const suyas = vivas.filter((c) => c.medico_id === m.id);
+        const suyas = vivas.filter((c) => c.barbero_id === m.id);
         return {
           nombre: m.nombre.replace(/^Dra?\.\s*/, ""),
           ingresos: suyas.reduce((s, c) => s + c.precio, 0),
@@ -101,15 +101,15 @@ export default function ReportesPage() {
     });
 
     return {
-      porMedico,
+      porBarbero,
       porMetodo,
       dias,
       ingresoTotal: vivas.reduce((s, c) => s + c.precio, 0),
       ticketPromedio: vivas.length ? vivas.reduce((s, c) => s + c.precio, 0) / vivas.length : 0,
       tasaAsistencia: vivas.length ? asistidas.length / vivas.length : 0,
-      pacientes: new Set(vivas.map((c) => c.paciente_id)).size,
+      clientes: new Set(vivas.map((c) => c.cliente_id)).size,
     };
-  }, [citas, medicos]);
+  }, [citas, barberos]);
 
   if (!listo) return null;
 
@@ -122,7 +122,7 @@ export default function ReportesPage() {
       <header className="anim-in mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Reportes</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-          Desempeño financiero y operativo de la clínica en vivo.
+          Desempeño financiero y operativo de la barbería en vivo.
         </p>
       </header>
 
@@ -130,24 +130,24 @@ export default function ReportesPage() {
         <KpiPastel tono="lila" delay="anim-d1" icon={<Banknote className="h-4 w-4" />} label="Ingresos totales" value={mxn.format(datos.ingresoTotal)} nota="Citas confirmadas y asistidas" />
         <KpiPastel tono="azul" delay="anim-d2" icon={<TrendingUp className="h-4 w-4" />} label="Ticket promedio" value={mxn.format(Math.round(datos.ticketPromedio))} nota="Por cita" />
         <KpiPastel tono="menta" delay="anim-d3" icon={<CalendarCheck className="h-4 w-4" />} label="Tasa de asistencia" value={`${Math.round(datos.tasaAsistencia * 100)}%`} nota="Asistidas vs. totales" />
-        <KpiPastel tono="durazno" delay="anim-d4" icon={<Users className="h-4 w-4" />} label="Pacientes activos" value={String(datos.pacientes)} nota="Con al menos una cita" />
+        <KpiPastel tono="durazno" delay="anim-d4" icon={<Users className="h-4 w-4" />} label="Clientes activos" value={String(datos.clientes)} nota="Con al menos una cita" />
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="anim-in anim-d2 rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-          <h2 className="mb-4 font-semibold">Ingresos por médico</h2>
-          {datos.porMedico.length === 0 ? (
+          <h2 className="mb-4 font-semibold">Ingresos por barbero</h2>
+          {datos.porBarbero.length === 0 ? (
             <EmptyState texto="Aún no hay citas registradas." />
           ) : (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={datos.porMedico} layout="vertical" margin={{ left: 8, right: 24 }}>
+                <BarChart data={datos.porBarbero} layout="vertical" margin={{ left: 8, right: 24 }}>
                   <CartesianGrid horizontal={false} stroke={grid} />
                   <XAxis type="number" tickFormatter={(v) => mxnCompact.format(v)} tick={{ fill: inkMuted, fontSize: 12 }} axisLine={{ stroke: grid }} tickLine={false} />
                   <YAxis type="category" dataKey="nombre" width={90} tick={{ fill: inkMuted, fontSize: 12 }} axisLine={{ stroke: grid }} tickLine={false} />
                   <Tooltip content={<TooltipCard formatter={(v) => mxn.format(v)} />} cursor={{ fill: esOscuro ? "rgba(255,255,255,0.04)" : "rgba(15,23,42,0.04)" }} />
                   <Bar dataKey="ingresos" name="Ingresos" radius={[0, 4, 4, 0]} barSize={22} label={{ position: "right", fill: inkMuted, fontSize: 11, formatter: (v) => mxnCompact.format(Number(v)) }}>
-                    {datos.porMedico.map((_, i) => (
+                    {datos.porBarbero.map((_, i) => (
                       <Cell key={i} fill={cat[i % cat.length]} />
                     ))}
                   </Bar>

@@ -13,12 +13,12 @@ const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN",
 // atender o agendar citas en los otros paneles cambia estos números.
 export default function DashboardAdminPage() {
   const store = useDemoStore();
-  const { listo, citas, sesion, medicos, recompensasConfig } = store;
+  const { listo, citas, sesion, barberos, recompensasConfig } = store;
 
   const stats = useMemo(() => {
     const vivas = citas.filter((c) => c.estado !== "cancelada");
     const asistidas = citas.filter((c) => c.estado === "asistida");
-    const pacientes = new Set(vivas.map((c) => c.paciente_id));
+    const clientes = new Set(vivas.map((c) => c.cliente_id));
     const pendientesEfectivo = vivas.filter((c) => c.estado_pago === "pendiente");
     const pagadasTarjeta = vivas.filter((c) => c.metodo_pago === "tarjeta");
     const pagadasEfectivo = vivas.filter((c) => c.metodo_pago === "efectivo" && c.estado_pago === "pagado");
@@ -26,14 +26,14 @@ export default function DashboardAdminPage() {
       ingresos: vivas.reduce((s, c) => s + c.precio, 0),
       citas: vivas.length,
       asistencia: vivas.length ? asistidas.length / vivas.length : 0,
-      pacientes: pacientes.size,
+      clientes: clientes.size,
       recompensas: Math.floor(asistidas.length / recompensasConfig.citas_requeridas),
       porCobrarMonto: pendientesEfectivo.reduce((s, c) => s + c.precio, 0),
       porCobrarCitas: pendientesEfectivo.length,
       tarjetaCitas: pagadasTarjeta.length,
       efectivoCitas: pagadasEfectivo.length + pendientesEfectivo.length,
-      porMedico: medicos.map((m) => {
-        const suyas = vivas.filter((c) => c.medico_id === m.id);
+      porBarbero: barberos.map((m) => {
+        const suyas = vivas.filter((c) => c.barbero_id === m.id);
         return {
           ...m,
           citas: suyas.length,
@@ -41,7 +41,7 @@ export default function DashboardAdminPage() {
         };
       }),
     };
-  }, [citas, medicos, recompensasConfig]);
+  }, [citas, barberos, recompensasConfig]);
 
   if (!listo) return null;
 
@@ -64,9 +64,9 @@ export default function DashboardAdminPage() {
   return (
     <PanelShell sesion={sesion} activo="Panel" onLogout={store.logout}>
       <header className="anim-in mb-6">
-        <h1 className="font-display text-2xl font-bold tracking-tight">Clínica Partum</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Barbería Partum</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-          Los números se actualizan en vivo con la actividad de pacientes y médicos.
+          Los números se actualizan en vivo con la actividad de clientes y barberos.
         </p>
       </header>
 
@@ -84,23 +84,23 @@ export default function DashboardAdminPage() {
               : "Citas confirmadas y asistidas"
           }
         />
-        <KpiPastel tono="azul" delay="anim-d2" icon={<CalendarCheck className="h-4 w-4" />} label="Citas" value={String(stats.citas)} nota="Activas en la clínica" />
+        <KpiPastel tono="azul" delay="anim-d2" icon={<CalendarCheck className="h-4 w-4" />} label="Citas" value={String(stats.citas)} nota="Activas en la barbería" />
         <KpiPastel tono="menta" delay="anim-d3" icon={<TrendingUp className="h-4 w-4" />} label="Tasa de asistencia" value={`${Math.round(stats.asistencia * 100)}%`} nota="Asistidas vs. totales" />
-        <KpiPastel tono="durazno" delay="anim-d4" icon={<Users className="h-4 w-4" />} label="Pacientes" value={String(stats.pacientes)} nota="Con citas activas" />
+        <KpiPastel tono="durazno" delay="anim-d4" icon={<Users className="h-4 w-4" />} label="Clientes" value={String(stats.clientes)} nota="Con citas activas" />
       </section>
 
       <div className="mb-6">
-        <CalendarOverview citas={citas} perspective="admin" title="Agenda de la clínica" />
+        <CalendarOverview citas={citas} perspective="admin" title="Agenda de la barbería" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Equipo médico */}
+        {/* Equipo de barberos */}
         <section
           className="anim-in anim-d3 rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 lg:col-span-2"
           style={{ background: "var(--card)" }}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold">Equipo médico</h2>
+            <h2 className="font-semibold">Equipo de barberos</h2>
             <Link
               href="/dashboard/admin/equipo"
               className="card-hover rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-4 py-1.5 text-sm font-medium text-white shadow-sm"
@@ -112,14 +112,14 @@ export default function DashboardAdminPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left" style={{ color: "var(--ink-muted)" }}>
-                  <th className="pb-3 font-medium">Médico</th>
+                  <th className="pb-3 font-medium">Barbero</th>
                   <th className="pb-3 font-medium">Especialidad</th>
                   <th className="pb-3 text-right font-medium">Citas</th>
                   <th className="pb-3 text-right font-medium">Ingresos</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {stats.porMedico.map((m) => (
+                {stats.porBarbero.map((m) => (
                   <tr key={m.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-white/5">
                     <td className="py-3">
                       <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ export default function DashboardAdminPage() {
             href="/dashboard/admin/equipo"
             className="mt-4 inline-block text-sm font-medium text-brand-600 hover:text-brand-700"
           >
-            Gestionar equipo médico →
+            Gestionar equipo de barberos →
           </Link>
         </section>
 
@@ -186,7 +186,7 @@ export default function DashboardAdminPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2" style={{ color: "var(--ink-muted)" }}>
-                  <Banknote className="h-4 w-4 text-orange-500" /> Efectivo en clínica
+                  <Banknote className="h-4 w-4 text-orange-500" /> Efectivo en barbería
                 </span>
                 <span className="font-medium tabular-nums">{stats.efectivoCitas} citas</span>
               </div>
@@ -211,7 +211,7 @@ export default function DashboardAdminPage() {
           >
             <h3 className="mb-2 font-semibold">Demo interactiva</h3>
             <p style={{ color: "var(--ink-muted)" }}>
-              Agenda una cita como paciente o márcala asistida como médico y verás
+              Agenda una cita como cliente o márcala asistida como barbero y verás
               estos indicadores moverse.
             </p>
             <button

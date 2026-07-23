@@ -21,9 +21,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Medical OS by Partum",
+  title: "Barber OS by Partum",
   description:
-    "El sistema núcleo para clínicas y consultorios: agenda, pago anticipado, telemedicina y lealtad en un solo lugar.",
+    "El sistema núcleo para barberías y barberos independientes: agenda, pago anticipado, servicio a domicilio y lealtad en un solo lugar.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -36,8 +36,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         {children}
         <footer className="site-footer">
-          <span>Medical OS</span>
-          <span>Operación clínica conectada · Partum Design</span>
+          <span>Barber OS</span>
+          <span>Operación barbería conectada · Partum Design</span>
         </footer>
       </body>
     </html>

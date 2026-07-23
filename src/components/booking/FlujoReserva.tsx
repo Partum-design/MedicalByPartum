@@ -10,34 +10,34 @@ import {
   Clock,
   CreditCard,
   Gift,
+  Home,
   MapPin,
   ShieldCheck,
   Smartphone,
-  Video,
 } from "lucide-react";
 import { calcularLealtad, useDemoStore, type MetodoPago } from "@/lib/demo-store";
 import { MercadoPagoMark, StripeMark } from "@/components/payments/BrandMarks";
 
-type Medico = {
+type Barbero = {
   id: string;
   nombre: string;
   especialidad: string;
-  precio_consulta: number;
+  precio_servicio: number;
   duracion_cita_min: number;
-  acepta_telemedicina: boolean;
+  acepta_domicilio: boolean;
   biografia: string;
 };
 
-type Paso = "medico" | "horario" | "otp" | "pago" | "confirmada";
+type Paso = "barbero" | "horario" | "otp" | "pago" | "confirmada";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
 
-export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boolean }) {
+export function FlujoReserva({ barberos, demo }: { barberos: Barbero[]; demo: boolean }) {
   const store = useDemoStore();
-  const [paso, setPaso] = useState<Paso>("medico");
-  const [medico, setMedico] = useState<Medico | null>(null);
+  const [paso, setPaso] = useState<Paso>("barbero");
+  const [barbero, setBarbero] = useState<Barbero | null>(null);
   const [slot, setSlot] = useState<Date | null>(null);
-  const [modalidad, setModalidad] = useState<"presencial" | "telemedicina">("presencial");
+  const [modalidad, setModalidad] = useState<"presencial" | "domicilio">("presencial");
   const [metodoPago, setMetodoPago] = useState<MetodoPago>("tarjeta");
   const [procesador, setProcesador] = useState<"stripe" | "mercado-pago">("stripe");
   const [telefono, setTelefono] = useState("");
@@ -67,18 +67,18 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
 
   // Slots de ejemplo: próximos 3 días hábiles, 9:00–13:00
   const slots = useMemo(() => {
-    if (!medico) return [];
+    if (!barbero) return [];
     const out: Date[] = [];
     for (let d = 1; d <= 3; d++) {
       const dia = addDays(new Date(), d);
       if ([0, 6].includes(dia.getDay())) continue;
       for (let h = 9; h < 13; h++) {
         out.push(setMinutes(setHours(dia, h), 0));
-        if (medico.duracion_cita_min <= 30) out.push(setMinutes(setHours(dia, h), 30));
+        if (barbero.duracion_cita_min <= 30) out.push(setMinutes(setHours(dia, h), 30));
       }
     }
     return out;
-  }, [medico]);
+  }, [barbero]);
 
   async function enviarOtp() {
     setError("");
@@ -95,7 +95,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
   }
 
   async function verificarOtpYReservar() {
-    if (!medico || !slot) return;
+    if (!barbero || !slot) return;
     setError("");
     setCargando(true);
 
@@ -110,12 +110,12 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
       return setError(vdata.error ?? "Código incorrecto");
     }
 
-    const fin = new Date(slot.getTime() + medico.duracion_cita_min * 60_000);
+    const fin = new Date(slot.getTime() + barbero.duracion_cita_min * 60_000);
     const res = await fetch("/api/bookings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        medico_id: medico.id,
+        barbero_id: barbero.id,
         inicio: slot.toISOString(),
         fin: fin.toISOString(),
         modalidad,
@@ -139,13 +139,13 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
         </p>
       )}
 
-      {/* Paso 1: elegir médico */}
-      {paso === "medico" && (
+      {/* Paso 1: elegir barbero */}
+      {paso === "barbero" && (
         <div className="space-y-3">
-          {medicos.map((m) => (
+          {barberos.map((m) => (
             <button
               key={m.id}
-              onClick={() => { setMedico(m); setPaso("horario"); }}
+              onClick={() => { setBarbero(m); setPaso("horario"); }}
               className="flex w-full items-center gap-4 rounded-2xl p-4 text-left shadow-sm ring-1 ring-slate-900/5 transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-accent-500/50 dark:ring-white/10"
               style={{ background: "var(--card)" }}
             >
@@ -156,24 +156,24 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
                 <p className="font-medium">{m.nombre}</p>
                 <p className="text-sm" style={{ color: "var(--ink-muted)" }}>
                   {m.especialidad} · {m.duracion_cita_min} min
-                  {m.acepta_telemedicina && (
+                  {m.acepta_domicilio && (
                     <span className="ml-2 inline-flex items-center gap-1 text-accent-600">
-                      <Video className="h-3.5 w-3.5" /> Video
+                      <Home className="h-3.5 w-3.5" /> Domicilio
                     </span>
                   )}
                 </p>
               </div>
-              <span className="font-semibold text-brand-600">{mxn.format(m.precio_consulta)}</span>
+              <span className="font-semibold text-brand-600">{mxn.format(m.precio_servicio)}</span>
             </button>
           ))}
         </div>
       )}
 
       {/* Paso 2: elegir horario */}
-      {paso === "horario" && medico && (
+      {paso === "horario" && barbero && (
         <div className="rounded-2xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
           <p className="mb-4 text-sm">
-            Disponibilidad de <span className="font-medium">{medico.nombre}</span>
+            Disponibilidad de <span className="font-medium">{barbero.nombre}</span>
           </p>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {slots.map((s) => (
@@ -234,7 +234,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
       )}
 
       {/* Paso 4: pago con slot bloqueado */}
-      {paso === "pago" && medico && slot && (
+      {paso === "pago" && barbero && slot && (
         <div className="rounded-2xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold">Confirma tu pago</h2>
@@ -242,9 +242,9 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
               <Clock className="h-4 w-4" /> {restante}
             </span>
           </div>
-          {medico.acepta_telemedicina && (
+          {barbero.acepta_domicilio && (
             <div className="mb-4 flex gap-2">
-              {(["presencial", "telemedicina"] as const).map((m) => (
+              {(["presencial", "domicilio"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setModalidad(m)}
@@ -254,17 +254,17 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
                       : "border-slate-200 dark:border-white/10"
                   }`}
                 >
-                  {m === "presencial" ? <MapPin className="h-4 w-4" /> : <Video className="h-4 w-4" />}
-                  {m === "presencial" ? "Presencial" : "Videoconsulta"}
+                  {m === "presencial" ? <MapPin className="h-4 w-4" /> : <Home className="h-4 w-4" />}
+                  {m === "presencial" ? "En barbería" : "A domicilio"}
                 </button>
               ))}
             </div>
           )}
           <dl className="mb-5 space-y-2 text-sm">
-            <Fila k="Especialista" v={medico.nombre} />
+            <Fila k="Barbero" v={barbero.nombre} />
             <Fila k="Fecha" v={format(slot, "EEEE d 'de' MMMM, HH:mm 'h'", { locale: es })} />
-            <Fila k="Modalidad" v={modalidad === "presencial" ? "Presencial" : "Videoconsulta"} />
-            <Fila k="Total" v={mxn.format(medico.precio_consulta)} destacado />
+            <Fila k="Modalidad" v={modalidad === "presencial" ? "En barbería" : "A domicilio"} />
+            <Fila k="Total" v={mxn.format(barbero.precio_servicio)} destacado />
           </dl>
 
           <p className="mb-2 text-xs font-medium" style={{ color: "var(--ink-muted)" }}>
@@ -291,7 +291,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
               }`}
             >
               <Banknote className="h-4 w-4" />
-              Efectivo en clínica
+              Efectivo en barbería
             </button>
           </div>
 
@@ -309,23 +309,23 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
             <p className="mb-4 flex items-start gap-2 text-xs" style={{ color: "var(--ink-muted)" }}>
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent-500" />
               Tu horario está apartado por 10 minutos. Si el pago no se completa, se libera
-              automáticamente para otros pacientes.
+              automáticamente para otros clientes.
             </p>
           ) : (
             <p className="mb-4 flex items-start gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-xs text-brand-700 dark:bg-brand-900/30 dark:text-brand-100">
               <Banknote className="mt-0.5 h-4 w-4 shrink-0" />
               Tu horario queda apartado ahora mismo. Paga el total en recepción al llegar a
-              tu cita — si no te presentas, el horario se libera para otros pacientes.
+              tu cita — si no te presentas, el horario se libera para otros clientes.
             </p>
           )}
 
           <button
             onClick={() => {
               // En la demo el pago crea la cita en el almacén local: aparece
-              // al instante en la cuenta del paciente y en la agenda del médico.
-              const fin = new Date(slot.getTime() + medico.duracion_cita_min * 60_000);
+              // al instante en la cuenta del cliente y en la agenda del barbero.
+              const fin = new Date(slot.getTime() + barbero.duracion_cita_min * 60_000);
               store.crearCita({
-                medico_id: medico.id,
+                barbero_id: barbero.id,
                 inicio: slot.toISOString(),
                 fin: fin.toISOString(),
                 modalidad,
@@ -345,19 +345,19 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
       )}
 
       {/* Paso 5: confirmación */}
-      {paso === "confirmada" && medico && slot && (() => {
-        const lealtad = calcularLealtad(store.citas, "pac-1", store.recompensasConfig.citas_requeridas);
+      {paso === "confirmada" && barbero && slot && (() => {
+        const lealtad = calcularLealtad(store.citas, "cli-1", store.recompensasConfig.citas_requeridas);
         return (
           <div className="anim-pop rounded-2xl p-8 text-center shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
             <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-accent-500" />
             <h2 className="text-lg font-semibold">¡Cita confirmada!</h2>
             <p className="mt-1 text-sm capitalize" style={{ color: "var(--ink-muted)" }}>
-              {medico.nombre} · {format(slot, "EEEE d 'de' MMMM, HH:mm 'h'", { locale: es })}
+              {barbero.nombre} · {format(slot, "EEEE d 'de' MMMM, HH:mm 'h'", { locale: es })}
             </p>
             {metodoPago === "efectivo" && (
               <p className="mx-auto mt-4 flex w-fit items-center gap-2 rounded-xl bg-brand-50 px-4 py-2.5 text-xs font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-100">
                 <Banknote className="h-4 w-4 shrink-0" />
-                Recuerda llevar {mxn.format(medico.precio_consulta)} en efectivo el día de tu
+                Recuerda llevar {mxn.format(barbero.precio_servicio)} en efectivo el día de tu
                 cita
               </p>
             )}
@@ -367,7 +367,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link
-                href={store.sesion?.rol === "paciente" ? "/cuenta" : "/login"}
+                href={store.sesion?.rol === "cliente" ? "/cuenta" : "/login"}
                 className="card-hover rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md"
               >
                 Ver en mi cuenta
@@ -389,7 +389,7 @@ export function FlujoReserva({ medicos, demo }: { medicos: Medico[]; demo: boole
 
 function Stepper({ actual }: { actual: Paso }) {
   const pasos: { id: Paso; label: string }[] = [
-    { id: "medico", label: "Especialista" },
+    { id: "barbero", label: "Barbero" },
     { id: "horario", label: "Horario" },
     { id: "otp", label: "Verificación" },
     { id: "pago", label: "Pago" },

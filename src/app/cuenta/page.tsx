@@ -4,20 +4,20 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Banknote, CalendarPlus, CreditCard, Gift, MapPin, Sparkles, Video } from "lucide-react";
+import { Banknote, CalendarPlus, CreditCard, Gift, Home, MapPin, Sparkles } from "lucide-react";
 import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
 import { CalendarOverview } from "@/components/calendar/CalendarOverview";
 import { calcularLealtad, useDemoStore } from "@/lib/demo-store";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
 
-// Nodo Paciente: su cuenta con citas, historial y programa de recompensas.
+// Nodo Cliente: su cuenta con citas, historial y programa de recompensas.
 export default function CuentaPage() {
   const store = useDemoStore();
   const { listo, citas, sesion, recompensasConfig } = store;
 
   const mias = useMemo(
-    () => citas.filter((c) => c.paciente_id === "pac-1"),
+    () => citas.filter((c) => c.cliente_id === "cli-1"),
     [citas]
   );
   const ahora = Date.now();
@@ -27,11 +27,11 @@ export default function CuentaPage() {
   const historial = mias
     .filter((c) => c.estado !== "confirmada" || new Date(c.fin).getTime() < ahora)
     .sort((a, b) => b.inicio.localeCompare(a.inicio));
-  const lealtad = calcularLealtad(citas, "pac-1", recompensasConfig.citas_requeridas);
+  const lealtad = calcularLealtad(citas, "cli-1", recompensasConfig.citas_requeridas);
 
   if (!listo) return null;
 
-  if (!sesion || sesion.rol !== "paciente") {
+  if (!sesion || sesion.rol !== "cliente") {
     return <SinSesion />;
   }
 
@@ -83,7 +83,7 @@ export default function CuentaPage() {
       </section>
 
       <div className="mb-6">
-        <CalendarOverview citas={mias} perspective="paciente" title="Mis citas" />
+        <CalendarOverview citas={mias} perspective="cliente" title="Mis citas" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -115,12 +115,12 @@ export default function CuentaPage() {
                 <span className="text-sm font-semibold">{format(new Date(c.inicio), "HH:mm")}</span>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{c.medico_nombre}</p>
+                <p className="truncate font-medium">{c.barbero_nombre}</p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-sm" style={{ color: "var(--ink-muted)" }}>
-                  {c.modalidad === "telemedicina" ? (
-                    <><Video className="h-3.5 w-3.5 text-accent-500" /> Videoconsulta</>
+                  {c.modalidad === "domicilio" ? (
+                    <><Home className="h-3.5 w-3.5 text-accent-500" /> A domicilio</>
                   ) : (
-                    <><MapPin className="h-3.5 w-3.5 text-brand-500" /> Presencial</>
+                    <><MapPin className="h-3.5 w-3.5 text-brand-500" /> En barbería</>
                   )}
                   <span aria-hidden>·</span> {mxn.format(c.precio)}
                 </p>
@@ -138,14 +138,14 @@ export default function CuentaPage() {
                   )}
                 </span>
               </div>
-              {c.modalidad === "telemedicina" && c.enlace_videollamada && (
+              {c.modalidad === "domicilio" && c.direccion_domicilio && (
                 <a
-                  href={c.enlace_videollamada}
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.direccion_domicilio)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-full bg-accent-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-600"
                 >
-                  Unirse
+                  Ver dirección
                 </a>
               )}
               <button
@@ -170,7 +170,7 @@ export default function CuentaPage() {
                 </p>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{c.medico_nombre}</p>
+                <p className="truncate text-sm font-medium">{c.barbero_nombre}</p>
                 <p className="text-xs" style={{ color: "var(--ink-muted)" }}>{c.especialidad}</p>
               </div>
               <span
@@ -200,7 +200,7 @@ export default function CuentaPage() {
             <p className="text-sm text-white/85">
               Cada <strong>{lealtad.requerido} citas asistidas</strong> desbloqueas un{" "}
               <strong>{recompensasConfig.valor_descuento}% de descuento</strong> en tu siguiente
-              consulta.
+              visita.
             </p>
             {/* Progreso */}
             <div className="mt-5 flex items-center gap-1.5">

@@ -1,26 +1,24 @@
 import Link from "next/link";
 import {
-  Activity,
   ArrowRight,
-  Banknote,
   CalendarCheck,
   CalendarX2,
   CreditCard,
   Gift,
+  Home,
   Layers,
   PhoneOff,
   Quote,
+  Scissors,
   ShieldCheck,
-  Stethoscope,
   Timer,
   User,
   UserCog,
   UserX,
-  Video,
 } from "lucide-react";
 import { Reveal } from "@/components/marketing/Reveal";
 import { ThreePulse } from "@/components/marketing/ThreePulse";
-import { MedicalOSExperience } from "@/components/landing/MedicalOSExperience";
+import { BarberOSExperience } from "@/components/landing/BarberOSExperience";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 
@@ -33,10 +31,10 @@ export default function LandingPage() {
         <nav className="landing-nav">
           <Link href="/" className="anim-in landing-logo">
             <span className="landing-logo-mark">
-              <Activity className="h-4 w-4" />
+              <Scissors className="h-4 w-4" />
             </span>
             <span className="font-display leading-none whitespace-nowrap">
-              <span className="block text-sm font-bold tracking-tight sm:text-base">Medical OS</span>
+              <span className="block text-sm font-bold tracking-tight sm:text-base">Barber OS</span>
               <span className="block text-[9px] uppercase tracking-[0.24em] text-ink-900/45">
                 by Partum
               </span>
@@ -55,15 +53,15 @@ export default function LandingPage() {
         <div className="landing-hero-grid">
           <div className="landing-hero-copy">
             <p className="anim-in anim-d1 landing-eyebrow">
-              <span /> Operación clínica conectada
+              <span /> Operación barbería conectada
             </p>
             <h1 className="anim-in anim-d2">
-              Tu clínica,
+              Tu barbería,
               <br />
               <span>en un solo pulso.</span>
             </h1>
             <p className="anim-in anim-d3 landing-hero-lead">
-              Agenda, cobros, telemedicina y pacientes dejan de vivir separados. Medical OS pone el estado correcto frente a cada persona, justo cuando lo necesita.
+              Agenda, cobros, domicilio y clientes dejan de vivir separados. Barber OS pone el estado correcto frente a cada persona, justo cuando lo necesita.
             </p>
             <div className="anim-in anim-d4 landing-hero-actions">
               <Link href="/login" className="landing-primary-action">
@@ -75,7 +73,7 @@ export default function LandingPage() {
             </div>
             <div className="anim-in anim-d5 landing-hero-facts">
               <span><CreditCard className="h-3.5 w-3.5" /> Tarjeta y efectivo</span>
-              <span><Video className="h-3.5 w-3.5" /> Telemedicina</span>
+              <span><Home className="h-3.5 w-3.5" /> Servicio a domicilio</span>
               <span><ShieldCheck className="h-3.5 w-3.5" /> OTP y antifraude</span>
             </div>
           </div>
@@ -85,8 +83,8 @@ export default function LandingPage() {
             <div className="landing-console">
               <div className="landing-console-top">
                 <div className="flex items-center gap-2">
-                  <span className="landing-console-mark">M</span>
-                  <span className="font-display text-xs font-semibold">Medical OS</span>
+                  <span className="landing-console-mark">B</span>
+                  <span className="font-display text-xs font-semibold">Barber OS</span>
                 </div>
                 <span className="landing-live"><span /> En vivo</span>
               </div>
@@ -103,9 +101,9 @@ export default function LandingPage() {
                   <div><span>Asistencia</span><strong>92%</strong><small>+8% este mes</small></div>
                 </div>
                 <div className="landing-agenda">
-                  <HeroAppointment time="09:30" name="Mariana Gutiérrez" detail="Ginecología · Pagada" state="Lista" />
-                  <HeroAppointment time="11:00" name="Sofía Ramírez" detail="Seguimiento · Efectivo" state="Confirmada" />
-                  <HeroAppointment time="13:30" name="Diego Torres" detail="Videoconsulta · Pagada" state="Enlace listo" />
+                  <HeroAppointment time="09:30" name="Mariana Gutiérrez" detail="Fade + barba · Pagada" state="Lista" />
+                  <HeroAppointment time="11:00" name="Sofía Ramírez" detail="Corte clásico · Efectivo" state="Confirmada" />
+                  <HeroAppointment time="13:30" name="Diego Torres" detail="Corte a domicilio · Pagada" state="Dirección lista" />
                 </div>
               </div>
             </div>
@@ -119,14 +117,14 @@ export default function LandingPage() {
         <div className="landing-capability-strip">
           <span>AGENDA ONLINE</span>
           <span>PAGOS</span>
-          <span>TELEMEDICINA</span>
-          <span>EXPEDIENTES</span>
+          <span>DOMICILIO</span>
+          <span>FICHAS</span>
           <span>LEALTAD</span>
         </div>
       </section>
 
       {/* Experiencia interactiva antes / después */}
-      <MedicalOSExperience />
+      <BarberOSExperience />
 
       {/* Núcleo único — estadísticas reales del producto, no vanidad */}
       <section className="landing-stats-band">
@@ -140,14 +138,14 @@ export default function LandingPage() {
             </h2>
             <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--ink-muted)" }}>
               Sin agenda de papel, sin hoja de cálculo aparte, sin terminal de cobro
-              desconectada. Un mismo lugar para paciente, médico y administrador.
+              desconectada. Un mismo lugar para cliente, barbero y administrador.
             </p>
           </Reveal>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Stat delay={0} icon={<Layers className="h-4 w-4" />} value="1" label="Sistema núcleo" nota="Sustituye agenda, chat, hoja de cálculo y terminal" />
             <Stat delay={80} icon={<Timer className="h-4 w-4" />} value="10 min" label="Bloqueo de horario" nota="Sin pago confirmado, se libera solo" />
             <Stat delay={160} icon={<Gift className="h-4 w-4" />} value="Cada 5" label="Citas asistidas" nota="Desbloquean una recompensa automática" />
-            <Stat delay={240} icon={<UserCog className="h-4 w-4" />} value="3 roles" label="Un solo panel" nota="Paciente, médico y administrador" />
+            <Stat delay={240} icon={<UserCog className="h-4 w-4" />} value="3 roles" label="Un solo panel" nota="Cliente, barbero y administrador" />
           </div>
         </div>
       </section>
@@ -157,7 +155,7 @@ export default function LandingPage() {
         <Reveal className="mx-auto mb-10 max-w-2xl text-center">
           <h2 className="font-display text-2xl font-bold tracking-tight">El problema que atacamos</h2>
           <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--ink-muted)" }}>
-            Los consultorios independientes y clínicas pequeñas pierden ingresos todos los
+            Las barberías independientes y los salones pequeños pierden ingresos todos los
             días por tres fugas silenciosas:
           </p>
         </Reveal>
@@ -166,21 +164,21 @@ export default function LandingPage() {
             <Problema
               icon={<CalendarX2 className="h-5 w-5" />}
               title="Citas que no llegan"
-              text="Sin confirmación de pago, cancelar a última hora no le cuesta nada al paciente — y el hueco en la agenda ya no se llena."
+              text="Sin confirmación de pago, cancelar a última hora no le cuesta nada al cliente — y el hueco en la agenda ya no se llena."
             />
           </Reveal>
           <Reveal delay={100}>
             <Problema
               icon={<PhoneOff className="h-5 w-5" />}
               title="Agenda por teléfono"
-              text="Recepción atada al teléfono, dobles reservas y pacientes que se van con quien sí contesta a la primera."
+              text="Recepción atada al teléfono, dobles reservas y clientes que se van con quien sí contesta a la primera."
             />
           </Reveal>
           <Reveal delay={200}>
             <Problema
               icon={<UserX className="h-5 w-5" />}
-              title="Pacientes que no vuelven"
-              text="Conseguir un paciente nuevo cuesta mucho más que retener a uno actual, pero nadie mide ni premia la recurrencia."
+              title="Clientes que no vuelven"
+              text="Conseguir un cliente nuevo cuesta mucho más que retener a uno actual, pero nadie mide ni premia la recurrencia."
             />
           </Reveal>
         </div>
@@ -193,13 +191,13 @@ export default function LandingPage() {
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-3">
           <Reveal delay={0}>
-            <Paso n="01" icon={<CreditCard className="h-5 w-5" />} title="El paciente agenda y elige cómo pagar" text="Disponibilidad en tiempo real, verificación por WhatsApp y pago con tarjeta o en efectivo al llegar. El horario queda apartado 10 minutos: sin confirmación, se libera — adiós a los bloqueos fantasma." />
+            <Paso n="01" icon={<CreditCard className="h-5 w-5" />} title="El cliente agenda y elige cómo pagar" text="Disponibilidad en tiempo real, verificación por WhatsApp y pago con tarjeta o en efectivo al llegar. El horario queda apartado 10 minutos: sin confirmación, se libera — adiós a los bloqueos fantasma." />
           </Reveal>
           <Reveal delay={100}>
-            <Paso n="02" icon={<CalendarCheck className="h-5 w-5" />} title="El médico solo atiende" text="La cita cae directo en su Google Calendar u Outlook con enlace de Meet o Teams si es videoconsulta. Su agenda del día vive en un panel limpio." />
+            <Paso n="02" icon={<CalendarCheck className="h-5 w-5" />} title="El barbero solo atiende" text="La cita cae directo en su Google Calendar u Outlook, con la dirección lista si el servicio es a domicilio. Su agenda del día vive en un panel limpio." />
           </Reveal>
           <Reveal delay={200}>
-            <Paso n="03" icon={<Gift className="h-5 w-5" />} title="La clínica fideliza sola" text="Cada 5 citas asistidas y pagadas, el sistema desbloquea automáticamente una recompensa: 20% de descuento o consulta de seguimiento gratis." />
+            <Paso n="03" icon={<Gift className="h-5 w-5" />} title="La barbería fideliza sola" text="Cada 5 citas asistidas y pagadas, el sistema desbloquea automáticamente una recompensa: 20% de descuento o un corte de seguimiento gratis." />
           </Reveal>
         </div>
         <Reveal delay={280} className="mx-auto mt-8 flex w-fit">
@@ -209,7 +207,7 @@ export default function LandingPage() {
           >
             <ShieldCheck className="h-4 w-4 text-accent-500" />
             Con seguridad antifraude: captcha invisible, OTP por SMS/WhatsApp, límites
-            antibots y datos aislados por clínica.
+            antibots y datos aislados por barbería.
           </p>
         </Reveal>
       </section>
@@ -225,13 +223,13 @@ export default function LandingPage() {
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-3">
           <Reveal delay={0}>
-            <RolCard icon={<User className="h-6 w-6" />} titulo="Paciente" texto="Agenda, paga, acumula recompensas y entra a sus videoconsultas." tono="from-brand-500 to-brand-700" />
+            <RolCard icon={<User className="h-6 w-6" />} titulo="Cliente" texto="Agenda, paga, acumula recompensas y pide su corte a domicilio." tono="from-brand-500 to-brand-700" />
           </Reveal>
           <Reveal delay={100}>
-            <RolCard icon={<Stethoscope className="h-6 w-6" />} titulo="Médico" texto="Ve su agenda del día, atiende y marca citas como asistidas." tono="from-accent-400 to-brand-600" />
+            <RolCard icon={<Scissors className="h-6 w-6" />} titulo="Barbero" texto="Ve su agenda del día, atiende y marca citas como asistidas." tono="from-accent-400 to-brand-600" />
           </Reveal>
           <Reveal delay={200}>
-            <RolCard icon={<ShieldCheck className="h-6 w-6" />} titulo="Administrador" texto="Supervisa ingresos, equipo médico y el programa de lealtad." tono="from-brand-600 to-accent-500" />
+            <RolCard icon={<ShieldCheck className="h-6 w-6" />} titulo="Administrador" texto="Supervisa ingresos, equipo barbero y el programa de lealtad." tono="from-brand-600 to-accent-500" />
           </Reveal>
         </div>
       </section>
@@ -242,7 +240,7 @@ export default function LandingPage() {
       {/* Testimonios (personajes de la propia demo) */}
       <section className="landing-testimonials mx-auto max-w-6xl px-6 py-20">
         <Reveal className="mx-auto mb-10 max-w-2xl text-center">
-          <h2 className="font-display text-2xl font-bold tracking-tight">Lo que dicen en Clínica Partum</h2>
+          <h2 className="font-display text-2xl font-bold tracking-tight">Lo que dicen en Barbería Partum</h2>
           <p className="mt-2 text-sm" style={{ color: "var(--ink-muted)" }}>
             Testimonios de los mismos perfiles que puedes probar en la demo.
           </p>
@@ -250,22 +248,22 @@ export default function LandingPage() {
         <div className="grid gap-4 sm:grid-cols-3">
           <Reveal delay={0}>
             <Testimonio
-              nombre="Dra. Valeria Ortiz"
-              rol="Ginecología y Obstetricia"
-              texto="Ya no reviso quién pagó antes de cada consulta: llego y mi agenda del día ya me dice quién está confirmado y quién paga en efectivo al llegar."
+              nombre="Iván Rosales"
+              rol="Barbero, especialista en fades"
+              texto="Ya no reviso quién pagó antes de cada corte: llego y mi agenda del día ya me dice quién está confirmado y quién paga en efectivo al llegar."
             />
           </Reveal>
           <Reveal delay={100}>
             <Testimonio
               nombre="Bruno Salas"
-              rol="Administrador, Clínica Partum"
-              texto="Ver los ingresos por médico y por método de pago en un solo panel nos ahorró la hoja de cálculo que llevábamos a mano cada semana."
+              rol="Administrador, Barbería Partum"
+              texto="Ver los ingresos por barbero y por método de pago en un solo panel nos ahorró la hoja de cálculo que llevábamos a mano cada semana."
             />
           </Reveal>
           <Reveal delay={200}>
             <Testimonio
               nombre="Mariana Gutiérrez"
-              rol="Paciente"
+              rol="Cliente"
               texto="Agendo, elijo si pago con tarjeta o en efectivo, y ya sé exactamente cuánto llevar el día de mi cita. Además veo mis recompensas acumuladas."
             />
           </Reveal>
@@ -279,7 +277,7 @@ export default function LandingPage() {
       <section className="landing-final">
         <Reveal className="mx-auto max-w-3xl px-6 py-20 text-center">
           <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Un consultorio lleno empieza con una agenda que cobra sola.
+            Una barbería llena empieza con una agenda que cobra sola.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-white/70">
             Prueba los tres paneles de la demo con datos reales de tu navegador — sin
@@ -401,7 +399,7 @@ function Testimonio({ nombre, rol, texto }: { nombre: string; rol: string; texto
       </p>
       <div className="mt-4 flex items-center gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-400 text-sm font-semibold text-white">
-          {nombre.replace(/^(Dra?\.\s*)/, "").charAt(0)}
+          {nombre.charAt(0)}
         </span>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{nombre}</p>

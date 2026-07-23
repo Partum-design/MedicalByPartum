@@ -8,28 +8,28 @@ import { CheckCircle2, Gift, Sparkles, User } from "lucide-react";
 import { PanelShell } from "@/components/shell/PanelShell";
 import { calcularLealtad, useDemoStore } from "@/lib/demo-store";
 
-// Nodo Paciente: detalle del programa de lealtad — progreso, historial de
+// Nodo Cliente: detalle del programa de lealtad — progreso, historial de
 // citas que suman puntos y canje de recompensas ganadas.
 export default function RecompensasPage() {
   const store = useDemoStore();
   const { listo, citas, sesion, recompensasConfig, canjes } = store;
-  const pacienteId = "pac-1";
+  const clienteId = "cli-1";
 
-  const lealtad = calcularLealtad(citas, pacienteId, recompensasConfig.citas_requeridas);
-  const canjeadas = canjes[pacienteId] ?? 0;
+  const lealtad = calcularLealtad(citas, clienteId, recompensasConfig.citas_requeridas);
+  const canjeadas = canjes[clienteId] ?? 0;
   const disponibles = Math.max(0, lealtad.recompensasGanadas - canjeadas);
 
   const historialAsistidas = useMemo(
     () =>
       citas
-        .filter((c) => c.paciente_id === pacienteId && c.estado === "asistida")
+        .filter((c) => c.cliente_id === clienteId && c.estado === "asistida")
         .sort((a, b) => b.inicio.localeCompare(a.inicio)),
     [citas]
   );
 
   if (!listo) return null;
 
-  if (!sesion || sesion.rol !== "paciente") {
+  if (!sesion || sesion.rol !== "cliente") {
     return <SinSesion />;
   }
 
@@ -39,7 +39,7 @@ export default function RecompensasPage() {
         <h1 className="text-2xl font-bold tracking-tight">Recompensas</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
           Cada {lealtad.requerido} citas asistidas desbloqueas un descuento en tu siguiente
-          consulta.
+          visita.
         </p>
       </header>
 
@@ -77,7 +77,7 @@ export default function RecompensasPage() {
               </div>
               <button
                 disabled={disponibles === 0}
-                onClick={() => store.canjearRecompensa(pacienteId, lealtad.recompensasGanadas)}
+                onClick={() => store.canjearRecompensa(clienteId, lealtad.recompensasGanadas)}
                 className="card-hover rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 disabled:opacity-40"
               >
                 Canjear recompensa
@@ -103,7 +103,7 @@ export default function RecompensasPage() {
                     <CheckCircle2 className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{c.medico_nombre}</p>
+                    <p className="truncate text-sm font-medium">{c.barbero_nombre}</p>
                     <p className="text-xs" style={{ color: "var(--ink-muted)" }}>
                       {format(new Date(c.inicio), "d 'de' MMMM, yyyy", { locale: es })}
                     </p>

@@ -1,6 +1,6 @@
 -- ============================================================================
--- Medical OS — Inicialización de Base de Datos (Supabase / PostgreSQL)
--- SaaS B2B para gestión de clínicas y consultorios médicos.
+-- Barber OS — Inicialización de Base de Datos (Supabase / PostgreSQL)
+-- SaaS B2B para gestión de barberías y barberos independientes.
 --
 -- Incluye: esquema completo, llaves foráneas, índices, triggers de
 -- fidelización, bloqueo temporal de slots y políticas RLS por rol.
@@ -8,14 +8,14 @@
 
 -- Extensiones -----------------------------------------------------------------
 create extension if not exists "pgcrypto";      -- gen_random_uuid()
-create extension if not exists "pg_trgm";       -- búsqueda difusa de médicos
+create extension if not exists "pg_trgm";       -- búsqueda difusa de barberos
 
 -- ============================================================================
 -- 1. TIPOS ENUMERADOS
 -- ============================================================================
-create type rol_usuario as enum ('paciente', 'medico', 'admin_clinica', 'superadmin');
+create type rol_usuario as enum ('cliente', 'barbero', 'admin_barberia', 'superadmin');
 create type estado_cita as enum ('bloqueada', 'pendiente_pago', 'confirmada', 'asistida', 'cancelada', 'no_asistio');
-create type modalidad_cita as enum ('presencial', 'telemedicina');
+create type modalidad_cita as enum ('presencial', 'domicilio');
 create type estado_pago as enum ('pendiente', 'pagado', 'reembolsado', 'fallido');
 create type proveedor_calendario as enum ('google', 'microsoft');
 create type tipo_recompensa as enum ('descuento_porcentaje', 'cita_gratis');
@@ -24,8 +24,8 @@ create type tipo_recompensa as enum ('descuento_porcentaje', 'cita_gratis');
 -- 2. TABLAS PRINCIPALES
 -- ============================================================================
 
--- Clínicas (tenant raíz del modelo multi-tenant) ------------------------------
-create table public.clinicas (
+-- Barberías (tenant raíz del modelo multi-tenant) ------------------------------
+create table public.barberias (
   id            uuid primary key default gen_random_uuid(),
   nombre        text not null,
   slug          text not null unique,
@@ -34,15 +34,15 @@ create table public.clinicas (
   telefono      text,
   stripe_account_id text,                -- Stripe Connect para cobros de citas
   suscripcion_activa boolean not null default false,
-  stripe_subscription_id text,           -- Suscripción SaaS de la clínica
+  stripe_subscription_id text,           -- Suscripción SaaS de la barbería
   creado_en     timestamptz not null default now()
 );
 
 -- Perfiles de usuario (espejo de auth.users) ----------------------------------
 create table public.usuarios (
   id            uuid primary key references auth.users(id) on delete cascade,
-  rol           rol_usuario not null default 'paciente',
-  clinica_id    uuid references public.clinicas(id) on delete set null,
+  rol           rol_usuario not null default 'cliente',
+  barberia_id    uuid references public.barberias(id) on delete set null,
   nombre        text not null,
   apellidos     text,
   email         text not null,
@@ -53,17 +53,17 @@ create table public.usuarios (
   actualizado_en timestamptz not null default now()
 );
 
--- Médicos ---------------------------------------------------------------------
-create table public.medicos (
+-- Barberos ---------------------------------------------------------------------
+create table public.barberos (
   id            uuid primary key default gen_random_uuid(),
   usuario_id    uuid not null unique references public.usuarios(id) on delete cascade,
-  clinica_id    uuid not null references public.clinicas(id) on delete cascade,
+  barberia_id    uuid not null references public.barberias(id) on delete cascade,
   especialidad  text not null,
-  cedula_profesional text not null,
+  certificacion text,
   biografia     text,
-  precio_consulta numeric(10,2) not null default 0,
+  precio_servicio numeric(10,2) not null default 0,
   duracion_cita_min int not null default 30,
-  acepta_telemedicina boolean not null default true,
+  acepta_domicilio boolean not null default true,
   activo        boolean not null default true,
   -- Tokens OAuth cifrados (Vault/pgsodium recomendado en producción)
   calendario_proveedor proveedor_calendario,
@@ -72,27 +72,27 @@ create table public.medicos (
   creado_en     timestamptz not null default now()
 );
 
-create index idx_medicos_clinica on public.medicos (clinica_id);
-create index idx_medicos_especialidad_trgm on public.medicos using gin (especialidad gin_trgm_ops);
+create index idx_barberos_barberia on public.barberos (barberia_id);
+create index idx_barberos_especialidad_trgm on public.barberos using gin (especialidad gin_trgm_ops);
 
 -- Horarios de disponibilidad --------------------------------------------------
-create table public.horarios_medicos (
+create table public.horarios_barberos (
   id            uuid primary key default gen_random_uuid(),
-  medico_id     uuid not null references public.medicos(id) on delete cascade,
+  barbero_id     uuid not null references public.barberos(id) on delete cascade,
   dia_semana    smallint not null check (dia_semana between 0 and 6),
   hora_inicio   time not null,
   hora_fin      time not null,
   check (hora_inicio < hora_fin)
 );
 
-create index idx_horarios_medico on public.horarios_medicos (medico_id);
+create index idx_horarios_barbero on public.horarios_barberos (barbero_id);
 
 -- Citas -------------------------------------------------------------------
 create table public.citas (
   id            uuid primary key default gen_random_uuid(),
-  clinica_id    uuid not null references public.clinicas(id) on delete cascade,
-  medico_id     uuid not null references public.medicos(id) on delete cascade,
-  paciente_id   uuid references public.usuarios(id) on delete set null,
+  barberia_id    uuid not null references public.barberias(id) on delete cascade,
+  barbero_id     uuid not null references public.barberos(id) on delete cascade,
+  cliente_id   uuid references public.usuarios(id) on delete set null,
   inicio        timestamptz not null,
   fin           timestamptz not null,
   modalidad     modalidad_cita not null default 'presencial',
@@ -102,21 +102,21 @@ create table public.citas (
   precio        numeric(10,2) not null,
   descuento_aplicado numeric(10,2) not null default 0,
   recompensa_id uuid,                              -- FK diferida (ver abajo)
-  enlace_videollamada text,                        -- Google Meet / Teams
+  direccion_domicilio text,                        -- dirección para servicio a domicilio
   evento_calendario_id text,                       -- id del evento sincronizado
-  motivo_consulta text,
+  servicio_solicitado text,
   creado_en     timestamptz not null default now(),
   check (inicio < fin),
   -- Evita doble reserva del mismo slot para citas vivas
   constraint citas_sin_solape exclude using gist (
-    medico_id with =,
+    barbero_id with =,
     tstzrange(inicio, fin) with &&
   ) where (estado in ('bloqueada', 'pendiente_pago', 'confirmada'))
 );
 
-create index idx_citas_medico_inicio on public.citas (medico_id, inicio);
-create index idx_citas_paciente on public.citas (paciente_id);
-create index idx_citas_clinica on public.citas (clinica_id);
+create index idx_citas_barbero_inicio on public.citas (barbero_id, inicio);
+create index idx_citas_cliente on public.citas (cliente_id);
+create index idx_citas_barberia on public.citas (barberia_id);
 create index idx_citas_expiracion on public.citas (bloqueo_expira_en)
   where estado = 'bloqueada';
 
@@ -127,8 +127,8 @@ create extension if not exists btree_gist;
 create table public.pagos (
   id            uuid primary key default gen_random_uuid(),
   cita_id       uuid not null unique references public.citas(id) on delete cascade,
-  clinica_id    uuid not null references public.clinicas(id) on delete cascade,
-  paciente_id   uuid not null references public.usuarios(id),
+  barberia_id    uuid not null references public.barberias(id) on delete cascade,
+  cliente_id   uuid not null references public.usuarios(id),
   monto         numeric(10,2) not null,
   moneda        text not null default 'MXN',
   estado        estado_pago not null default 'pendiente',
@@ -137,32 +137,32 @@ create table public.pagos (
   pagado_en     timestamptz
 );
 
-create index idx_pagos_clinica on public.pagos (clinica_id);
+create index idx_pagos_barberia on public.pagos (barberia_id);
 
--- Expedientes clínicos básicos ---------------------------------------------
-create table public.expedientes (
+-- Fichas de servicio y preferencias del cliente ------------------------------
+create table public.fichas (
   id            uuid primary key default gen_random_uuid(),
-  clinica_id    uuid not null references public.clinicas(id) on delete cascade,
-  paciente_id   uuid not null references public.usuarios(id) on delete cascade,
-  medico_id     uuid not null references public.medicos(id) on delete cascade,
+  barberia_id    uuid not null references public.barberias(id) on delete cascade,
+  cliente_id   uuid not null references public.usuarios(id) on delete cascade,
+  barbero_id     uuid not null references public.barberos(id) on delete cascade,
   cita_id       uuid references public.citas(id) on delete set null,
   notas         text,
-  diagnostico   text,
-  receta        jsonb,
+  servicio      text,
+  preferencias  jsonb,
   creado_en     timestamptz not null default now()
 );
 
-create index idx_expedientes_paciente on public.expedientes (paciente_id);
-create index idx_expedientes_medico on public.expedientes (medico_id);
+create index idx_fichas_cliente on public.fichas (cliente_id);
+create index idx_fichas_barbero on public.fichas (barbero_id);
 
 -- ============================================================================
 -- 3. PROGRAMA DE FIDELIZACIÓN
 -- ============================================================================
 
--- Configuración de recompensas por clínica ---------------------------------
+-- Configuración de recompensas por barbería ---------------------------------
 create table public.recompensas_config (
   id            uuid primary key default gen_random_uuid(),
-  clinica_id    uuid not null references public.clinicas(id) on delete cascade,
+  barberia_id    uuid not null references public.barberias(id) on delete cascade,
   citas_requeridas int not null default 5,
   tipo          tipo_recompensa not null default 'descuento_porcentaje',
   valor         numeric(10,2) not null default 20,   -- 20% o precio 0
@@ -173,8 +173,8 @@ create table public.recompensas_config (
 -- Historial de fidelidad ------------------------------------------------------
 create table public.historial_fidelidad (
   id            uuid primary key default gen_random_uuid(),
-  paciente_id   uuid not null references public.usuarios(id) on delete cascade,
-  clinica_id    uuid not null references public.clinicas(id) on delete cascade,
+  cliente_id   uuid not null references public.usuarios(id) on delete cascade,
+  barberia_id    uuid not null references public.barberias(id) on delete cascade,
   cita_id       uuid references public.citas(id) on delete set null,
   puntos        int not null default 1,
   recompensa_desbloqueada boolean not null default false,
@@ -184,8 +184,8 @@ create table public.historial_fidelidad (
   creado_en     timestamptz not null default now()
 );
 
-create index idx_fidelidad_paciente_clinica
-  on public.historial_fidelidad (paciente_id, clinica_id);
+create index idx_fidelidad_cliente_barberia
+  on public.historial_fidelidad (cliente_id, barberia_id);
 
 -- FK diferida de citas.recompensa_id
 alter table public.citas
@@ -193,7 +193,7 @@ alter table public.citas
   foreign key (recompensa_id) references public.historial_fidelidad(id);
 
 -- Trigger: al marcar una cita como 'asistida' y pagada, acumula un punto.
--- Cada N citas (config de la clínica) desbloquea la recompensa.
+-- Cada N citas (config de la barbería) desbloquea la recompensa.
 create or replace function public.fn_acumular_fidelidad()
 returns trigger
 language plpgsql
@@ -205,22 +205,22 @@ declare
   v_puntos int;
 begin
   if new.estado = 'asistida' and old.estado is distinct from 'asistida'
-     and new.paciente_id is not null
+     and new.cliente_id is not null
      and exists (select 1 from pagos p where p.cita_id = new.id and p.estado = 'pagado')
   then
     select * into v_config
       from recompensas_config
-     where clinica_id = new.clinica_id and activa
+     where barberia_id = new.barberia_id and activa
      order by creado_en desc limit 1;
 
-    insert into historial_fidelidad (paciente_id, clinica_id, cita_id)
-    values (new.paciente_id, new.clinica_id, new.id);
+    insert into historial_fidelidad (cliente_id, barberia_id, cita_id)
+    values (new.cliente_id, new.barberia_id, new.id);
 
     if v_config.id is not null then
       select coalesce(sum(puntos), 0) into v_puntos
         from historial_fidelidad
-       where paciente_id = new.paciente_id
-         and clinica_id = new.clinica_id
+       where cliente_id = new.cliente_id
+         and barberia_id = new.barberia_id
          and not recompensa_desbloqueada
          and not canjeada;
 
@@ -229,8 +229,8 @@ begin
         update historial_fidelidad
            set recompensa_desbloqueada = true,
                recompensa_config_id = v_config.id
-         where paciente_id = new.paciente_id
-           and clinica_id = new.clinica_id
+         where cliente_id = new.cliente_id
+           and barberia_id = new.barberia_id
            and not recompensa_desbloqueada
            and not canjeada;
       end if;
@@ -250,7 +250,7 @@ create trigger trg_fidelidad
 
 -- Bloqueo temporal de slot (anti-scalping): reserva por 10 minutos.
 create or replace function public.fn_bloquear_slot(
-  p_medico_id uuid,
+  p_barbero_id uuid,
   p_inicio timestamptz,
   p_fin timestamptz,
   p_modalidad modalidad_cita default 'presencial'
@@ -261,13 +261,13 @@ set search_path = public
 as $$
 declare
   v_cita_id uuid;
-  v_medico medicos%rowtype;
+  v_barbero barberos%rowtype;
 begin
   if auth.uid() is null then
     raise exception 'No autenticado';
   end if;
 
-  -- El paciente debe tener teléfono verificado por OTP antes de reservar
+  -- El cliente debe tener teléfono verificado por OTP antes de reservar
   if not exists (
     select 1 from usuarios
      where id = auth.uid() and telefono_verificado
@@ -275,23 +275,23 @@ begin
     raise exception 'Teléfono no verificado';
   end if;
 
-  -- Máximo 3 slots bloqueados simultáneos por paciente (anti-hoarding)
+  -- Máximo 3 slots bloqueados simultáneos por cliente (anti-hoarding)
   if (select count(*) from citas
-       where paciente_id = auth.uid()
+       where cliente_id = auth.uid()
          and estado = 'bloqueada'
          and bloqueo_expira_en > now()) >= 3 then
     raise exception 'Límite de reservas simultáneas alcanzado';
   end if;
 
-  select * into v_medico from medicos where id = p_medico_id and activo;
+  select * into v_barbero from barberos where id = p_barbero_id and activo;
   if not found then
-    raise exception 'Médico no disponible';
+    raise exception 'Barbero no disponible';
   end if;
 
-  insert into citas (clinica_id, medico_id, paciente_id, inicio, fin,
+  insert into citas (barberia_id, barbero_id, cliente_id, inicio, fin,
                      modalidad, estado, precio, bloqueo_expira_en)
-  values (v_medico.clinica_id, p_medico_id, auth.uid(), p_inicio, p_fin,
-          p_modalidad, 'bloqueada', v_medico.precio_consulta,
+  values (v_barbero.barberia_id, p_barbero_id, auth.uid(), p_inicio, p_fin,
+          p_modalidad, 'bloqueada', v_barbero.precio_servicio,
           now() + interval '10 minutes')
   returning id into v_cita_id;
 
@@ -329,22 +329,22 @@ as $$
   select rol from usuarios where id = auth.uid();
 $$;
 
-create or replace function public.fn_mi_clinica()
+create or replace function public.fn_mi_barberia()
 returns uuid
 language sql stable
 security definer
 set search_path = public
 as $$
-  select clinica_id from usuarios where id = auth.uid();
+  select barberia_id from usuarios where id = auth.uid();
 $$;
 
-create or replace function public.fn_mi_medico_id()
+create or replace function public.fn_mi_barbero_id()
 returns uuid
 language sql stable
 security definer
 set search_path = public
 as $$
-  select id from medicos where usuario_id = auth.uid();
+  select id from barberos where usuario_id = auth.uid();
 $$;
 
 -- Trigger: crear perfil automáticamente al registrarse en auth
@@ -359,7 +359,7 @@ begin
   values (new.id,
           coalesce(new.raw_user_meta_data->>'nombre', split_part(new.email, '@', 1)),
           new.email,
-          coalesce((new.raw_user_meta_data->>'rol')::rol_usuario, 'paciente'));
+          coalesce((new.raw_user_meta_data->>'rol')::rol_usuario, 'cliente'));
   return new;
 end;
 $$;
@@ -371,13 +371,13 @@ create trigger trg_on_auth_user_created
 -- ============================================================================
 -- 5. ROW LEVEL SECURITY (RLS)
 -- ============================================================================
-alter table public.clinicas            enable row level security;
+alter table public.barberias            enable row level security;
 alter table public.usuarios            enable row level security;
-alter table public.medicos             enable row level security;
-alter table public.horarios_medicos    enable row level security;
+alter table public.barberos             enable row level security;
+alter table public.horarios_barberos    enable row level security;
 alter table public.citas               enable row level security;
 alter table public.pagos               enable row level security;
-alter table public.expedientes         enable row level security;
+alter table public.fichas         enable row level security;
 alter table public.recompensas_config  enable row level security;
 alter table public.historial_fidelidad enable row level security;
 
@@ -391,125 +391,125 @@ create policy "usuarios: actualizar propio perfil"
   using (id = auth.uid())
   with check (id = auth.uid() and rol = (select rol from usuarios where id = auth.uid()));
 
-create policy "usuarios: admin lee usuarios de su clinica"
+create policy "usuarios: admin lee usuarios de su barberia"
   on public.usuarios for select
-  using (fn_mi_rol() = 'admin_clinica' and clinica_id = fn_mi_clinica());
+  using (fn_mi_rol() = 'admin_barberia' and barberia_id = fn_mi_barberia());
 
--- --- CLINICAS ---------------------------------------------------------------
-create policy "clinicas: lectura publica de datos basicos"
-  on public.clinicas for select
+-- --- BARBERIAS ---------------------------------------------------------------
+create policy "barberias: lectura publica de datos basicos"
+  on public.barberias for select
   using (true);   -- el directorio público necesita nombre/slug/logo
 
-create policy "clinicas: admin actualiza su clinica"
-  on public.clinicas for update
-  using (fn_mi_rol() = 'admin_clinica' and id = fn_mi_clinica());
+create policy "barberias: admin actualiza su barberia"
+  on public.barberias for update
+  using (fn_mi_rol() = 'admin_barberia' and id = fn_mi_barberia());
 
--- --- MEDICOS ----------------------------------------------------------------
+-- --- BARBEROS ----------------------------------------------------------------
 -- Lectura pública SOLO vía vista (sin tokens); la tabla queda restringida.
-create policy "medicos: medico lee su propio registro"
-  on public.medicos for select
+create policy "barberos: barbero lee su propio registro"
+  on public.barberos for select
   using (usuario_id = auth.uid());
 
-create policy "medicos: medico actualiza su registro"
-  on public.medicos for update
+create policy "barberos: barbero actualiza su registro"
+  on public.barberos for update
   using (usuario_id = auth.uid());
 
-create policy "medicos: admin gestiona medicos de su clinica"
-  on public.medicos for all
-  using (fn_mi_rol() = 'admin_clinica' and clinica_id = fn_mi_clinica())
-  with check (fn_mi_rol() = 'admin_clinica' and clinica_id = fn_mi_clinica());
+create policy "barberos: admin gestiona barberos de su barberia"
+  on public.barberos for all
+  using (fn_mi_rol() = 'admin_barberia' and barberia_id = fn_mi_barberia())
+  with check (fn_mi_rol() = 'admin_barberia' and barberia_id = fn_mi_barberia());
 
--- Vista pública segura para el directorio de pacientes (sin tokens OAuth)
-create view public.directorio_medicos
+-- Vista pública segura para el directorio de clientes (sin tokens OAuth)
+create view public.directorio_barberos
 with (security_invoker = off) as
-  select m.id, m.clinica_id, m.especialidad, m.biografia, m.precio_consulta,
-         m.duracion_cita_min, m.acepta_telemedicina,
+  select m.id, m.barberia_id, m.especialidad, m.biografia, m.precio_servicio,
+         m.duracion_cita_min, m.acepta_domicilio,
          u.nombre, u.apellidos, u.avatar_url
-    from public.medicos m
+    from public.barberos m
     join public.usuarios u on u.id = m.usuario_id
    where m.activo;
 
-grant select on public.directorio_medicos to anon, authenticated;
+grant select on public.directorio_barberos to anon, authenticated;
 
 -- --- HORARIOS ---------------------------------------------------------------
 create policy "horarios: lectura publica"
-  on public.horarios_medicos for select
-  using (true);   -- necesario para mostrar disponibilidad a pacientes
+  on public.horarios_barberos for select
+  using (true);   -- necesario para mostrar disponibilidad a clientes
 
-create policy "horarios: medico gestiona los suyos"
-  on public.horarios_medicos for all
-  using (medico_id = fn_mi_medico_id())
-  with check (medico_id = fn_mi_medico_id());
+create policy "horarios: barbero gestiona los suyos"
+  on public.horarios_barberos for all
+  using (barbero_id = fn_mi_barbero_id())
+  with check (barbero_id = fn_mi_barbero_id());
 
-create policy "horarios: admin gestiona los de su clinica"
-  on public.horarios_medicos for all
-  using (fn_mi_rol() = 'admin_clinica'
-         and medico_id in (select id from medicos where clinica_id = fn_mi_clinica()));
+create policy "horarios: admin gestiona los de su barberia"
+  on public.horarios_barberos for all
+  using (fn_mi_rol() = 'admin_barberia'
+         and barbero_id in (select id from barberos where barberia_id = fn_mi_barberia()));
 
 -- --- CITAS ------------------------------------------------------------------
-create policy "citas: paciente lee sus citas"
+create policy "citas: cliente lee sus citas"
   on public.citas for select
-  using (paciente_id = auth.uid());
+  using (cliente_id = auth.uid());
 
-create policy "citas: medico lee SOLO sus citas"
+create policy "citas: barbero lee SOLO sus citas"
   on public.citas for select
-  using (medico_id = fn_mi_medico_id());
+  using (barbero_id = fn_mi_barbero_id());
 
-create policy "citas: medico actualiza estado de sus citas"
+create policy "citas: barbero actualiza estado de sus citas"
   on public.citas for update
-  using (medico_id = fn_mi_medico_id());
+  using (barbero_id = fn_mi_barbero_id());
 
-create policy "citas: admin lee SOLO citas de su clinica"
+create policy "citas: admin lee SOLO citas de su barberia"
   on public.citas for select
-  using (fn_mi_rol() = 'admin_clinica' and clinica_id = fn_mi_clinica());
+  using (fn_mi_rol() = 'admin_barberia' and barberia_id = fn_mi_barberia());
 
-create policy "citas: paciente cancela su cita"
+create policy "citas: cliente cancela su cita"
   on public.citas for update
-  using (paciente_id = auth.uid())
+  using (cliente_id = auth.uid())
   with check (estado in ('cancelada'));
 
 -- NOTA: no hay política INSERT en citas. Toda creación pasa por
 -- fn_bloquear_slot() (security definer), que aplica OTP + anti-hoarding.
 
 -- --- PAGOS --------------------------------------------------------------
-create policy "pagos: paciente lee sus pagos"
+create policy "pagos: cliente lee sus pagos"
   on public.pagos for select
-  using (paciente_id = auth.uid());
+  using (cliente_id = auth.uid());
 
-create policy "pagos: admin lee pagos de su clinica"
+create policy "pagos: admin lee pagos de su barberia"
   on public.pagos for select
-  using (fn_mi_rol() = 'admin_clinica' and clinica_id = fn_mi_clinica());
+  using (fn_mi_rol() = 'admin_barberia' and barberia_id = fn_mi_barberia());
 -- Escritura de pagos: solo service_role (webhooks de Stripe), sin política.
 
--- --- EXPEDIENTES ----------------------------------------------------------
-create policy "expedientes: paciente lee su expediente"
-  on public.expedientes for select
-  using (paciente_id = auth.uid());
+-- --- FICHAS ----------------------------------------------------------
+create policy "fichas: cliente lee su ficha"
+  on public.fichas for select
+  using (cliente_id = auth.uid());
 
-create policy "expedientes: medico gestiona expedientes de sus pacientes"
-  on public.expedientes for all
-  using (medico_id = fn_mi_medico_id())
-  with check (medico_id = fn_mi_medico_id() and clinica_id = fn_mi_clinica());
+create policy "fichas: barbero gestiona fichas de sus clientes"
+  on public.fichas for all
+  using (barbero_id = fn_mi_barbero_id())
+  with check (barbero_id = fn_mi_barbero_id() and barberia_id = fn_mi_barberia());
 
 -- --- FIDELIZACIÓN -----------------------------------------------------------
-create policy "fidelidad: paciente lee su historial"
+create policy "fidelidad: cliente lee su historial"
   on public.historial_fidelidad for select
-  using (paciente_id = auth.uid());
+  using (cliente_id = auth.uid());
 
-create policy "fidelidad: admin lee historial de su clinica"
+create policy "fidelidad: admin lee historial de su barberia"
   on public.historial_fidelidad for select
-  using (fn_mi_rol() = 'admin_clinica' and clinica_id = fn_mi_clinica());
+  using (fn_mi_rol() = 'admin_barberia' and barberia_id = fn_mi_barberia());
 
-create policy "recompensas: lectura por miembros y pacientes de la clinica"
+create policy "recompensas: lectura por miembros y clientes de la barberia"
   on public.recompensas_config for select
   using (true);
 
-create policy "recompensas: admin configura las de su clinica"
+create policy "recompensas: admin configura las de su barberia"
   on public.recompensas_config for all
-  using (fn_mi_rol() = 'admin_clinica' and clinica_id = fn_mi_clinica())
-  with check (fn_mi_rol() = 'admin_clinica' and clinica_id = fn_mi_clinica());
+  using (fn_mi_rol() = 'admin_barberia' and barberia_id = fn_mi_barberia())
+  with check (fn_mi_rol() = 'admin_barberia' and barberia_id = fn_mi_barberia());
 
 -- ============================================================================
--- 6. REALTIME (disponibilidad en vivo para el nodo paciente)
+-- 6. REALTIME (disponibilidad en vivo para el nodo cliente)
 -- ============================================================================
 alter publication supabase_realtime add table public.citas;

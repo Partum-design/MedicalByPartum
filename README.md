@@ -1,14 +1,14 @@
-# Medical OS
+# Barber OS
 
-SaaS B2B para la gestión de negocios médicos (clínicas y consultorios independientes), construido con **Next.js 15 (App Router)**, **Supabase** (PostgreSQL + Auth + RLS + Realtime) y desplegado en **Vercel**.
+SaaS B2B para la gestión de barberías y barberos independientes, construido con **Next.js 15 (App Router)**, **Supabase** (PostgreSQL + Auth + RLS + Realtime) y desplegado en **Vercel**.
 
 ## Nodos de usuario
 
 | Nodo | Acceso | Capacidades |
 |---|---|---|
-| **Paciente** | Público / autenticado | Buscar médicos, ver disponibilidad en tiempo real (Supabase Realtime sobre `citas`), reservar con bloqueo de slot de 10 min y pagar con Stripe |
-| **Médico** | Privado | Agenda diaria/semanal, expedientes clínicos básicos, configuración de horarios, conexión de Google Calendar / Outlook |
-| **Admin de clínica** | Privado | Altas/bajas de médicos, reportes financieros, configuración de recompensas y pasarela de pagos |
+| **Cliente** | Público / autenticado | Buscar barberos, ver disponibilidad en tiempo real (Supabase Realtime sobre `citas`), reservar con bloqueo de slot de 10 min y pagar con Stripe |
+| **Barbero** | Privado | Agenda diaria/semanal, fichas de servicio y preferencias por cliente, configuración de horarios, conexión de Google Calendar / Outlook |
+| **Admin de barbería** | Privado | Altas/bajas de barberos, reportes financieros, configuración de recompensas y pasarela de pagos |
 
 ## Arquitectura
 
@@ -21,7 +21,7 @@ Next.js (Vercel)
 │   ├── /api/webhooks/stripe ─ confirma pagos → dispara fidelización
 │   └── /api/calendar/* ─ OAuth2 + sync bidireccional Google/Microsoft
 └── Supabase
-    ├── PostgreSQL con RLS multi-tenant (clinica_id)
+    ├── PostgreSQL con RLS multi-tenant (barberia_id)
     ├── Trigger de fidelización (5 citas asistidas+pagadas → recompensa)
     ├── Exclusion constraint anti doble-reserva (tstzrange + gist)
     └── pg_cron ─ libera slots bloqueados no pagados cada minuto
@@ -31,9 +31,9 @@ Next.js (Vercel)
 
 - **Cloudflare Turnstile** invisible en el flujo de reserva (verificación server-side).
 - **Rate limiting** estricto en `src/middleware.ts` sobre `/api/bookings` y `/api/search`.
-- **OTP obligatorio** (Twilio Verify vía SMS/WhatsApp): `fn_bloquear_slot` rechaza pacientes sin `telefono_verificado`.
-- **Bloqueo de slot 10 min**: `citas.bloqueo_expira_en` + limpieza por `pg_cron`; máximo 3 bloqueos simultáneos por paciente.
-- **RLS**: médicos solo leen sus citas; admins solo datos de su clínica; los tokens OAuth nunca se exponen (vista `directorio_medicos`).
+- **OTP obligatorio** (Twilio Verify vía SMS/WhatsApp): `fn_bloquear_slot` rechaza clientes sin `telefono_verificado`.
+- **Bloqueo de slot 10 min**: `citas.bloqueo_expira_en` + limpieza por `pg_cron`; máximo 3 bloqueos simultáneos por cliente.
+- **RLS**: barberos solo leen sus citas; admins solo datos de su barbería; los tokens OAuth nunca se exponen (vista `directorio_barberos`).
 
 ## Documentación
 
@@ -51,4 +51,4 @@ npx supabase db push              # aplica supabase/migrations/
 npm run dev
 ```
 
-Dashboard del médico de ejemplo: `src/app/dashboard/medico/page.tsx` + `src/components/dashboard/AgendaMedico.tsx` (paleta azul/cian con dark mode).
+Dashboard del barbero de ejemplo: `src/app/dashboard/barbero/page.tsx` (paleta dorada/oxblood con dark mode).

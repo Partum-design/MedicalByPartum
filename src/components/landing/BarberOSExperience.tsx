@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  Activity,
   ArrowRight,
   CalendarCheck,
   Check,
@@ -12,6 +11,7 @@ import {
   MessageCircle,
   MoveRight,
   Plus,
+  Scissors,
   Sparkles,
   Users,
   X,
@@ -23,10 +23,10 @@ type ViewMode = "antes" | "despues";
 const MODULOS = [
   { icon: CalendarCheck, label: "Agenda", copy: "Disponibilidad y citas confirmadas" },
   { icon: CircleDollarSign, label: "Cobros", copy: "Tarjeta, efectivo y estados claros" },
-  { icon: Users, label: "Pacientes", copy: "Historial y recurrencia en contexto" },
+  { icon: Users, label: "Clientes", copy: "Historial y recurrencia en contexto" },
 ];
 
-export function MedicalOSExperience() {
+export function BarberOSExperience() {
   const [mode, setMode] = useState<ViewMode>("antes");
   const [simulated, setSimulated] = useState(false);
 
@@ -41,12 +41,12 @@ export function MedicalOSExperience() {
     <section id="experiencia" className="experience-section relative overflow-hidden">
       <div className="mx-auto max-w-6xl px-6 py-24 lg:py-32">
         <Reveal className="mb-12 max-w-3xl">
-          <p className="eyebrow eyebrow-dark"><Activity className="h-3.5 w-3.5" /> Operación visible</p>
+          <p className="eyebrow eyebrow-dark"><Scissors className="h-3.5 w-3.5" /> Operación visible</p>
           <h2 className="font-display mt-5 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
             El cambio se entiende cuando lo puedes tocar.
           </h2>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg">
-            Compara la operación fragmentada con el flujo que queda después de centralizarla en Medical OS.
+            Compara la operación fragmentada con el flujo que queda después de centralizarla en Barber OS.
             Cambia de vista y prueba una cita confirmada.
           </p>
         </Reveal>
@@ -56,7 +56,7 @@ export function MedicalOSExperience() {
             <div className="mode-card">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-mint-raw">Vista de operación</p>
               <div className="comparison-control mt-5">
-                <div className="comparison-labels"><button type="button" onClick={() => changeMode("antes")} className={!isAfter ? "is-active" : ""}>Antes</button><button type="button" onClick={() => changeMode("despues")} className={isAfter ? "is-active" : ""}>Con Medical OS</button></div>
+                <div className="comparison-labels"><button type="button" onClick={() => changeMode("antes")} className={!isAfter ? "is-active" : ""}>Antes</button><button type="button" onClick={() => changeMode("despues")} className={isAfter ? "is-active" : ""}>Con Barber OS</button></div>
                 <input
                   type="range"
                   min="0"
@@ -73,7 +73,7 @@ export function MedicalOSExperience() {
                   {isAfter ? "Después de centralizar" : "Antes de centralizar"}
                 </p>
                 <h3 className="mt-3 font-display text-2xl font-semibold text-white">
-                  {isAfter ? "Una clínica que responde a tiempo." : "La información llega tarde."}
+                  {isAfter ? "Una barbería que responde a tiempo." : "La información llega tarde."}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-white/60">
                   {isAfter
@@ -97,8 +97,8 @@ export function MedicalOSExperience() {
             <div className={`operations-board ${isAfter ? "is-after" : "is-before"}`}>
               <div className="board-topbar">
                 <div className="flex items-center gap-2">
-                  <span className={`board-mark ${!isAfter ? "is-before" : ""}`}>{isAfter ? "M" : "!"}</span>
-                  <span className="font-display text-sm font-semibold text-white">{isAfter ? "Medical OS" : "Operación fragmentada"}</span>
+                  <span className={`board-mark ${!isAfter ? "is-before" : ""}`}>{isAfter ? "B" : "!"}</span>
+                  <span className="font-display text-sm font-semibold text-white">{isAfter ? "Barber OS" : "Operación fragmentada"}</span>
                   <span className="board-divider" />
                   <span className="hidden text-xs text-white/45 sm:inline">{isAfter ? "Centro de operación" : "Vista manual"}</span>
                 </div>
@@ -121,7 +121,7 @@ export function MedicalOSExperience() {
                 <div className="board-kpis">
                   <Kpi label="Citas de hoy" value={isAfter ? "12" : "12"} change={isAfter ? "+3 confirmadas" : "4 por confirmar"} good={isAfter} icon={<CalendarCheck className="h-4 w-4" />} />
                   <Kpi label="Cobros" value={isAfter ? "$8,460" : "$5,280"} change={isAfter ? "100% conciliado" : "3 métodos distintos"} good={isAfter} icon={<CircleDollarSign className="h-4 w-4" />} />
-                  <Kpi label="Seguimiento" value={isAfter ? "86%" : "—"} change={isAfter ? "pacientes que regresan" : "sin medir"} good={isAfter} icon={<ClipboardCheck className="h-4 w-4" />} />
+                  <Kpi label="Seguimiento" value={isAfter ? "86%" : "—"} change={isAfter ? "clientes que regresan" : "sin medir"} good={isAfter} icon={<ClipboardCheck className="h-4 w-4" />} />
                 </div>
 
                 <div className="board-grid">
@@ -130,9 +130,9 @@ export function MedicalOSExperience() {
                       <span><CalendarCheck className="h-4 w-4 text-brand-600" /> Agenda del día</span>
                       <span className="module-muted">09:00 — 18:00</span>
                     </div>
-                    <Appointment name="Mariana Gutiérrez" time="09:30" type="Ginecología" state={isAfter ? "Confirmada" : "WhatsApp"} done={isAfter} />
-                    <Appointment name="Sofía Ramírez" time="11:00" type="Seguimiento" state={isAfter ? "Pagada" : "Sin respuesta"} done={isAfter} />
-                    <Appointment name="Diego Torres" time="13:30" type="Videoconsulta" state={isAfter ? "Confirmada" : "Por revisar"} done={isAfter} />
+                    <Appointment name="Mariana Gutiérrez" time="09:30" type="Fade + barba" state={isAfter ? "Confirmada" : "WhatsApp"} done={isAfter} />
+                    <Appointment name="Sofía Ramírez" time="11:00" type="Corte clásico" state={isAfter ? "Pagada" : "Sin respuesta"} done={isAfter} />
+                    <Appointment name="Diego Torres" time="13:30" type="Corte a domicilio" state={isAfter ? "Confirmada" : "Por revisar"} done={isAfter} />
                   </div>
 
                   <div className="board-side-stack">
@@ -144,7 +144,7 @@ export function MedicalOSExperience() {
                       {isAfter ? (
                         <div className="action-success"><Check className="h-4 w-4" /><span>Recordatorios enviados automáticamente</span></div>
                       ) : (
-                        <div className="action-warning"><X className="h-4 w-4" /><span>4 pacientes esperan confirmación manual</span></div>
+                        <div className="action-warning"><X className="h-4 w-4" /><span>4 clientes esperan confirmación manual</span></div>
                       )}
                     </div>
                     <div className="board-module loyalty-module">

@@ -12,7 +12,7 @@ import { useDemoStore } from "@/lib/demo-store";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
 
-// Nodo Paciente: método de pago guardado + historial de cobros de sus citas.
+// Nodo Cliente: método de pago guardado + historial de cobros de sus citas.
 export default function PagosPage() {
   const store = useDemoStore();
   const { listo, citas, sesion } = store;
@@ -22,14 +22,14 @@ export default function PagosPage() {
   const mias = useMemo(
     () =>
       citas
-        .filter((c) => c.paciente_id === "pac-1" && c.estado !== "cancelada")
+        .filter((c) => c.cliente_id === "cli-1" && c.estado !== "cancelada")
         .sort((a, b) => b.inicio.localeCompare(a.inicio)),
     [citas]
   );
 
   if (!listo) return null;
 
-  if (!sesion || sesion.rol !== "paciente") {
+  if (!sesion || sesion.rol !== "cliente") {
     return <SinSesion />;
   }
 
@@ -92,10 +92,10 @@ export default function PagosPage() {
                   : <Banknote />}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{c.medico_nombre}</p>
+                <p className="truncate font-medium">{c.barbero_nombre}</p>
                 <p className="text-xs" style={{ color: "var(--ink-muted)" }}>
                   {format(new Date(c.inicio), "d 'de' MMMM, yyyy", { locale: es })} ·{" "}
-                  {c.metodo_pago === "tarjeta" ? `${index % 2 === 0 ? "Visa" : "Mastercard"} ····${index % 2 === 0 ? "5521" : "1084"}` : "Efectivo en clínica"}
+                  {c.metodo_pago === "tarjeta" ? `${index % 2 === 0 ? "Visa" : "Mastercard"} ····${index % 2 === 0 ? "5521" : "1084"}` : "Efectivo en barbería"}
                 </p>
               </div>
               <div className="text-right">

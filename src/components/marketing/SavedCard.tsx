@@ -68,7 +68,7 @@ export function SavedCard({
               <Activity className="saved-card-watermark" strokeWidth={1.25} aria-hidden />
               <div className="relative flex items-start justify-between">
                 <div>
-                  <p className="font-display text-sm font-bold tracking-tight">Medical OS</p>
+                  <p className="font-display text-sm font-bold tracking-tight">Barber OS</p>
                   <p className="text-[9px] uppercase tracking-[0.22em] text-white/60">by Partum</p>
                 </div>
                 <Wifi className="h-5 w-5 rotate-90 text-white/75" aria-hidden />
@@ -119,7 +119,7 @@ export function SavedCard({
       {trust && (
         <p className="mt-5 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-xs text-white/55">
           <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-accent-400" />
-          Método tokenizado; Medical OS no almacena el número completo.
+          Método tokenizado; Barber OS no almacena el número completo.
         </p>
       )}
     </div>

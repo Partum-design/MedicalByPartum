@@ -1,4 +1,4 @@
-# Guía de Despliegue en Vercel — Medical OS
+# Guía de Despliegue en Vercel — Barber OS
 
 ## 1. Variables de entorno requeridas
 
@@ -17,7 +17,7 @@ Configúralas en **Vercel → Project → Settings → Environment Variables**, 
 | `STRIPE_SECRET_KEY` | Solo servidor | Llave secreta de la cuenta plataforma |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Cliente | Llave pública para Stripe.js/Elements |
 | `STRIPE_WEBHOOK_SECRET` | Solo servidor | Firma de webhooks (`checkout.session.completed`, `invoice.paid`) |
-| `STRIPE_CONNECT_CLIENT_ID` | Solo servidor | Onboarding de clínicas con Stripe Connect |
+| `STRIPE_CONNECT_CLIENT_ID` | Solo servidor | Onboarding de barberías con Stripe Connect |
 
 ### Integraciones de calendario (OAuth2)
 | Variable | Ámbito | Descripción |
@@ -61,7 +61,7 @@ Vercel no ofrece rate limiting declarativo en `vercel.json` (eso vive en el Midd
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(self), microphone=(self), geolocation=()" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
       ]
     },

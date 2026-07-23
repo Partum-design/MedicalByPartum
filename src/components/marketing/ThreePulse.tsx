@@ -20,17 +20,17 @@ function PulseObject() {
     <group ref={group}>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[1.05, 0.018, 12, 96]} />
-        <meshBasicMaterial color="#80EE98" transparent opacity={0.82} />
+        <meshBasicMaterial color="#EEC980" transparent opacity={0.82} />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0.6, 0]}>
         <torusGeometry args={[1.32, 0.012, 12, 96]} />
-        <meshBasicMaterial color="#09D1C7" transparent opacity={0.4} />
+        <meshBasicMaterial color="#D10920" transparent opacity={0.4} />
       </mesh>
       <mesh>
         <icosahedronGeometry args={[0.62, 2]} />
         <meshStandardMaterial
-          color="#15919B"
-          emissive="#46DFB1"
+          color="#9B1525"
+          emissive="#DFAC46"
           emissiveIntensity={0.75}
           roughness={0.3}
           metalness={0.45}
@@ -39,7 +39,7 @@ function PulseObject() {
           opacity={0.78}
         />
       </mesh>
-      <pointLight color="#80EE98" intensity={2} distance={4} />
+      <pointLight color="#EEC980" intensity={2} distance={4} />
     </group>
   );
 }

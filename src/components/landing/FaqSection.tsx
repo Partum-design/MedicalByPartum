@@ -6,24 +6,24 @@ import { Reveal } from "@/components/marketing/Reveal";
 
 const PREGUNTAS = [
   {
-    q: "¿Puedo cobrar las consultas en efectivo además de con tarjeta?",
-    a: "Sí. El paciente elige el método al agendar: tarjeta vía Stripe o efectivo en clínica. Las citas en efectivo quedan marcadas como \"pendientes\" hasta que recepción o el médico confirman el cobro desde su panel.",
+    q: "¿Puedo cobrar los cortes en efectivo además de con tarjeta?",
+    a: "Sí. El cliente elige el método al agendar: tarjeta vía Stripe o efectivo en barbería. Las citas en efectivo quedan marcadas como \"pendientes\" hasta que recepción o el barbero confirman el cobro desde su panel.",
   },
   {
     q: "¿Necesito tarjeta de crédito para probar la demo?",
-    a: "No. La demo interactiva corre con datos locales en tu navegador — no se conecta a Stripe ni a una base de datos real, así que puedes explorar los tres roles (paciente, médico, administrador) sin ningún costo ni registro.",
+    a: "No. La demo interactiva corre con datos locales en tu navegador — no se conecta a Stripe ni a una base de datos real, así que puedes explorar los tres roles (cliente, barbero, administrador) sin ningún costo ni registro.",
   },
   {
-    q: "¿Qué pasa si un paciente no completa el pago?",
-    a: "El horario se bloquea por 10 minutos mientras se confirma el pago o el método elegido. Si no se completa, el sistema lo libera automáticamente para que otro paciente pueda tomarlo — así se evitan los huecos fantasma en la agenda.",
+    q: "¿Qué pasa si un cliente no completa el pago?",
+    a: "El horario se bloquea por 10 minutos mientras se confirma el pago o el método elegido. Si no se completa, el sistema lo libera automáticamente para que otro cliente pueda tomarlo — así se evitan los huecos fantasma en la agenda.",
   },
   {
     q: "¿Puedo cambiar de plan más adelante?",
-    a: "Sí, puedes subir o bajar de plan cuando quieras; el cambio aplica en el siguiente ciclo de facturación y no perdemos tu historial de pacientes, citas ni tu programa de lealtad.",
+    a: "Sí, puedes subir o bajar de plan cuando quieras; el cambio aplica en el siguiente ciclo de facturación y no perdemos tu historial de clientes, citas ni tu programa de lealtad.",
   },
   {
-    q: "¿La plataforma sirve para clínicas con varios consultorios?",
-    a: "Sí, el plan Clínica soporta múltiples sucursales y médicos ilimitados, con roles y permisos separados por sucursal para tu equipo administrativo.",
+    q: "¿La plataforma sirve para barberías con varias sucursales?",
+    a: "Sí, el plan Barbería soporta múltiples sucursales y barberos ilimitados, con roles y permisos separados por sucursal para tu equipo administrativo.",
   },
 ];
 

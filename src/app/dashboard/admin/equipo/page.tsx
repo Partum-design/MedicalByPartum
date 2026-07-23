@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Plus, ShieldCheck, Video, X } from "lucide-react";
+import { Home, Plus, ShieldCheck, X } from "lucide-react";
 import { PanelShell } from "@/components/shell/PanelShell";
 import { useDemoStore } from "@/lib/demo-store";
 
@@ -11,26 +11,26 @@ const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" 
 const formInicial = {
   nombre: "",
   especialidad: "",
-  precio_consulta: 800,
+  precio_servicio: 800,
   duracion_cita_min: 30,
-  acepta_telemedicina: true,
+  acepta_domicilio: true,
   biografia: "",
 };
 
-// Nodo Administrador: alta y gestión del equipo médico de la clínica.
-export default function EquipoMedicoPage() {
+// Nodo Administrador: alta y gestión del equipo de barberos de la barbería.
+export default function EquipoBarberoPage() {
   const store = useDemoStore();
-  const { listo, sesion, medicos, citas } = store;
+  const { listo, sesion, barberos, citas } = store;
   const [mostrarForm, setMostrarForm] = useState(false);
   const [form, setForm] = useState(formInicial);
 
   const conStats = useMemo(
     () =>
-      medicos.map((m) => {
-        const suyas = citas.filter((c) => c.medico_id === m.id && c.estado !== "cancelada");
+      barberos.map((m) => {
+        const suyas = citas.filter((c) => c.barbero_id === m.id && c.estado !== "cancelada");
         return { ...m, citas: suyas.length, ingresos: suyas.reduce((s, c) => s + c.precio, 0) };
       }),
-    [medicos, citas]
+    [barberos, citas]
   );
 
   if (!listo) return null;
@@ -41,18 +41,18 @@ export default function EquipoMedicoPage() {
 
   function darDeAlta() {
     if (!form.nombre.trim() || !form.especialidad.trim()) return;
-    store.agregarMedico({ ...form, nombre: form.nombre.trim(), especialidad: form.especialidad.trim() });
+    store.agregarBarbero({ ...form, nombre: form.nombre.trim(), especialidad: form.especialidad.trim() });
     setForm(formInicial);
     setMostrarForm(false);
   }
 
   return (
-    <PanelShell sesion={sesion} activo="Equipo médico" onLogout={store.logout}>
+    <PanelShell sesion={sesion} activo="Equipo de barberos" onLogout={store.logout}>
       <header className="anim-in mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Equipo médico</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Equipo de barberos</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-            Da de alta especialistas y activa o desactiva su disponibilidad para agendar.
+            Da de alta barberos y activa o desactiva su disponibilidad para agendar.
           </p>
         </div>
         <button
@@ -66,26 +66,26 @@ export default function EquipoMedicoPage() {
 
       {mostrarForm && (
         <section className="anim-pop mb-6 rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-          <h2 className="mb-4 font-semibold">Nuevo especialista</h2>
+          <h2 className="mb-4 font-semibold">Nuevo barbero</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <input
               value={form.nombre}
               onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-              placeholder="Nombre (ej. Dr. Luis Peña)"
+              placeholder="Nombre (ej. Iván Rosales)"
               className="rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
             />
             <input
               value={form.especialidad}
               onChange={(e) => setForm((f) => ({ ...f, especialidad: e.target.value }))}
-              placeholder="Especialidad"
+              placeholder="Especialidad (ej. Fades y diseño de barba)"
               className="rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
             />
             <input
               type="number"
               min={0}
-              value={form.precio_consulta}
-              onChange={(e) => setForm((f) => ({ ...f, precio_consulta: Number(e.target.value) }))}
-              placeholder="Precio de consulta"
+              value={form.precio_servicio}
+              onChange={(e) => setForm((f) => ({ ...f, precio_servicio: Number(e.target.value) }))}
+              placeholder="Precio del servicio"
               className="rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
             />
             <select
@@ -107,26 +107,26 @@ export default function EquipoMedicoPage() {
               className="rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15 sm:col-span-2"
             />
             <button
-              onClick={() => setForm((f) => ({ ...f, acepta_telemedicina: !f.acepta_telemedicina }))}
+              onClick={() => setForm((f) => ({ ...f, acepta_domicilio: !f.acepta_domicilio }))}
               className={`flex items-center justify-between rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors sm:col-span-2 ${
-                form.acepta_telemedicina
+                form.acepta_domicilio
                   ? "border-accent-500 bg-accent-100/50 text-accent-600 dark:bg-accent-500/10"
                   : "border-slate-200 dark:border-white/10"
               }`}
             >
               <span className="flex items-center gap-2">
-                <Video className="h-4 w-4" /> Ofrece videoconsultas
+                <Home className="h-4 w-4" /> Ofrece servicio a domicilio
               </span>
               <span
                 className={`relative h-6 w-11 shrink-0 rounded-full ring-1 ring-inset transition-colors ${
-                  form.acepta_telemedicina
+                  form.acepta_domicilio
                     ? "bg-gradient-to-r from-brand-600 to-accent-500 ring-transparent"
                     : "bg-slate-300 ring-slate-300 dark:bg-white/15 dark:ring-white/15"
                 }`}
               >
                 <span
                   className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ring-1 ring-black/5 transition-transform ${
-                    form.acepta_telemedicina ? "translate-x-5" : "translate-x-0.5"
+                    form.acepta_domicilio ? "translate-x-5" : "translate-x-0.5"
                   }`}
                 />
               </span>
@@ -137,7 +137,7 @@ export default function EquipoMedicoPage() {
             disabled={!form.nombre.trim() || !form.especialidad.trim()}
             className="card-hover mt-4 rounded-xl bg-gradient-to-r from-brand-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
           >
-            Guardar especialista
+            Guardar barbero
           </button>
         </section>
       )}
@@ -169,7 +169,7 @@ export default function EquipoMedicoPage() {
               </div>
             </dl>
             <button
-              onClick={() => store.toggleActivoMedico(m.id)}
+              onClick={() => store.toggleActivoBarbero(m.id)}
               className={`w-full rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
                 m.activo
                   ? "border border-red-200 text-red-500 hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/40"

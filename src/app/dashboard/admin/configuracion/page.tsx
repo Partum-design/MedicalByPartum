@@ -6,16 +6,16 @@ import { Building2, Check, Gift, RotateCcw, Save, ShieldCheck } from "lucide-rea
 import { PanelShell } from "@/components/shell/PanelShell";
 import { useDemoStore } from "@/lib/demo-store";
 
-// Nodo Administrador: datos de la clínica y reglas del programa de lealtad.
+// Nodo Administrador: datos de la barbería y reglas del programa de lealtad.
 export default function ConfiguracionAdminPage() {
   const store = useDemoStore();
-  const { listo, sesion, clinicaConfig, recompensasConfig } = store;
+  const { listo, sesion, barberiaConfig, recompensasConfig } = store;
 
-  const [clinica, setClinica] = useState(clinicaConfig);
+  const [barberia, setBarberia] = useState(barberiaConfig);
   const [recompensas, setRecompensas] = useState(recompensasConfig);
   const [guardado, setGuardado] = useState(false);
 
-  useEffect(() => setClinica(clinicaConfig), [clinicaConfig]);
+  useEffect(() => setBarberia(barberiaConfig), [barberiaConfig]);
   useEffect(() => setRecompensas(recompensasConfig), [recompensasConfig]);
 
   if (!listo) return null;
@@ -25,7 +25,7 @@ export default function ConfiguracionAdminPage() {
   }
 
   function guardar() {
-    store.actualizarClinicaConfig(clinica);
+    store.actualizarBarberiaConfig(barberia);
     store.actualizarRecompensasConfig(recompensas);
     setGuardado(true);
     setTimeout(() => setGuardado(false), 2500);
@@ -36,22 +36,22 @@ export default function ConfiguracionAdminPage() {
       <header className="anim-in mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Configuración</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-          Datos de la clínica y reglas del programa de lealtad.
+          Datos de la barbería y reglas del programa de lealtad.
         </p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="anim-in anim-d1 space-y-4 rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
           <h2 className="flex items-center gap-2 font-semibold">
-            <Building2 className="h-4 w-4 text-accent-500" /> Clínica
+            <Building2 className="h-4 w-4 text-accent-500" /> Barbería
           </h2>
           <div>
             <label className="mb-1.5 block text-xs font-medium" style={{ color: "var(--ink-muted)" }}>
               Nombre
             </label>
             <input
-              value={clinica.nombre}
-              onChange={(e) => setClinica((c) => ({ ...c, nombre: e.target.value }))}
+              value={barberia.nombre}
+              onChange={(e) => setBarberia((c) => ({ ...c, nombre: e.target.value }))}
               className="w-full rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
             />
           </div>
@@ -60,8 +60,8 @@ export default function ConfiguracionAdminPage() {
               Dirección
             </label>
             <input
-              value={clinica.direccion}
-              onChange={(e) => setClinica((c) => ({ ...c, direccion: e.target.value }))}
+              value={barberia.direccion}
+              onChange={(e) => setBarberia((c) => ({ ...c, direccion: e.target.value }))}
               className="w-full rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
             />
           </div>
@@ -70,8 +70,8 @@ export default function ConfiguracionAdminPage() {
               Teléfono
             </label>
             <input
-              value={clinica.telefono}
-              onChange={(e) => setClinica((c) => ({ ...c, telefono: e.target.value }))}
+              value={barberia.telefono}
+              onChange={(e) => setBarberia((c) => ({ ...c, telefono: e.target.value }))}
               className="w-full rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
             />
           </div>
@@ -114,7 +114,7 @@ export default function ConfiguracionAdminPage() {
           <p className="rounded-xl bg-brand-50 px-4 py-2.5 text-sm text-brand-700 dark:bg-brand-900/30 dark:text-brand-100">
             Regla activa: cada <strong>{recompensas.citas_requeridas}</strong> citas asistidas →{" "}
             <strong>{recompensas.valor_descuento}%</strong> de descuento. Se aplica a todos los
-            pacientes de la clínica.
+            clientes de la barbería.
           </p>
         </section>
       </div>

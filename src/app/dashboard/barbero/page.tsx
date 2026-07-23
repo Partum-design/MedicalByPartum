@@ -4,16 +4,16 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { format, isToday } from "date-fns";
 import { es } from "date-fns/locale";
-import { Banknote, CalendarDays, CheckCircle2, CreditCard, MapPin, Users, Video } from "lucide-react";
+import { Banknote, CalendarDays, CheckCircle2, CreditCard, Home, MapPin, Users } from "lucide-react";
 import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
 import { CalendarOverview } from "@/components/calendar/CalendarOverview";
 import { useDemoStore } from "@/lib/demo-store";
 
 const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
 
-// Nodo Médico: agenda con datos locales reales (marcar asistida funciona
-// y alimenta el programa de lealtad del paciente).
-export default function DashboardMedicoPage() {
+// Nodo Barbero: agenda con datos locales reales (marcar asistida funciona
+// y alimenta el programa de lealtad del cliente).
+export default function DashboardBarberoPage() {
   const store = useDemoStore();
   const { listo, citas, sesion } = store;
   const [vista, setVista] = useState<"hoy" | "semana">("hoy");
@@ -21,7 +21,7 @@ export default function DashboardMedicoPage() {
   const propias = useMemo(
     () =>
       citas
-        .filter((c) => c.medico_id === "med-1" && c.estado !== "cancelada")
+        .filter((c) => c.barbero_id === "bar-1" && c.estado !== "cancelada")
         .sort((a, b) => a.inicio.localeCompare(b.inicio)),
     [citas]
   );
@@ -35,7 +35,7 @@ export default function DashboardMedicoPage() {
   const pendientesEfectivo = deHoy.filter((c) => c.estado_pago === "pendiente");
   const stats = {
     hoy: deHoy.length,
-    tele: deHoy.filter((c) => c.modalidad === "telemedicina").length,
+    tele: deHoy.filter((c) => c.modalidad === "domicilio").length,
     ingresos: deHoy.reduce((s, c) => s + c.precio, 0),
     porCobrar: pendientesEfectivo.reduce((s, c) => s + c.precio, 0),
     asistidas: deHoy.filter((c) => c.estado === "asistida").length,
@@ -43,8 +43,8 @@ export default function DashboardMedicoPage() {
 
   if (!listo) return null;
 
-  if (!sesion || sesion.rol !== "medico") {
-    return <SinSesion rol="médico" />;
+  if (!sesion || sesion.rol !== "barbero") {
+    return <SinSesion rol="barbero" />;
   }
 
   return (
@@ -77,7 +77,7 @@ export default function DashboardMedicoPage() {
       {/* KPIs pastel estilo referencia */}
       <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiPastel tono="lila" delay="anim-d1" icon={<Users className="h-4 w-4" />} label="Citas de hoy" value={String(stats.hoy)} nota="Agenda del día" />
-        <KpiPastel tono="azul" delay="anim-d2" icon={<Video className="h-4 w-4" />} label="Telemedicina" value={String(stats.tele)} nota="Con enlace de video" />
+        <KpiPastel tono="azul" delay="anim-d2" icon={<Home className="h-4 w-4" />} label="Domicilio" value={String(stats.tele)} nota="Con dirección confirmada" />
         <KpiPastel
           tono="menta"
           delay="anim-d3"
@@ -94,7 +94,7 @@ export default function DashboardMedicoPage() {
       </section>
 
       <div className="mb-6">
-        <CalendarOverview citas={propias} perspective="medico" title="Agenda mensual" />
+        <CalendarOverview citas={propias} perspective="barbero" title="Agenda mensual" />
       </div>
 
       {/* Lista de citas */}
@@ -107,7 +107,7 @@ export default function DashboardMedicoPage() {
             <CalendarDays className="h-8 w-8 text-accent-500" />
             <p className="font-medium">Sin citas {vista === "hoy" ? "para hoy" : "próximas"}</p>
             <p className="text-sm" style={{ color: "var(--ink-muted)" }}>
-              Las nuevas reservas de pacientes aparecen aquí al instante.
+              Las nuevas reservas de clientes aparecen aquí al instante.
             </p>
           </div>
         )}
@@ -125,12 +125,12 @@ export default function DashboardMedicoPage() {
               <span className="text-sm font-semibold">{format(new Date(cita.inicio), "HH:mm")}</span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{cita.paciente_nombre}</p>
+              <p className="truncate font-medium">{cita.cliente_nombre}</p>
               <p className="mt-0.5 flex items-center gap-1.5 text-sm" style={{ color: "var(--ink-muted)" }}>
-                {cita.modalidad === "telemedicina" ? (
-                  <><Video className="h-3.5 w-3.5 text-accent-500" /> Videoconsulta</>
+                {cita.modalidad === "domicilio" ? (
+                  <><Home className="h-3.5 w-3.5 text-accent-500" /> A domicilio</>
                 ) : (
-                  <><MapPin className="h-3.5 w-3.5 text-brand-500" /> Presencial</>
+                  <><MapPin className="h-3.5 w-3.5 text-brand-500" /> En barbería</>
                 )}
                 <span aria-hidden>·</span> {mxn.format(cita.precio)}
               </p>
@@ -157,16 +157,16 @@ export default function DashboardMedicoPage() {
                   Cobrar efectivo
                 </button>
               )}
-              {cita.modalidad === "telemedicina" &&
-                cita.enlace_videollamada &&
+              {cita.modalidad === "domicilio" &&
+                cita.direccion_domicilio &&
                 cita.estado === "confirmada" && (
                   <a
-                    href={cita.enlace_videollamada}
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cita.direccion_domicilio)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-full bg-accent-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-600"
                   >
-                    Unirse
+                    Ver dirección
                   </a>
                 )}
               {cita.estado === "confirmada" ? (

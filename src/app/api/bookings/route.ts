@@ -23,7 +23,7 @@ async function verifyTurnstile(token: string | undefined, ip: string) {
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "";
   const body = await req.json().catch(() => null);
-  if (!body?.medico_id || !body?.inicio || !body?.fin) {
+  if (!body?.barbero_id || !body?.inicio || !body?.fin) {
     return NextResponse.json({ error: "Parámetros incompletos" }, { status: 400 });
   }
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   // La RPC valida OTP, límite de bloqueos simultáneos y solapes.
   const { data: citaId, error } = await supabase.rpc("fn_bloquear_slot", {
-    p_medico_id: body.medico_id,
+    p_barbero_id: body.barbero_id,
     p_inicio: body.inicio,
     p_fin: body.fin,
     p_modalidad: body.modalidad ?? "presencial",
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     const conocido =
       error.message.includes("Teléfono no verificado") ||
       error.message.includes("Límite de reservas") ||
-      error.message.includes("Médico no disponible");
+      error.message.includes("Barbero no disponible");
     return NextResponse.json(
       { error: conocido ? error.message : "No fue posible reservar el horario" },
       { status: conocido ? 409 : 500 }

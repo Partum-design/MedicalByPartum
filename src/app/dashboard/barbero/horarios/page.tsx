@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, Check, Clock3, Stethoscope } from "lucide-react";
+import { CalendarClock, Check, Clock3, Scissors } from "lucide-react";
 import { PanelShell } from "@/components/shell/PanelShell";
 import { DIAS_SEMANA, useDemoStore } from "@/lib/demo-store";
 
-// Nodo Médico: disponibilidad semanal. Los bloques activos son los que
-// alimentan los horarios que ve el paciente al agendar (en la demo, la
+// Nodo Barbero: disponibilidad semanal. Los bloques activos son los que
+// alimentan los horarios que ve el cliente al agendar (en la demo, la
 // franja 9–13h de FlujoReserva; en producción, esta tabla sería la fuente).
 export default function HorariosPage() {
   const store = useDemoStore();
@@ -14,11 +14,11 @@ export default function HorariosPage() {
 
   if (!listo) return null;
 
-  if (!sesion || sesion.rol !== "medico") {
+  if (!sesion || sesion.rol !== "barbero") {
     return <SinSesion />;
   }
 
-  const horario = store.horarioDeMedico(sesion.id);
+  const horario = store.horarioDeBarbero(sesion.id);
   const activos = DIAS_SEMANA.filter((dia) => horario[dia.id].activo);
   const horasSemanales = activos.reduce((total, dia) => {
     const [ih, im] = horario[dia.id].inicio.split(":").map(Number);
@@ -31,7 +31,7 @@ export default function HorariosPage() {
       <header className="anim-in mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Horarios</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-          Define tu disponibilidad semanal. Los pacientes solo verán horarios dentro de estos
+          Define tu disponibilidad semanal. Los clientes solo verán horarios dentro de estos
           bloques.
         </p>
       </header>
@@ -43,12 +43,12 @@ export default function HorariosPage() {
           <strong>{activos.length}<small>/ 7 días</small></strong>
           <div className="schedule-summary-line"><span style={{ width: `${(activos.length / 7) * 100}%` }} /></div>
           <div className="schedule-summary-stat"><Clock3 /><span><b>{horasSemanales.toFixed(horasSemanales % 1 ? 1 : 0)} h</b> disponibles por semana</span></div>
-          <p>Los cambios se aplican al instante en los horarios visibles para tus pacientes.</p>
+          <p>Los cambios se aplican al instante en los horarios visibles para tus clientes.</p>
         </aside>
 
         <div className="schedule-days">
           <div className="schedule-days-heading">
-            <div><p>Disponibilidad regular</p><span>Activa cada día y define la ventana de consulta.</span></div>
+            <div><p>Disponibilidad regular</p><span>Activa cada día y define la ventana de servicio.</span></div>
             <span className="schedule-saved"><Check /> Guardado</span>
           </div>
           {DIAS_SEMANA.map((dia, i) => {
@@ -91,7 +91,7 @@ export default function HorariosPage() {
                     </label>
                   </div>
                 ) : (
-                  <span className="schedule-unavailable">Sin consultas</span>
+                  <span className="schedule-unavailable">Sin citas</span>
                 )}
               </div>
             );
@@ -105,8 +105,8 @@ export default function HorariosPage() {
 function SinSesion() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <Stethoscope className="h-8 w-8 text-accent-500" />
-      <p className="anim-in text-lg font-semibold">Inicia sesión como médico para ver este panel</p>
+      <Scissors className="h-8 w-8 text-accent-500" />
+      <p className="anim-in text-lg font-semibold">Inicia sesión como barbero para ver este panel</p>
       <Link
         href="/login"
         className="anim-in anim-d1 rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md"

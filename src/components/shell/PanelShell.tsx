@@ -9,6 +9,7 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   PieChart,
   Settings,
   Sparkles,
@@ -29,6 +30,7 @@ const NAV: Record<RolDemo, NavItem[]> = {
     { label: "Panel", href: "/dashboard/admin", icon: <LayoutDashboard className="h-4 w-4" /> },
     { label: "Equipo médico", href: "/dashboard/admin/equipo", icon: <Users className="h-4 w-4" /> },
     { label: "Reportes", href: "/dashboard/admin/reportes", icon: <PieChart className="h-4 w-4" /> },
+    { label: "Marketing", href: "/dashboard/admin/marketing", icon: <Megaphone className="h-4 w-4" /> },
     { label: "Configuración", href: "/dashboard/admin/configuracion", icon: <Settings className="h-4 w-4" /> },
   ],
   paciente: [

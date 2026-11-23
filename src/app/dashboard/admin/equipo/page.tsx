@@ -1,201 +1,118 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Plus, ShieldCheck, Video, X } from "lucide-react";
-import { PanelShell } from "@/components/shell/PanelShell";
-import { useDemoStore } from "@/lib/demo-store";
+import { Check, Pencil, Plus, Power, Trash2, Video, Home } from "lucide-react";
+import { useClinica } from "@/lib/store";
+import { ETIQUETAS_PERMISOS, permisosDe, resumirMedicos, type Medico, type PermisosMedico } from "@/lib/datos/modelo";
+import { Avatar, Modal, moneda, PageHead, pct, Switch, useToast } from "@/components/ui";
+import { LogoCalendar } from "@/components/marca/LogoGoogle";
 
-const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
+const VACIO = { nombre: "", especialidad: "", cedula: "", color: "#04BFAD", experiencia: 1, duracion_cita_min: 30, acepta_domicilio: false, telemedicina: true, biografia: "" };
 
-const formInicial = {
-  nombre: "",
-  especialidad: "",
-  precio_consulta: 800,
-  duracion_cita_min: 30,
-  acepta_telemedicina: true,
-  biografia: "",
-};
+export default function Equipo() {
+  const c = useClinica();
+  const toast = useToast();
+  const [editando, setEditando] = useState<Medico | "nuevo" | null>(null);
+  const [d, setD] = useState<typeof VACIO>(VACIO);
+  const [permisos, setPermisos] = useState<PermisosMedico | null>(null);
+  const resumen = useMemo(() => new Map(resumirMedicos(c.citas.filter((x) => Date.now() - new Date(x.inicio).getTime() < 30 * 86_400_000 && new Date(x.inicio).getTime() <= Date.now()), c.medicos).map((r) => [r.id, r])), [c.citas, c.medicos]);
 
-// Nodo Administrador: alta y gestión del equipo médico de la clínica.
-export default function EquipoMedicoPage() {
-  const store = useDemoStore();
-  const { listo, sesion, medicos, citas } = store;
-  const [mostrarForm, setMostrarForm] = useState(false);
-  const [form, setForm] = useState(formInicial);
-
-  const conStats = useMemo(
-    () =>
-      medicos.map((m) => {
-        const suyas = citas.filter((c) => c.medico_id === m.id && c.estado !== "cancelada");
-        return { ...m, citas: suyas.length, ingresos: suyas.reduce((s, c) => s + c.precio, 0) };
-      }),
-    [medicos, citas]
-  );
-
-  if (!listo) return null;
-
-  if (!sesion || sesion.rol !== "admin") {
-    return <SinSesion />;
-  }
-
-  function darDeAlta() {
-    if (!form.nombre.trim() || !form.especialidad.trim()) return;
-    store.agregarMedico({ ...form, nombre: form.nombre.trim(), especialidad: form.especialidad.trim() });
-    setForm(formInicial);
-    setMostrarForm(false);
-  }
+  const abrir = (m: Medico | "nuevo") => {
+    setEditando(m);
+    if (m === "nuevo") {
+      setD(VACIO);
+      setPermisos(null);
+    } else {
+      setD({ nombre: m.nombre, especialidad: m.especialidad, cedula: m.cedula, color: m.color, experiencia: m.experiencia, duracion_cita_min: m.duracion_cita_min, acepta_domicilio: m.acepta_domicilio, telemedicina: m.telemedicina, biografia: m.biografia });
+      setPermisos(permisosDe(m));
+    }
+  };
+  const guardar = () => {
+    if (d.nombre.trim().length < 3 || !d.especialidad.trim()) return alert("Nombre y especialidad son obligatorios.");
+    if (editando === "nuevo") {
+      if (c.agregarMedico(d)) toast.mostrar(`${d.nombre} se unió al equipo`);
+    } else if (editando) {
+      if (c.actualizarMedico(editando.id, { ...d, permisos: permisos ?? undefined }).ok) toast.mostrar("Cambios guardados");
+    }
+    setEditando(null);
+  };
+  const grupos = [...new Set(ETIQUETAS_PERMISOS.map((p) => p.grupo))];
 
   return (
-    <PanelShell sesion={sesion} activo="Equipo médico" onLogout={store.logout}>
-      <header className="anim-in mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Equipo médico</h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-            Da de alta especialistas y activa o desactiva su disponibilidad para agendar.
-          </p>
-        </div>
-        <button
-          onClick={() => setMostrarForm((v) => !v)}
-          className="card-hover flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md"
-        >
-          {mostrarForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {mostrarForm ? "Cancelar" : "Dar de alta"}
-        </button>
-      </header>
-
-      {mostrarForm && (
-        <section className="anim-pop mb-6 rounded-3xl p-6 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-          <h2 className="mb-4 font-semibold">Nuevo especialista</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <input
-              value={form.nombre}
-              onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-              placeholder="Nombre (ej. Dr. Luis Peña)"
-              className="rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
-            />
-            <input
-              value={form.especialidad}
-              onChange={(e) => setForm((f) => ({ ...f, especialidad: e.target.value }))}
-              placeholder="Especialidad"
-              className="rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
-            />
-            <input
-              type="number"
-              min={0}
-              value={form.precio_consulta}
-              onChange={(e) => setForm((f) => ({ ...f, precio_consulta: Number(e.target.value) }))}
-              placeholder="Precio de consulta"
-              className="rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
-            />
-            <select
-              value={form.duracion_cita_min}
-              onChange={(e) => setForm((f) => ({ ...f, duracion_cita_min: Number(e.target.value) }))}
-              className="rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15"
-            >
-              {[15, 20, 30, 45, 60].map((d) => (
-                <option key={d} value={d}>
-                  {d} minutos
-                </option>
-              ))}
-            </select>
-            <textarea
-              value={form.biografia}
-              onChange={(e) => setForm((f) => ({ ...f, biografia: e.target.value }))}
-              placeholder="Biografía breve (opcional)"
-              rows={2}
-              className="rounded-xl border border-slate-300/70 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-accent-500 dark:border-white/15 sm:col-span-2"
-            />
-            <button
-              onClick={() => setForm((f) => ({ ...f, acepta_telemedicina: !f.acepta_telemedicina }))}
-              className={`flex items-center justify-between rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors sm:col-span-2 ${
-                form.acepta_telemedicina
-                  ? "border-accent-500 bg-accent-100/50 text-accent-600 dark:bg-accent-500/10"
-                  : "border-slate-200 dark:border-white/10"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <Video className="h-4 w-4" /> Ofrece videoconsultas
-              </span>
-              <span
-                className={`relative h-6 w-11 shrink-0 rounded-full ring-1 ring-inset transition-colors ${
-                  form.acepta_telemedicina
-                    ? "bg-gradient-to-r from-brand-600 to-accent-500 ring-transparent"
-                    : "bg-slate-300 ring-slate-300 dark:bg-white/15 dark:ring-white/15"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ring-1 ring-black/5 transition-transform ${
-                    form.acepta_telemedicina ? "translate-x-5" : "translate-x-0.5"
-                  }`}
-                />
-              </span>
-            </button>
-          </div>
-          <button
-            onClick={darDeAlta}
-            disabled={!form.nombre.trim() || !form.especialidad.trim()}
-            className="card-hover mt-4 rounded-xl bg-gradient-to-r from-brand-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-          >
-            Guardar especialista
-          </button>
-        </section>
-      )}
-
-      <section className="anim-in anim-d1 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {conStats.map((m) => (
-          <article
-            key={m.id}
-            className={`card-hover rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 ${!m.activo ? "opacity-60" : ""}`}
-            style={{ background: "var(--card)" }}
-          >
-            <div className="mb-3 flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-sm font-semibold text-white">
-                {m.nombre.replace(/^Dra?\.\s*/, "").charAt(0)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{m.nombre}</p>
-                <p className="truncate text-xs" style={{ color: "var(--ink-muted)" }}>{m.especialidad}</p>
+    <>
+      <PageHead titulo="Equipo médico" sub={`${c.medicos.filter((m) => m.activo).length} activos · desempeño de los últimos 30 días`}>
+        <button type="button" className="btn btn-grad btn-sm" onClick={() => abrir("nuevo")}><Plus /> Agregar especialista</button>
+      </PageHead>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {c.medicos.map((m) => {
+          const r = resumen.get(m.id);
+          return (
+            <div key={m.id} className="card anim-in" style={{ overflow: "hidden", opacity: m.activo ? 1 : 0.6 }}>
+              <div style={{ height: 6, background: m.color }} />
+              <div style={{ padding: 20 }}>
+                <div className="flex items-start gap-3">
+                  <Avatar nombre={m.nombre} color={m.color} size="is-lg" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: "var(--navy)", fontSize: 16.5 }}>{m.nombre}</div>
+                    <div style={{ color: "var(--teal-700)", fontSize: 14 }}>{m.especialidad}</div>
+                    <div style={{ color: "var(--soft)", fontSize: 12.5 }}>Céd. {m.cedula} · {m.duracion_cita_min} min por cita</div>
+                  </div>
+                  {!m.activo && <span className="chip chip-warn">Inactivo</span>}
+                </div>
+                <div className="flex flex-wrap gap-2" style={{ marginTop: 12 }}>
+                  {m.telemedicina && <span className="chip chip-violet"><Video /> Teleconsulta</span>}
+                  {m.acepta_domicilio && <span className="chip"><Home /> Domicilio</span>}
+                  <span className="chip" style={{ opacity: m.google ? 1 : 0.6 }}><LogoCalendar size={13} /> {m.google ? "Google conectado" : "Sin Google"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2" style={{ marginTop: 16 }}>
+                  {[["Atendidas", r?.atendidas ?? 0], ["Asistencia", pct(r?.asistencia ?? 0)], ["Producción", moneda.format(r?.ingresos ?? 0)]].map(([k, v]) => (
+                    <div key={k} style={{ background: "var(--bg-2)", borderRadius: 14, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{k}</div>
+                      <div className="tnum" style={{ fontWeight: 600, color: "var(--navy)" }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2" style={{ marginTop: 14 }}>
+                  <button type="button" className="btn btn-soft btn-sm" style={{ flex: 1 }} onClick={() => abrir(m)}><Pencil /> Editar y permisos</button>
+                  <button type="button" className="btn btn-ghost btn-icon" title={m.activo ? "Desactivar" : "Activar"} onClick={() => c.toggleActivoMedico(m.id)}><Power size={16} /></button>
+                  <button type="button" className="btn btn-ghost btn-icon" title="Eliminar" onClick={() => confirm(`¿Eliminar a ${m.nombre}? Sus citas futuras se cancelarán.`) && c.eliminarMedico(m.id)}><Trash2 size={16} /></button>
+                </div>
               </div>
             </div>
-            <dl className="mb-4 grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <dt className="text-xs" style={{ color: "var(--ink-muted)" }}>Citas</dt>
-                <dd className="font-semibold">{m.citas}</dd>
+          );
+        })}
+      </div>
+      <Modal abierto={!!editando} onClose={() => setEditando(null)} titulo={editando === "nuevo" ? "Nuevo especialista" : "Editar especialista"} grande pie={<><button type="button" className="btn btn-ghost" onClick={() => setEditando(null)}>Cancelar</button><button type="button" className="btn btn-grad" onClick={guardar}><Check /> Guardar</button></>}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="field"><span>Nombre</span><input className="input" value={d.nombre} onChange={(e) => setD({ ...d, nombre: e.target.value })} placeholder="Dra. Nombre Apellido" /></label>
+          <label className="field"><span>Especialidad</span><input className="input" value={d.especialidad} onChange={(e) => setD({ ...d, especialidad: e.target.value })} /></label>
+          <label className="field"><span>Cédula profesional</span><input className="input" value={d.cedula} onChange={(e) => setD({ ...d, cedula: e.target.value })} /></label>
+          <label className="field"><span>Duración base de cita (min)</span><input className="input" type="number" value={d.duracion_cita_min} onChange={(e) => setD({ ...d, duracion_cita_min: Number(e.target.value) })} /></label>
+          <label className="field"><span>Años de experiencia</span><input className="input" type="number" value={d.experiencia} onChange={(e) => setD({ ...d, experiencia: Number(e.target.value) })} /></label>
+          <label className="field"><span>Color</span><input className="input" type="color" style={{ padding: 4 }} value={d.color} onChange={(e) => setD({ ...d, color: e.target.value })} /></label>
+          <div className="flex items-center justify-between" style={{ padding: 12, borderRadius: 14, background: "var(--bg-2)" }}><span>Teleconsulta</span><Switch valor={d.telemedicina} etiqueta="Teleconsulta" onChange={(v) => setD({ ...d, telemedicina: v })} /></div>
+          <div className="flex items-center justify-between" style={{ padding: 12, borderRadius: 14, background: "var(--bg-2)" }}><span>Domicilio</span><Switch valor={d.acepta_domicilio} etiqueta="Domicilio" onChange={(v) => setD({ ...d, acepta_domicilio: v })} /></div>
+          <label className="field sm:col-span-2"><span>Biografía</span><textarea className="input" value={d.biografia} onChange={(e) => setD({ ...d, biografia: e.target.value })} /></label>
+        </div>
+        {permisos && (
+          <div style={{ marginTop: 22 }}>
+            <h3 style={{ fontSize: 16 }}>Permisos</h3>
+            <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>Lo que este usuario puede hacer en su panel.</p>
+            {grupos.map((g) => (
+              <div key={g} style={{ marginTop: 10 }}>
+                <div className="app-nav-grupo" style={{ padding: "6px 0" }}>{g}</div>
+                {ETIQUETAS_PERMISOS.filter((p) => p.grupo === g).map((p) => (
+                  <div key={p.id} className="flex items-center justify-between gap-3" style={{ padding: "8px 0", borderBottom: "1px solid var(--line-2)" }}>
+                    <div><div style={{ fontWeight: 500, fontSize: 14, color: "var(--navy)" }}>{p.label}</div><div style={{ fontSize: 12.5, color: "var(--muted)" }}>{p.ayuda}</div></div>
+                    <Switch valor={permisos[p.id]} etiqueta={p.label} onChange={(v) => setPermisos({ ...permisos, [p.id]: v })} />
+                  </div>
+                ))}
               </div>
-              <div>
-                <dt className="text-xs" style={{ color: "var(--ink-muted)" }}>Ingresos</dt>
-                <dd className="font-semibold">{mxn.format(m.ingresos)}</dd>
-              </div>
-            </dl>
-            <button
-              onClick={() => store.toggleActivoMedico(m.id)}
-              className={`w-full rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-                m.activo
-                  ? "border border-red-200 text-red-500 hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/40"
-                  : "bg-gradient-to-r from-brand-600 to-accent-500 text-white"
-              }`}
-            >
-              {m.activo ? "Desactivar" : "Reactivar"}
-            </button>
-          </article>
-        ))}
-      </section>
-    </PanelShell>
-  );
-}
-
-function SinSesion() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <ShieldCheck className="h-8 w-8 text-accent-500" />
-      <p className="anim-in text-lg font-semibold">Inicia sesión como administrador para ver este panel</p>
-      <Link
-        href="/login"
-        className="anim-in anim-d1 rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md"
-      >
-        Entrar a la demo
-      </Link>
-    </main>
+            ))}
+          </div>
+        )}
+      </Modal>
+      {toast.nodo}
+    </>
   );
 }

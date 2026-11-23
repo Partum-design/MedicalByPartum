@@ -1,54 +1,32 @@
-import { NextRequest, NextResponse } from "next/server";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { NextResponse, type NextRequest } from "next/server";
+import { COOKIE_SESION, decodificarSesion, inicioDeRol } from "@/lib/sesion";
 
-// Rate limiting estricto en el Edge para endpoints sensibles a bots.
-// Límite por IP y por sesión (cookie sb-*) sobre búsqueda y reservas.
-const hasRedis =
-  !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN;
-
-const limiters = hasRedis
-  ? (() => {
-      const redis = Redis.fromEnv();
-      return {
-        // Anti-scraping del directorio de médicos
-        search: new Ratelimit({
-          redis,
-          limiter: Ratelimit.slidingWindow(30, "60 s"),
-          prefix: "rl:search",
-        }),
-        // Anti appointment-scalping
-        bookings: new Ratelimit({
-          redis,
-          limiter: Ratelimit.slidingWindow(5, "60 s"),
-          prefix: "rl:bookings",
-        }),
-      };
-    })()
-  : null;
-
-export async function middleware(req: NextRequest) {
-  // Sin Redis configurado (entorno demo/local) el middleware no limita.
-  if (!limiters) return NextResponse.next();
-
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "anon";
-  const session = req.cookies.get("sb-access-token")?.value?.slice(0, 32) ?? "";
-  const key = `${ip}:${session}`;
-
-  const limiter = req.nextUrl.pathname.startsWith("/api/bookings")
-    ? limiters.bookings
-    : limiters.search;
-
-  const { success, reset } = await limiter.limit(key);
-  if (!success) {
-    return NextResponse.json(
-      { error: "Demasiadas peticiones. Intenta más tarde." },
-      { status: 429, headers: { "Retry-After": String(reset) } }
-    );
+// Protege los paneles: cada rol sólo entra a su zona. La sesión es la cookie
+// de la demo; al conectar autenticación real se valida aquí su token.
+export function middleware(req: NextRequest) {
+  const sesion = decodificarSesion(req.cookies.get(COOKIE_SESION)?.value);
+  const { pathname } = req.nextUrl;
+  const zona = pathname.startsWith("/dashboard/admin")
+    ? "admin"
+    : pathname.startsWith("/dashboard/medico")
+      ? "medico"
+      : pathname.startsWith("/cuenta")
+        ? "paciente"
+        : null;
+  if (!zona) return NextResponse.next();
+  if (!sesion) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = `?siguiente=${encodeURIComponent(pathname)}`;
+    return NextResponse.redirect(url);
+  }
+  if (sesion.rol !== zona) {
+    const url = req.nextUrl.clone();
+    url.pathname = inicioDeRol(sesion.rol);
+    url.search = "";
+    return NextResponse.redirect(url);
   }
   return NextResponse.next();
 }
 
-export const config = {
-  matcher: ["/api/bookings/:path*", "/api/search/:path*"],
-};
+export const config = { matcher: ["/dashboard/:path*", "/cuenta/:path*"] };

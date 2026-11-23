@@ -2,203 +2,86 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { format, isToday } from "date-fns";
-import { es } from "date-fns/locale";
-import { Banknote, CalendarDays, CheckCircle2, CreditCard, MapPin, Users, Video } from "lucide-react";
-import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
-import { CalendarOverview } from "@/components/calendar/CalendarOverview";
-import { useDemoStore } from "@/lib/demo-store";
+import { CalendarCheck2, CalendarDays, Check, FileHeart, Stethoscope, Users, Video, Wallet } from "lucide-react";
+import { useClinica } from "@/lib/store";
+import { resumirCitas } from "@/lib/datos/modelo";
+import { Avatar, claveDia, edad, EstadoChip, hora, Kpi, moneda, PageHead, useToast } from "@/components/ui";
+import { Agenda } from "@/components/citas/Agenda";
+import { DetalleCita } from "@/components/citas/CitaModales";
+import { LogoCalendar } from "@/components/marca/LogoGoogle";
 
-const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
-
-// Nodo Médico: agenda con datos locales reales (marcar asistida funciona
-// y alimenta el programa de lealtad del paciente).
-export default function DashboardMedicoPage() {
-  const store = useDemoStore();
-  const { listo, citas, sesion } = store;
-  const [vista, setVista] = useState<"hoy" | "semana">("hoy");
-
-  const propias = useMemo(
-    () =>
-      citas
-        .filter((c) => c.medico_id === "med-1" && c.estado !== "cancelada")
-        .sort((a, b) => a.inicio.localeCompare(b.inicio)),
-    [citas]
-  );
-  const futurasOHoy = propias.filter(
-    (c) => isToday(new Date(c.inicio)) || new Date(c.inicio).getTime() > Date.now()
-  );
-  const visibles =
-    vista === "hoy" ? propias.filter((c) => isToday(new Date(c.inicio))) : futurasOHoy;
-
-  const deHoy = propias.filter((c) => isToday(new Date(c.inicio)));
-  const pendientesEfectivo = deHoy.filter((c) => c.estado_pago === "pendiente");
-  const stats = {
-    hoy: deHoy.length,
-    tele: deHoy.filter((c) => c.modalidad === "telemedicina").length,
-    ingresos: deHoy.reduce((s, c) => s + c.precio, 0),
-    porCobrar: pendientesEfectivo.reduce((s, c) => s + c.precio, 0),
-    asistidas: deHoy.filter((c) => c.estado === "asistida").length,
-  };
-
-  if (!listo) return null;
-
-  if (!sesion || sesion.rol !== "medico") {
-    return <SinSesion rol="médico" />;
-  }
+export default function PanelMedico() {
+  const c = useClinica();
+  const toast = useToast();
+  const [abierta, setAbierta] = useState<string | null>(null);
+  const yo = c.medicos.find((m) => m.id === c.sesion?.id);
+  const ahora = Date.now();
+  const mias = useMemo(() => c.citas.filter((x) => x.medico_id === c.sesion?.id), [c.citas, c.sesion]);
+  const hoy = mias.filter((x) => claveDia(x.inicio) === claveDia(ahora) && x.estado !== "cancelada").sort((a, b) => a.inicio.localeCompare(b.inicio));
+  const mes = resumirCitas(mias.filter((x) => ahora - new Date(x.inicio).getTime() < 30 * 86_400_000 && new Date(x.inicio).getTime() <= ahora));
+  const siguiente = hoy.find((x) => x.estado === "confirmada" && new Date(x.fin).getTime() > ahora);
+  if (!yo) return null;
+  const pacienteSig = siguiente ? c.pacientes.find((p) => p.id === siguiente.paciente_id) : null;
 
   return (
-    <PanelShell sesion={sesion} activo="Mi agenda" onLogout={store.logout}>
-      <header className="anim-in mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">Mi agenda</h1>
-          <p className="mt-1 text-sm capitalize" style={{ color: "var(--ink-muted)" }}>
-            {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
-          </p>
-        </div>
-        <div className="flex rounded-full p-1 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-          {(["hoy", "semana"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setVista(v)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
-                vista === v
-                  ? "bg-gradient-to-r from-brand-600 to-accent-500 text-white shadow-sm"
-                  : ""
-              }`}
-              style={vista === v ? undefined : { color: "var(--ink-muted)" }}
-            >
-              {v === "hoy" ? "Hoy" : "Próximas"}
-            </button>
-          ))}
-        </div>
-      </header>
+    <>
+      <PageHead titulo={`Hola, ${yo.nombre.split(" ").slice(0, 2).join(" ")}`} sub={`${yo.especialidad} · ${hoy.length} pacientes hoy`}>
+        {yo.google ? (
+          <Link href="/dashboard/medico/google" className="chip" style={{ height: 36, padding: "0 14px" }}><LogoCalendar size={16} /> Google Calendar sincronizado</Link>
+        ) : (
+          <Link href="/dashboard/medico/google" className="btn btn-soft btn-sm"><LogoCalendar size={16} /> Conectar Google Calendar</Link>
+        )}
+      </PageHead>
 
-      {/* KPIs pastel estilo referencia */}
-      <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiPastel tono="lila" delay="anim-d1" icon={<Users className="h-4 w-4" />} label="Citas de hoy" value={String(stats.hoy)} nota="Agenda del día" />
-        <KpiPastel tono="azul" delay="anim-d2" icon={<Video className="h-4 w-4" />} label="Telemedicina" value={String(stats.tele)} nota="Con enlace de video" />
-        <KpiPastel
-          tono="menta"
-          delay="anim-d3"
-          icon={<Banknote className="h-4 w-4" />}
-          label="Ingresos del día"
-          value={mxn.format(stats.ingresos)}
-          nota={
-            stats.porCobrar > 0
-              ? `Incluye ${mxn.format(stats.porCobrar)} por cobrar en efectivo`
-              : "Todo pagado"
-          }
-        />
-        <KpiPastel tono="durazno" delay="anim-d4" icon={<CheckCircle2 className="h-4 w-4" />} label="Atendidas" value={`${stats.asistidas}/${stats.hoy}`} nota="Marcadas como asistidas" />
-      </section>
-
-      <div className="mb-6">
-        <CalendarOverview citas={propias} perspective="medico" title="Agenda mensual" />
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr_1fr_1fr]">
+        {siguiente ? (
+          <div className="credencial anim-in">
+            <div style={{ fontSize: 12.5, opacity: 0.8, textTransform: "uppercase", letterSpacing: ".06em" }}>Siguiente paciente · {hora(siguiente.inicio)}</div>
+            <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
+              <Avatar nombre={siguiente.paciente_nombre} color="#0b6f75" />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 17 }}>{siguiente.paciente_nombre}</div>
+                <div style={{ fontSize: 13, opacity: 0.85 }}>{siguiente.servicio_nombre}{pacienteSig?.fecha_nacimiento ? ` · ${edad(pacienteSig.fecha_nacimiento)}` : ""}</div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2" style={{ marginTop: 16 }}>
+              <Link href={`/dashboard/medico/expedientes?id=${siguiente.paciente_id}&cita=${siguiente.id}`} className="btn btn-white btn-sm"><Stethoscope /> Iniciar consulta</Link>
+              {siguiente.enlace_video && <a href={siguiente.enlace_video} target="_blank" rel="noreferrer" className="btn btn-outline-white btn-sm"><Video /> Video</a>}
+            </div>
+          </div>
+        ) : (
+          <Kpi destacado label="Siguiente paciente" icono={<CalendarCheck2 />} valor="Libre" nota="No quedan citas por hoy" />
+        )}
+        <Kpi label="Atendidos (30 días)" icono={<Users />} valor={mes.atendidas} nota={`${Math.round(mes.asistencia * 100)} % de asistencia`} />
+        <Kpi label="Producción (30 días)" icono={<Wallet />} valor={moneda.format(mes.ingresos)} nota="Valor de consultas atendidas" />
+        <Kpi label="Por venir" icono={<CalendarDays />} valor={mias.filter((x) => x.estado === "confirmada" && new Date(x.inicio).getTime() > ahora).length} nota="citas agendadas" />
       </div>
 
-      {/* Lista de citas */}
-      <section className="anim-in anim-d3 space-y-3">
-        {visibles.length === 0 && (
-          <div
-            className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-brand-500/30 py-14 text-center"
-            style={{ background: "var(--card)" }}
-          >
-            <CalendarDays className="h-8 w-8 text-accent-500" />
-            <p className="font-medium">Sin citas {vista === "hoy" ? "para hoy" : "próximas"}</p>
-            <p className="text-sm" style={{ color: "var(--ink-muted)" }}>
-              Las nuevas reservas de pacientes aparecen aquí al instante.
-            </p>
-          </div>
-        )}
-
-        {visibles.map((cita, i) => (
-          <article
-            key={cita.id}
-            className={`anim-in anim-d${Math.min(i + 1, 6)} card-hover flex flex-wrap items-center gap-4 rounded-2xl p-4 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10`}
-            style={{ background: "var(--card)" }}
-          >
-            <div className="flex w-16 shrink-0 flex-col items-center rounded-xl bg-gradient-to-b from-brand-600 to-accent-600 py-2 text-white">
-              <span className="text-[10px] font-medium capitalize opacity-90">
-                {format(new Date(cita.inicio), "d MMM", { locale: es })}
-              </span>
-              <span className="text-sm font-semibold">{format(new Date(cita.inicio), "HH:mm")}</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{cita.paciente_nombre}</p>
-              <p className="mt-0.5 flex items-center gap-1.5 text-sm" style={{ color: "var(--ink-muted)" }}>
-                {cita.modalidad === "telemedicina" ? (
-                  <><Video className="h-3.5 w-3.5 text-accent-500" /> Videoconsulta</>
-                ) : (
-                  <><MapPin className="h-3.5 w-3.5 text-brand-500" /> Presencial</>
-                )}
-                <span aria-hidden>·</span> {mxn.format(cita.precio)}
-              </p>
-              <span
-                className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                  cita.estado_pago === "pagado"
-                    ? "bg-pastel-menta text-emerald-700"
-                    : "bg-pastel-durazno text-orange-800"
-                }`}
-              >
-                {cita.estado_pago === "pagado" ? (
-                  <><CreditCard className="h-3 w-3" /> Pagado</>
-                ) : (
-                  <><Banknote className="h-3 w-3" /> Efectivo pendiente</>
-                )}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {cita.estado_pago === "pendiente" && (
-                <button
-                  onClick={() => store.cobrarEfectivo(cita.id)}
-                  className="card-hover rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm"
-                >
-                  Cobrar efectivo
-                </button>
-              )}
-              {cita.modalidad === "telemedicina" &&
-                cita.enlace_videollamada &&
-                cita.estado === "confirmada" && (
-                  <a
-                    href={cita.enlace_videollamada}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full bg-accent-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-600"
-                  >
-                    Unirse
-                  </a>
-                )}
-              {cita.estado === "confirmada" ? (
-                <button
-                  onClick={() => store.marcarAsistida(cita.id)}
-                  className="rounded-full border border-brand-500/30 px-4 py-2 text-sm font-medium text-brand-600 transition-colors hover:bg-brand-50 dark:hover:bg-brand-900/30"
-                >
-                  Marcar asistida
-                </button>
+      <div className="grid gap-4 xl:grid-cols-[380px_1fr]" style={{ marginTop: 16 }}>
+        <div className="card card-pad anim-in">
+          <div className="card-title"><div><h2>Hoy</h2><p>Tu lista del día</p></div></div>
+          {hoy.length === 0 && <p style={{ color: "var(--muted)" }}>Sin citas hoy.</p>}
+          {hoy.map((x) => (
+            <div key={x.id} className="list-row" style={{ cursor: "pointer" }} onClick={() => setAbierta(x.id)}>
+              <div className="tnum" style={{ width: 46, fontWeight: 600, color: "var(--navy)" }}>{hora(x.inicio)}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 500, color: "var(--navy)", fontSize: 14 }} className="flex items-center gap-1">{x.modalidad === "telemedicina" && <Video size={13} color="var(--violet)" />}{x.paciente_nombre}</div>
+                <div style={{ fontSize: 12.5, color: "var(--muted)" }}>{x.servicio_nombre}</div>
+              </div>
+              {x.estado === "confirmada" ? (
+                <button type="button" className="btn btn-soft btn-sm" onClick={(e) => { e.stopPropagation(); if (c.marcarAsistida(x.id).ok) toast.mostrar("Llegada confirmada"); }}><Check /> Llegó</button>
+              ) : x.estado === "asistida" ? (
+                <Link href={`/dashboard/medico/expedientes?id=${x.paciente_id}&cita=${x.id}`} className="btn btn-ghost btn-sm" onClick={(e) => e.stopPropagation()}><FileHeart /> Nota</Link>
               ) : (
-                <span className="anim-pop flex items-center gap-1.5 rounded-full bg-pastel-menta px-3 py-1.5 text-xs font-medium text-emerald-700">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Asistida
-                </span>
+                <EstadoChip estado={x.estado} />
               )}
             </div>
-          </article>
-        ))}
-      </section>
-    </PanelShell>
-  );
-}
-
-function SinSesion({ rol }: { rol: string }) {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="anim-in text-lg font-semibold">Inicia sesión como {rol} para ver este panel</p>
-      <Link
-        href="/login"
-        className="anim-in anim-d1 rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md"
-      >
-        Entrar a la demo
-      </Link>
-    </main>
+          ))}
+        </div>
+        <Agenda medicos={[yo]} vistaInicial="semana" soloLectura={!c.permisos.crear_citas} />
+      </div>
+      {abierta && <DetalleCita cita={c.citas.find((x) => x.id === abierta) ?? null} onClose={() => setAbierta(null)} onToast={toast.mostrar} />}
+      {toast.nodo}
+    </>
   );
 }

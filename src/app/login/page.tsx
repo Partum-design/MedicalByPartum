@@ -1,124 +1,207 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, CreditCard, ShieldCheck, Stethoscope, User } from "lucide-react";
-import { CUENTAS_DEMO, useDemoStore, type RolDemo } from "@/lib/demo-store";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, ArrowRight, ShieldCheck, Stethoscope, UserRound, Building2 } from "lucide-react";
+import { baseCompleta, useClinica } from "@/lib/store";
+import { CUENTAS_DEMO } from "@/lib/datos/semilla";
+import { celularValido, normalizarTelefono } from "@/lib/datos/modelo";
+import { Logo } from "@/components/marca/Logo";
+import { Avatar, Segmented } from "@/components/ui";
+import { LogoGoogle } from "@/components/marca/LogoGoogle";
 
-function GoogleIcon() {
+type Pestana = "paciente" | "medico" | "admin";
+
+function Acceso() {
+  const c = useClinica();
+  const router = useRouter();
+  const q = useSearchParams();
+  const [pestana, setPestana] = useState<Pestana>((q.get("rol") as Pestana) || "paciente");
+  const [cargando, setCargando] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [registro, setRegistro] = useState(false);
+  const [nombre, setNombre] = useState("");
+  const [tel, setTel] = useState("");
+  const siguiente = q.get("siguiente");
+
+  useEffect(() => {
+    const r = q.get("rol");
+    if (r === "admin" || r === "medico" || r === "paciente") setPestana(r);
+  }, [q]);
+
+  const entrar = async (datos: Parameters<typeof c.iniciarSesion>[0]) => {
+    setError(null);
+    setCargando(datos.id);
+    const r = await c.iniciarSesion(datos);
+    setCargando(null);
+    if (!r.ok) return setError(r.error ?? "No se pudo iniciar sesión.");
+    const destino = siguiente && siguiente.startsWith("/") ? siguiente : r.destino ?? "/";
+    router.push(destino);
+  };
+
+  const registrar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (nombre.trim().length < 3) return setError("Escribe tu nombre completo.");
+    if (!celularValido(tel)) return setError("Escribe un celular válido de 10 dígitos.");
+    const yaExiste = baseCompleta().pacientes.find((p) => normalizarTelefono(p.telefono) === normalizarTelefono(tel));
+    if (yaExiste) return entrar({ rol: "paciente", id: yaExiste.id, nombre: yaExiste.nombre });
+    const id = `pac-${crypto.randomUUID().slice(0, 8)}`;
+    const { paciente, error: err } = c.registrarPaciente(
+      { id, nombre, telefono: tel, email: "" },
+      { rol: "paciente", id, nombre, subtitulo: "Paciente" }
+    );
+    if (!paciente) return setError(err ?? "No se pudo crear la cuenta.");
+    await entrar({ rol: "paciente", id: paciente.id, nombre: paciente.nombre });
+  };
+
+  const medicos = c.listo ? c.medicos.filter((m) => m.activo) : [];
+  const listaMedicos = medicos.length
+    ? medicos.map((m) => ({ rol: "medico" as const, id: m.id, nombre: m.nombre, subtitulo: m.especialidad, color: m.color }))
+    : CUENTAS_DEMO.medicos.map((m) => ({ ...m, color: undefined as string | undefined }));
+
   return (
-    <svg viewBox="0 0 18 18" className="h-4.5 w-4.5" aria-hidden>
-      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62Z" />
-      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.83.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18Z" />
-      <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l2.99-2.33Z" />
-      <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97l2.99 2.33C4.66 5.17 6.65 3.58 9 3.58Z" />
-    </svg>
+    <div className="grid min-h-dvh lg:grid-cols-[1fr_1.05fr]" style={{ background: "#fff" }}>
+      <div className="flex flex-col" style={{ padding: "28px clamp(16px, 5vw, 64px)" }}>
+        <div className="flex items-center justify-between">
+          <Link href="/">
+            <Logo alto={32} />
+          </Link>
+          <Link href="/" className="btn btn-ghost btn-sm">
+            <ArrowLeft /> Portada
+          </Link>
+        </div>
+        <div className="anim-in" style={{ margin: "auto 0", padding: "40px 0", maxWidth: 460, width: "100%", alignSelf: "center" }}>
+          <h1 style={{ fontSize: 34, fontWeight: 600 }}>Bienvenido de vuelta</h1>
+          <p style={{ color: "var(--muted)", marginTop: 6 }}>Elige cómo quieres entrar a la demo de Medical OS.</p>
+          <div style={{ marginTop: 22 }}>
+            <Segmented
+              valor={pestana}
+              onChange={(v) => {
+                setPestana(v);
+                setError(null);
+              }}
+              opciones={[
+                { id: "paciente", label: "Paciente" },
+                { id: "medico", label: "Médico" },
+                { id: "admin", label: "Administración" },
+              ]}
+            />
+          </div>
+
+          {pestana === "paciente" && (
+            <div style={{ marginTop: 22 }} className="grid gap-3">
+              <Link href={`/google/autorizar?modo=login${siguiente ? `&siguiente=${encodeURIComponent(siguiente)}` : ""}`} className="btn btn-ghost btn-lg" style={{ width: "100%" }}>
+                <LogoGoogle /> Continuar con Google
+              </Link>
+              <div className="flex items-center gap-3" style={{ color: "var(--soft)", fontSize: 13 }}>
+                <span style={{ flex: 1, height: 1, background: "var(--line)" }} /> cuentas de ejemplo <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+              </div>
+              {CUENTAS_DEMO.pacientes.map((p) => (
+                <button key={p.id} type="button" className="card card-hover flex items-center gap-3" style={{ padding: 14, textAlign: "left" }} onClick={() => entrar(p)} disabled={!!cargando}>
+                  <Avatar nombre={p.nombre} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: "var(--navy)" }}>{p.nombre}</div>
+                    <div style={{ fontSize: 13, color: "var(--muted)" }}>{p.subtitulo}</div>
+                  </div>
+                  {cargando === p.id ? <span className="chip chip-teal">Entrando…</span> : <ArrowRight size={18} color="var(--teal)" />}
+                </button>
+              ))}
+              {!registro ? (
+                <button type="button" className="btn btn-soft" onClick={() => setRegistro(true)}>
+                  <UserRound /> Soy paciente nuevo
+                </button>
+              ) : (
+                <form onSubmit={registrar} className="card card-pad grid gap-3 anim-in">
+                  <b style={{ color: "var(--navy)" }}>Crear mi cuenta</b>
+                  <label className="field">
+                    <span>Nombre completo</span>
+                    <input className="input" value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="name" placeholder="Ej. Andrea Morales" />
+                  </label>
+                  <label className="field">
+                    <span>Celular (10 dígitos)</span>
+                    <input className="input" value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" autoComplete="tel" placeholder="55 1234 5678" />
+                    <small>En producción se verifica con un código por SMS o WhatsApp.</small>
+                  </label>
+                  <button className="btn btn-grad">Crear cuenta y entrar</button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {pestana === "medico" && (
+            <div style={{ marginTop: 22 }} className="grid gap-2">
+              {listaMedicos.map((m) => (
+                <button key={m.id} type="button" className="card card-hover flex items-center gap-3" style={{ padding: 12, textAlign: "left" }} onClick={() => entrar(m)} disabled={!!cargando}>
+                  <Avatar nombre={m.nombre} color={m.color} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: "var(--navy)" }}>{m.nombre}</div>
+                    <div style={{ fontSize: 13, color: "var(--muted)" }}>{m.subtitulo}</div>
+                  </div>
+                  {cargando === m.id ? <span className="chip chip-teal">Entrando…</span> : <Stethoscope size={18} color="var(--teal)" />}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {pestana === "admin" && (
+            <div style={{ marginTop: 22 }} className="grid gap-3">
+              <button type="button" className="card card-hover flex items-center gap-3" style={{ padding: 16, textAlign: "left" }} onClick={() => entrar(CUENTAS_DEMO.admin)} disabled={!!cargando}>
+                <span className="icon-tile">
+                  <Building2 />
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, color: "var(--navy)" }}>{CUENTAS_DEMO.admin.nombre}</div>
+                  <div style={{ fontSize: 13, color: "var(--muted)" }}>Agenda, pacientes, caja, inventario, reportes e integraciones</div>
+                </div>
+                {cargando === "admin" ? <span className="chip chip-teal">Entrando…</span> : <ArrowRight size={18} color="var(--teal)" />}
+              </button>
+            </div>
+          )}
+
+          {error && (
+            <p className="chip chip-danger" style={{ marginTop: 14, height: "auto", padding: "8px 12px", whiteSpace: "normal" }}>
+              {error}
+            </p>
+          )}
+          <p className="flex items-center gap-2" style={{ marginTop: 22, fontSize: 13, color: "var(--soft)" }}>
+            <ShieldCheck size={15} /> Demo sin contraseñas: los datos son ficticios y viven en este navegador.
+          </p>
+        </div>
+      </div>
+      <div className="hidden p-4 lg:block">
+        <div className="band flex h-full flex-col justify-end" style={{ padding: 56, borderRadius: 40 }}>
+          <svg viewBox="0 0 400 400" style={{ position: "absolute", top: 40, right: 40, width: 280, opacity: 0.18 }} aria-hidden>
+            <rect x="160" y="40" width="80" height="320" rx="40" fill="#fff" />
+            <rect x="40" y="160" width="320" height="80" rx="40" fill="#fff" />
+          </svg>
+          <span className="chip" style={{ background: "rgba(255,255,255,.18)", color: "#fff", width: "fit-content" }}>Medical OS</span>
+          <h2 style={{ fontSize: 44, fontWeight: 600, marginTop: 18, maxWidth: 520, lineHeight: 1.05 }}>Toda tu clínica, en un solo lugar.</h2>
+          <p style={{ color: "rgba(255,255,255,.85)", marginTop: 14, maxWidth: 480, fontSize: 17 }}>
+            Agenda, expediente clínico, vacunación, cobros, inventario y Google Calendar conectados entre sí.
+          </p>
+          <div className="grid grid-cols-3 gap-3" style={{ marginTop: 34, maxWidth: 520 }}>
+            {[
+              ["3 roles", "paciente, médico y admin"],
+              ["15 módulos", "listos para usar"],
+              ["Google", "Calendar y acceso"],
+            ].map(([a, b]) => (
+              <div key={a} style={{ background: "rgba(255,255,255,.14)", borderRadius: 18, padding: 14 }}>
+                <b style={{ fontSize: 18 }}>{a}</b>
+                <div style={{ fontSize: 12.5, opacity: 0.8 }}>{b}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
-const DESTINOS: Record<RolDemo, string> = {
-  paciente: "/cuenta",
-  medico: "/dashboard/medico",
-  admin: "/dashboard/admin",
-};
-
 export default function LoginPage() {
-  const router = useRouter();
-  const { login } = useDemoStore();
-
-  function entrar(rol: RolDemo) {
-    login(rol);
-    router.push(DESTINOS[rol]);
-  }
-
-  function entrarConGoogle() {
-    // Demo: sin Supabase Auth conectado no hay OAuth real que ejecutar.
-    // Entra como paciente — el flujo que en producción usaría este botón.
-    login("paciente");
-    router.push(DESTINOS.paciente);
-  }
-
-  const cuentas: { rol: RolDemo; icon: React.ReactNode; desc: string }[] = [
-    {
-      rol: "paciente",
-      icon: <User className="h-6 w-6" />,
-      desc: "Consulta tus citas, agenda nuevas y revisa tu programa de recompensas.",
-    },
-    {
-      rol: "medico",
-      icon: <Stethoscope className="h-6 w-6" />,
-      desc: "Revisa tu agenda del día, atiende videoconsultas y marca citas como asistidas.",
-    },
-    {
-      rol: "admin",
-      icon: <ShieldCheck className="h-6 w-6" />,
-      desc: "Supervisa ingresos, equipo médico y el programa de fidelización de la clínica.",
-    },
-  ];
-
   return (
-    <main className="login-page">
-      <div className="login-shell anim-in">
-        <section className="login-story">
-          <Link href="/" className="login-brand">
-            <span className="login-brand-mark">M</span>
-            <span>Medical <strong>OS</strong></span>
-          </Link>
-          <div className="login-story-copy">
-            <p className="login-kicker">Demo clínica conectada</p>
-            <h1>Una cita cambia todo el sistema.</h1>
-            <p>
-              Agenda como paciente, atiende como médico y mira cómo se actualiza la clínica desde administración.
-            </p>
-          </div>
-          <div className="login-flow" aria-label="Flujo conectado de la demo">
-            <span><CalendarCheck className="h-4 w-4" /> Reserva</span>
-            <span><CreditCard className="h-4 w-4" /> Pago</span>
-            <span><ShieldCheck className="h-4 w-4" /> Seguimiento</span>
-          </div>
-          <p className="login-local-note"><span /> Datos locales · puedes reiniciar la demo cuando quieras</p>
-        </section>
-
-        <section className="login-access">
-          <Link href="/" className="login-back">← Volver al inicio</Link>
-          <header>
-            <p className="login-kicker text-brand-700">Acceso de prueba</p>
-            <h2>Elige desde dónde quieres entrar.</h2>
-            <p>Cada perfil tiene acciones reales conectadas con los demás paneles.</p>
-          </header>
-
-          <button onClick={entrarConGoogle} className="login-google">
-            <GoogleIcon /> Continuar con Google
-          </button>
-
-          <div className="login-divider"><span />o usa un perfil de la demo<span /></div>
-
-          <div className="login-role-list">
-            {cuentas.map((c, i) => {
-              const cuenta = CUENTAS_DEMO[c.rol];
-              return (
-                <button
-                  key={c.rol}
-                  onClick={() => entrar(c.rol)}
-                  className={`login-role anim-in anim-d${i + 1}`}
-                >
-                  <span className={`login-role-icon role-${c.rol}`}>{c.icon}</span>
-                  <span className="min-w-0 flex-1">
-                    <strong>{cuenta.nombre}</strong>
-                    <small>{cuenta.subtitulo}</small>
-                    <span className="login-role-copy">{c.desc}</span>
-                  </span>
-                  <ArrowRight className="login-role-arrow" />
-                </button>
-              );
-            })}
-          </div>
-
-          <p className="login-footnote">
-            En producción, el acceso usa Supabase Auth, OAuth con Google y verificación por OTP.
-          </p>
-        </section>
-      </div>
-    </main>
+    <Suspense>
+      <Acceso />
+    </Suspense>
   );
 }

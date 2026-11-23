@@ -2,228 +2,179 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Banknote, CalendarCheck, CreditCard, Gift, TrendingUp, Users } from "lucide-react";
-import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
-import { CalendarOverview } from "@/components/calendar/CalendarOverview";
-import { useDemoStore } from "@/lib/demo-store";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { AlertTriangle, ArrowRight, CalendarDays, CalendarPlus, Clock3, PackageX, Percent, UserPlus, Wallet } from "lucide-react";
+import { useClinica } from "@/lib/store";
+import { resumirCitas, resumirMedicos } from "@/lib/datos/modelo";
+import { Avatar, claveDia, diaCorto, EstadoChip, hora, Kpi, moneda, PageHead, pct } from "@/components/ui";
 
-const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+const DIA = 86_400_000;
 
-// Nodo Administrador: métricas calculadas en vivo desde el almacén local —
-// atender o agendar citas en los otros paneles cambia estos números.
-export default function DashboardAdminPage() {
-  const store = useDemoStore();
-  const { listo, citas, sesion, medicos, recompensasConfig } = store;
+export default function PanelAdmin() {
+  const c = useClinica();
+  const ahora = Date.now();
 
-  const stats = useMemo(() => {
-    const vivas = citas.filter((c) => c.estado !== "cancelada");
-    const asistidas = citas.filter((c) => c.estado === "asistida");
-    const pacientes = new Set(vivas.map((c) => c.paciente_id));
-    const pendientesEfectivo = vivas.filter((c) => c.estado_pago === "pendiente");
-    const pagadasTarjeta = vivas.filter((c) => c.metodo_pago === "tarjeta");
-    const pagadasEfectivo = vivas.filter((c) => c.metodo_pago === "efectivo" && c.estado_pago === "pagado");
-    return {
-      ingresos: vivas.reduce((s, c) => s + c.precio, 0),
-      citas: vivas.length,
-      asistencia: vivas.length ? asistidas.length / vivas.length : 0,
-      pacientes: pacientes.size,
-      recompensas: Math.floor(asistidas.length / recompensasConfig.citas_requeridas),
-      porCobrarMonto: pendientesEfectivo.reduce((s, c) => s + c.precio, 0),
-      porCobrarCitas: pendientesEfectivo.length,
-      tarjetaCitas: pagadasTarjeta.length,
-      efectivoCitas: pagadasEfectivo.length + pendientesEfectivo.length,
-      porMedico: medicos.map((m) => {
-        const suyas = vivas.filter((c) => c.medico_id === m.id);
-        return {
-          ...m,
-          citas: suyas.length,
-          ingresos: suyas.reduce((s, c) => s + c.precio, 0),
-        };
-      }),
-    };
-  }, [citas, medicos, recompensasConfig]);
+  const datos = useMemo(() => {
+    const mes = c.citas.filter((x) => ahora - new Date(x.inicio).getTime() < 30 * DIA && new Date(x.inicio).getTime() <= ahora);
+    const previo = c.citas.filter((x) => {
+      const d = ahora - new Date(x.inicio).getTime();
+      return d >= 30 * DIA && d < 60 * DIA;
+    });
+    const r = resumirCitas(mes);
+    const rp = resumirCitas(previo);
+    const hoy = c.citas.filter((x) => claveDia(x.inicio) === claveDia(ahora) && x.estado !== "cancelada").sort((a, b) => a.inicio.localeCompare(b.inicio));
+    const nuevos = c.pacientes.filter((p) => ahora - new Date(p.creado_en).getTime() < 30 * DIA).length;
+    const serie = Array.from({ length: 30 }, (_, i) => i).filter((i) => new Date(ahora - (29 - i) * DIA).getDay() !== 0).map((i) => {
+      const k = claveDia(ahora - (29 - i) * DIA);
+      const delDia = c.citas.filter((x) => claveDia(x.inicio) === k && x.estado === "asistida");
+      return { dia: diaCorto(ahora - (29 - i) * DIA), ingresos: delDia.reduce((a, x) => a + x.precio, 0), citas: delDia.length };
+    });
+    const porMedico = resumirMedicos(mes, c.medicos).map((m) => ({ ...m, corto: m.nombre.replace(/^(Dra?|Enf)\.\s*/, "").split(" ")[0] }));
+    const servicios = new Map<string, number>();
+    for (const x of mes) if (x.estado === "asistida") servicios.set(x.servicio_nombre ?? "", (servicios.get(x.servicio_nombre ?? "") ?? 0) + 1);
+    const top = [...servicios.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return { r, rp, hoy, nuevos, serie, porMedico, top };
+  }, [c.citas, c.pacientes, c.medicos, ahora]);
 
-  if (!listo) return null;
-
-  if (!sesion || sesion.rol !== "admin") {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="anim-in text-lg font-semibold">
-          Inicia sesión como administrador para ver este panel
-        </p>
-        <Link
-          href="/login"
-          className="anim-in anim-d1 rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md"
-        >
-          Entrar a la demo
-        </Link>
-      </main>
-    );
-  }
+  const bajos = c.productos.filter((p) => p.existencias <= p.minimo);
+  const caducan = c.productos.filter((p) => p.caducidad && new Date(p.caducidad).getTime() - ahora < 45 * DIA);
+  const delta = (a: number, b: number) => (b > 0 ? (a - b) / b : null);
+  const proximas = datos.hoy.filter((x) => new Date(x.fin).getTime() > ahora && x.estado === "confirmada");
+  const saludo = new Date().getHours() < 12 ? "Buenos días" : new Date().getHours() < 19 ? "Buenas tardes" : "Buenas noches";
 
   return (
-    <PanelShell sesion={sesion} activo="Panel" onLogout={store.logout}>
-      <header className="anim-in mb-6">
-        <h1 className="font-display text-2xl font-bold tracking-tight">Clínica Partum</h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-          Los números se actualizan en vivo con la actividad de pacientes y médicos.
-        </p>
-      </header>
+    <>
+      <PageHead titulo={`${saludo} 👋`} sub={`Así va ${c.clinicaConfig.nombre} en los últimos 30 días.`}>
+        <Link href="/dashboard/admin/citas" className="btn btn-ghost btn-sm">
+          <CalendarDays /> Ver agenda
+        </Link>
+        <Link href="/dashboard/admin/citas" className="btn btn-grad btn-sm">
+          <CalendarPlus /> Nueva cita
+        </Link>
+      </PageHead>
 
-      {/* KPIs pastel estilo referencia */}
-      <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiPastel
-          tono="lila"
-          delay="anim-d1"
-          icon={<Banknote className="h-4 w-4" />}
-          label="Ingresos"
-          value={mxn.format(stats.ingresos)}
-          nota={
-            stats.porCobrarMonto > 0
-              ? `Incluye ${mxn.format(stats.porCobrarMonto)} pendientes en efectivo`
-              : "Citas confirmadas y asistidas"
-          }
-        />
-        <KpiPastel tono="azul" delay="anim-d2" icon={<CalendarCheck className="h-4 w-4" />} label="Citas" value={String(stats.citas)} nota="Activas en la clínica" />
-        <KpiPastel tono="menta" delay="anim-d3" icon={<TrendingUp className="h-4 w-4" />} label="Tasa de asistencia" value={`${Math.round(stats.asistencia * 100)}%`} nota="Asistidas vs. totales" />
-        <KpiPastel tono="durazno" delay="anim-d4" icon={<Users className="h-4 w-4" />} label="Pacientes" value={String(stats.pacientes)} nota="Con citas activas" />
-      </section>
-
-      <div className="mb-6">
-        <CalendarOverview citas={citas} perspective="admin" title="Agenda de la clínica" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi destacado label="Ingresos del mes" icono={<Wallet />} valor={moneda.format(datos.r.ingresos)} delta={delta(datos.r.ingresos, datos.rp.ingresos)} nota="vs. 30 días previos" />
+        <Kpi label="Citas hoy" icono={<CalendarDays />} valor={datos.hoy.length} nota={`${proximas.length} por atender · ${datos.hoy.filter((x) => x.estado === "asistida").length} atendidas`} />
+        <Kpi label="Asistencia" icono={<Percent />} valor={pct(datos.r.asistencia)} delta={delta(datos.r.asistencia, datos.rp.asistencia)} nota={`${datos.r.faltas} faltas`} />
+        <Kpi label="Pacientes nuevos" icono={<UserPlus />} valor={datos.nuevos} nota={`${c.pacientes.length} en total`} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Equipo médico */}
-        <section
-          className="anim-in anim-d3 rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 lg:col-span-2"
-          style={{ background: "var(--card)" }}
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold">Equipo médico</h2>
-            <Link
-              href="/dashboard/admin/equipo"
-              className="card-hover rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-4 py-1.5 text-sm font-medium text-white shadow-sm"
-            >
-              + Dar de alta
-            </Link>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left" style={{ color: "var(--ink-muted)" }}>
-                  <th className="pb-3 font-medium">Médico</th>
-                  <th className="pb-3 font-medium">Especialidad</th>
-                  <th className="pb-3 text-right font-medium">Citas</th>
-                  <th className="pb-3 text-right font-medium">Ingresos</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {stats.porMedico.map((m) => (
-                  <tr key={m.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-white/5">
-                    <td className="py-3">
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-xs font-semibold text-white">
-                          {m.nombre.replace(/^Dra?\.\s*/, "").charAt(0)}
-                        </span>
-                        <span className="font-medium">{m.nombre}</span>
-                        {!m.activo && (
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-white/5">
-                            Inactivo
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3" style={{ color: "var(--ink-muted)" }}>{m.especialidad}</td>
-                    <td className="py-3 text-right tabular-nums">{m.citas}</td>
-                    <td className="py-3 text-right tabular-nums">{mxn.format(m.ingresos)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <Link
-            href="/dashboard/admin/equipo"
-            className="mt-4 inline-block text-sm font-medium text-brand-600 hover:text-brand-700"
-          >
-            Gestionar equipo médico →
-          </Link>
-        </section>
-
-        {/* Lealtad + acciones */}
-        <div className="space-y-4">
-          <section className="anim-in anim-d4 card-hover rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-accent-500 p-6 text-white shadow-md">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
-                <Gift className="h-5 w-5" />
-              </span>
-              <h2 className="font-semibold">Programa de lealtad</h2>
+      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]" style={{ marginTop: 16 }}>
+        <div className="card card-pad anim-in">
+          <div className="card-title">
+            <div>
+              <h2>Ingresos por día</h2>
+              <p>Consultas atendidas · últimos 30 días</p>
             </div>
-            <p className="text-3xl font-bold tabular-nums">{stats.recompensas}</p>
-            <p className="mt-1 text-sm text-white/80">
-              recompensas desbloqueadas · regla activa: {recompensasConfig.citas_requeridas} citas
-              → {recompensasConfig.valor_descuento}% de descuento
-            </p>
-            <Link
-              href="/dashboard/admin/configuracion"
-              className="card-hover mt-4 block w-full rounded-full bg-white px-4 py-2 text-center text-sm font-semibold text-brand-700"
-            >
-              Configurar recompensas
-            </Link>
-          </section>
+            <span className="chip chip-teal">{moneda.format(datos.r.ticketMedio)} ticket medio</span>
+          </div>
+          <div style={{ height: 260 }}>
+            <ResponsiveContainer>
+              <AreaChart data={datos.serie} margin={{ left: -10, right: 6, top: 6 }}>
+                <defs>
+                  <linearGradient id="gIng" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#04BFAD" stopOpacity={0.35} />
+                    <stop offset="1" stopColor="#04BFAD" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke="#eef3f5" />
+                <XAxis dataKey="dia" tick={{ fontSize: 11, fill: "#8a9bab" }} tickLine={false} axisLine={false} interval={4} />
+                <YAxis tick={{ fontSize: 11, fill: "#8a9bab" }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${Math.round(v / 1000)}k`} />
+                <Tooltip formatter={(v) => moneda.format(Number(v))} contentStyle={{ borderRadius: 14, border: "1px solid #e2ebef", fontSize: 13 }} />
+                <Area type="monotone" dataKey="ingresos" name="Ingresos" stroke="#009D9D" strokeWidth={2.5} fill="url(#gIng)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-          <section
-            className="anim-in anim-d5 rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
-            style={{ background: "var(--card)" }}
-          >
-            <h2 className="mb-3 font-semibold">Métodos de pago</h2>
-            <div className="space-y-2.5 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2" style={{ color: "var(--ink-muted)" }}>
-                  <CreditCard className="h-4 w-4 text-brand-500" /> Tarjeta (Stripe)
-                </span>
-                <span className="font-medium tabular-nums">{stats.tarjetaCitas} citas</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2" style={{ color: "var(--ink-muted)" }}>
-                  <Banknote className="h-4 w-4 text-orange-500" /> Efectivo en clínica
-                </span>
-                <span className="font-medium tabular-nums">{stats.efectivoCitas} citas</span>
-              </div>
-              {stats.porCobrarCitas > 0 && (
-                <p className="mt-1 rounded-xl bg-orange-50 px-3 py-2 text-xs text-orange-800 dark:bg-orange-500/10 dark:text-orange-300">
-                  {stats.porCobrarCitas} {stats.porCobrarCitas === 1 ? "cita" : "citas"} por
-                  cobrar en recepción ({mxn.format(stats.porCobrarMonto)})
-                </p>
-              )}
+        <div className="card card-pad anim-in">
+          <div className="card-title">
+            <div>
+              <h2>Próximas hoy</h2>
+              <p>{proximas.length ? `${proximas.length} pacientes por llegar` : "No quedan citas por hoy"}</p>
             </div>
-            <Link
-              href="/dashboard/admin/reportes"
-              className="mt-3 inline-block text-sm font-medium text-brand-600 hover:text-brand-700"
-            >
-              Ver reportes completos →
-            </Link>
-          </section>
-
-          <section
-            className="anim-in anim-d5 rounded-3xl p-5 text-sm shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10"
-            style={{ background: "var(--card)" }}
-          >
-            <h3 className="mb-2 font-semibold">Demo interactiva</h3>
-            <p style={{ color: "var(--ink-muted)" }}>
-              Agenda una cita como paciente o márcala asistida como médico y verás
-              estos indicadores moverse.
-            </p>
-            <button
-              onClick={store.reiniciarDemo}
-              className="mt-3 rounded-full border border-slate-200 px-4 py-1.5 text-xs font-medium transition-colors hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5"
-              style={{ color: "var(--ink-muted)" }}
-            >
-              Restablecer datos de la demo
-            </button>
-          </section>
+            <Link href="/dashboard/admin/confirmar" className="btn btn-soft btn-sm">Llegadas</Link>
+          </div>
+          <div style={{ maxHeight: 268, overflowY: "auto" }}>
+            {proximas.slice(0, 8).map((x) => {
+              const m = c.medicos.find((y) => y.id === x.medico_id);
+              return (
+                <div key={x.id} className="list-row">
+                  <div className="tnum" style={{ width: 48, fontWeight: 600, color: "var(--navy)" }}>{hora(x.inicio)}</div>
+                  <Avatar nombre={x.paciente_nombre} size="is-sm" color={m?.color} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 500, fontSize: 14, color: "var(--navy)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{x.paciente_nombre}</div>
+                    <div style={{ fontSize: 12.5, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{x.servicio_nombre} · {m?.nombre}</div>
+                  </div>
+                  <EstadoChip estado={x.estado} />
+                </div>
+              );
+            })}
+            {proximas.length === 0 && <p style={{ color: "var(--muted)", fontSize: 14, padding: "20px 0" }}>Revisa la agenda de mañana en Agenda y citas.</p>}
+          </div>
         </div>
       </div>
-    </PanelShell>
+
+      <div className="grid gap-4 lg:grid-cols-3" style={{ marginTop: 16 }}>
+        <div className="card card-pad anim-in lg:col-span-1">
+          <div className="card-title"><div><h2>Atendidas por especialista</h2><p>Últimos 30 días</p></div></div>
+          <div style={{ height: 220 }}>
+            <ResponsiveContainer>
+              <BarChart data={datos.porMedico} margin={{ left: -24, right: 0 }}>
+                <CartesianGrid vertical={false} stroke="#eef3f5" />
+                <XAxis dataKey="corto" tick={{ fontSize: 11, fill: "#8a9bab" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#8a9bab" }} tickLine={false} axisLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ borderRadius: 14, border: "1px solid #e2ebef", fontSize: 13 }} />
+                <Bar dataKey="atendidas" name="Atendidas" fill="#04BFAD" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="card card-pad anim-in">
+          <div className="card-title"><div><h2>Servicios más pedidos</h2><p>Últimos 30 días</p></div></div>
+          {datos.top.map(([n, v], i) => (
+            <div key={n} style={{ marginBottom: 14 }}>
+              <div className="flex justify-between" style={{ fontSize: 14, marginBottom: 6 }}>
+                <span style={{ color: "var(--navy)" }}>{i + 1}. {n}</span>
+                <b className="tnum" style={{ fontWeight: 600 }}>{v}</b>
+              </div>
+              <div className="progress"><span style={{ width: `${(v / (datos.top[0]?.[1] || 1)) * 100}%` }} /></div>
+            </div>
+          ))}
+        </div>
+        <div className="card card-pad anim-in">
+          <div className="card-title"><div><h2>Pendientes</h2><p>Lo que necesita tu atención</p></div></div>
+          <div className="grid gap-2">
+            {datos.r.porCobrarCitas > 0 && (
+              <Link href="/dashboard/admin/caja" className="list-row" style={{ borderBottom: "none", background: "var(--warn-50)", borderRadius: 14, padding: 12 }}>
+                <Clock3 size={18} color="#a56411" />
+                <div style={{ flex: 1, fontSize: 14 }}><b style={{ fontWeight: 600 }}>{datos.r.porCobrarCitas} consultas por cobrar</b><div style={{ color: "var(--muted)", fontSize: 12.5 }}>{moneda.format(datos.r.porCobrar)} pendientes</div></div>
+                <ArrowRight size={16} />
+              </Link>
+            )}
+            {bajos.length > 0 && (
+              <Link href="/dashboard/admin/inventario" className="list-row" style={{ borderBottom: "none", background: "var(--danger-50)", borderRadius: 14, padding: 12 }}>
+                <PackageX size={18} color="#c02842" />
+                <div style={{ flex: 1, fontSize: 14 }}><b style={{ fontWeight: 600 }}>{bajos.length} insumos bajo el mínimo</b><div style={{ color: "var(--muted)", fontSize: 12.5 }}>{bajos.slice(0, 2).map((p) => p.nombre.split(" (")[0]).join(", ")}</div></div>
+                <ArrowRight size={16} />
+              </Link>
+            )}
+            {caducan.length > 0 && (
+              <Link href="/dashboard/admin/inventario" className="list-row" style={{ borderBottom: "none", background: "var(--bg-2)", borderRadius: 14, padding: 12 }}>
+                <AlertTriangle size={18} color="#a56411" />
+                <div style={{ flex: 1, fontSize: 14 }}><b style={{ fontWeight: 600 }}>{caducan.length} por caducar (45 días)</b><div style={{ color: "var(--muted)", fontSize: 12.5 }}>{caducan.map((p) => p.nombre.split(" ")[0]).join(", ")}</div></div>
+                <ArrowRight size={16} />
+              </Link>
+            )}
+            <Link href="/dashboard/admin/integraciones" className="list-row" style={{ borderBottom: "none", background: "var(--teal-50)", borderRadius: 14, padding: 12 }}>
+              <CalendarDays size={18} color="var(--teal)" />
+              <div style={{ flex: 1, fontSize: 14 }}><b style={{ fontWeight: 600 }}>{c.medicos.filter((m) => m.google).length} de {c.medicos.length} con Google Calendar</b><div style={{ color: "var(--muted)", fontSize: 12.5 }}>Invita al resto a conectar su agenda</div></div>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

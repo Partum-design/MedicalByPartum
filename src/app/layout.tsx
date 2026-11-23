@@ -1,44 +1,35 @@
-import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Outfit } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Outfit } from "next/font/google";
+import { Preloader } from "@/components/marca/Preloader";
 import "./globals.css";
 
 const outfit = Outfit({
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-outfit",
-});
-
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-plex",
-});
-
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  variable: "--font-plex-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Medical OS by Partum",
+  title: { default: "Medical OS · Clínica Vitalia", template: "%s · Medical OS" },
   description:
-    "El sistema núcleo para clínicas y consultorios: agenda, pago anticipado, telemedicina y lealtad en un solo lugar.",
+    "Agenda en línea, expediente clínico, cartilla de vacunación, recordatorios y Google Calendar para clínicas y consultorios. Demo de Medical OS por Partum.",
+  icons: { icon: "/marca/icono.png", apple: "/marca/icono.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#009D9D",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="es"
-      suppressHydrationWarning
-      className={`${outfit.variable} ${plexSans.variable} ${plexMono.variable}`}
-    >
-      <body className="antialiased">
+    <html lang="es-MX" className={outfit.variable}>
+      <body>
+        <Preloader />
         {children}
-        <footer className="site-footer">
-          <span>Medical OS</span>
-          <span>Operación clínica conectada · Partum Design</span>
-        </footer>
       </body>
     </html>
   );

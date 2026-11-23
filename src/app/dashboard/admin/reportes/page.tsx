@@ -1,218 +1,158 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { addDays, format } from "date-fns";
-import { es } from "date-fns/locale";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { Banknote, CalendarCheck, ShieldCheck, TrendingUp, Users } from "lucide-react";
-import { PanelShell, KpiPastel } from "@/components/shell/PanelShell";
-import { useDemoStore } from "@/lib/demo-store";
+import { useMemo, useState } from "react";
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Download } from "lucide-react";
+import { useClinica } from "@/lib/store";
+import { enZona } from "@/lib/datos/disponibilidad";
+import { resumirCitas, resumirMedicos } from "@/lib/datos/modelo";
+import { Avatar, diaCorto, Kpi, moneda, PageHead, pct, Segmented } from "@/components/ui";
 
-const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
-const mxnCompact = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", notation: "compact", maximumFractionDigits: 1 });
+const COL = ["#009D9D", "#04BFAD", "#55D9A8", "#2C506D", "#7C5CFA", "#F08A4B", "#9fb0bd"];
+const tip = { borderRadius: 14, border: "1px solid #e2ebef", fontSize: 13 };
 
-// Paleta categórica validada (dataviz skill): pasos claros para superficie
-// clara, pasos oscuros para superficie oscura — mismo orden, sin ciclarla.
-const CATEGORICAL_LIGHT = ["#213A58", "#0C6478", "#15919B", "#09D1C7", "#46DFB1"];
-const CATEGORICAL_DARK = ["#80EE98", "#46DFB1", "#09D1C7", "#15919B", "#0C6478"];
-const INK_MUTED_LIGHT = "#617385";
-const INK_MUTED_DARK = "#B9EBE3";
-const GRID_LIGHT = "#DCE7E4";
-const GRID_DARK = "#0C6478";
+export default function Reportes() {
+  const c = useClinica();
+  const [dias, setDias] = useState<"30" | "60">("60");
+  const desde = Date.now() - Number(dias) * 86_400_000;
+  const r = useMemo(() => {
+    const citas = c.citas.filter((x) => new Date(x.inicio).getTime() >= desde && new Date(x.inicio).getTime() <= Date.now());
+    const total = resumirCitas(citas);
+    const semanas: { semana: string; Atendidas: number; Faltas: number; Canceladas: number }[] = [];
+    for (let i = Math.floor(Number(dias) / 7) - 1; i >= 0; i--) {
+      const a = Date.now() - (i + 1) * 7 * 86_400_000;
+      const b = Date.now() - i * 7 * 86_400_000;
+      const s = citas.filter((x) => { const t = new Date(x.inicio).getTime(); return t >= a && t < b; });
+      semanas.push({ semana: diaCorto(a), Atendidas: s.filter((x) => x.estado === "asistida").length, Faltas: s.filter((x) => x.estado === "no_asistio").length, Canceladas: s.filter((x) => x.estado === "cancelada").length });
+    }
+    const porCat = new Map<string, number>();
+    for (const x of citas) if (x.estado === "asistida") {
+      const cat = c.servicios.find((s) => s.id === x.servicio_id)?.categoria ?? "Otros";
+      porCat.set(cat, (porCat.get(cat) ?? 0) + x.precio);
+    }
+    const canal = [{ name: "En línea", value: citas.filter((x) => x.creada_por === "paciente").length }, { name: "Recepción", value: citas.filter((x) => x.creada_por !== "paciente").length }];
+    const modalidad = ["presencial", "telemedicina", "domicilio"].map((m) => ({ name: m === "presencial" ? "Consultorio" : m === "telemedicina" ? "Telemedicina" : "Domicilio", value: citas.filter((x) => x.modalidad === m).length }));
+    const calor: number[][] = Array.from({ length: 6 }, () => Array(13).fill(0));
+    const idx = { lun: 0, mar: 1, mie: 2, jue: 3, vie: 4, sab: 5, dom: -1 } as const;
+    for (const x of citas) {
+      if (x.estado === "cancelada") continue;
+      const z = enZona(new Date(x.inicio).getTime());
+      const d = idx[z.diaSemana];
+      const h = Math.floor(z.minutos / 60) - 8;
+      if (d >= 0 && h >= 0 && h < 13) calor[d][h]++;
+    }
+    return { total, semanas, porCat: [...porCat.entries()].map(([name, value]) => ({ name, value })), canal, modalidad, calor, medicos: resumirMedicos(citas, c.medicos) };
+  }, [c.citas, c.servicios, c.medicos, desde, dias]);
+  const max = Math.max(1, ...r.calor.flat());
 
-function useEsDark() {
-  const [esOscuro, setEsOscuro] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    setEsOscuro(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setEsOscuro(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return esOscuro;
-}
-
-function TooltipCard({ active, payload, label, formatter }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string; formatter: (v: number) => string }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-xs shadow-lg dark:border-white/10 dark:bg-slate-900">
-      <p className="mb-1 font-medium">{label}</p>
-      {payload.map((p) => (
-        <p key={p.name} className="flex items-center gap-1.5" style={{ color: p.color }}>
-          <span className="inline-block h-2 w-2 rounded-full" style={{ background: p.color }} />
-          <span className="text-slate-600 dark:text-slate-300">{p.name}:</span>
-          <span className="font-semibold">{formatter(p.value)}</span>
-        </p>
-      ))}
-    </div>
-  );
-}
-
-// Nodo Administrador: reportes financieros y operativos de la clínica.
-export default function ReportesPage() {
-  const store = useDemoStore();
-  const { listo, sesion, citas, medicos } = store;
-  const esOscuro = useEsDark();
-  const cat = esOscuro ? CATEGORICAL_DARK : CATEGORICAL_LIGHT;
-  const inkMuted = esOscuro ? INK_MUTED_DARK : INK_MUTED_LIGHT;
-  const grid = esOscuro ? GRID_DARK : GRID_LIGHT;
-
-  const datos = useMemo(() => {
-    const vivas = citas.filter((c) => c.estado !== "cancelada");
-    const asistidas = citas.filter((c) => c.estado === "asistida");
-
-    const porMedico = medicos
-      .map((m) => {
-        const suyas = vivas.filter((c) => c.medico_id === m.id);
-        return {
-          nombre: m.nombre.replace(/^Dra?\.\s*/, ""),
-          ingresos: suyas.reduce((s, c) => s + c.precio, 0),
-          citas: suyas.length,
-        };
-      })
-      .filter((m) => m.citas > 0)
-      .sort((a, b) => b.ingresos - a.ingresos);
-
-    const tarjeta = vivas.filter((c) => c.metodo_pago === "tarjeta");
-    const efectivo = vivas.filter((c) => c.metodo_pago === "efectivo");
-    const porMetodo = [
-      { metodo: "Tarjeta", ingresos: tarjeta.reduce((s, c) => s + c.precio, 0), citas: tarjeta.length },
-      { metodo: "Efectivo", ingresos: efectivo.reduce((s, c) => s + c.precio, 0), citas: efectivo.length },
-    ];
-
-    const dias = Array.from({ length: 14 }).map((_, i) => {
-      const dia = addDays(new Date(), -13 + i);
-      const clave = format(dia, "yyyy-MM-dd");
-      const delDia = vivas.filter((c) => c.inicio.slice(0, 10) === clave);
-      return {
-        fecha: format(dia, "d MMM", { locale: es }),
-        citas: delDia.length,
-      };
-    });
-
-    return {
-      porMedico,
-      porMetodo,
-      dias,
-      ingresoTotal: vivas.reduce((s, c) => s + c.precio, 0),
-      ticketPromedio: vivas.length ? vivas.reduce((s, c) => s + c.precio, 0) / vivas.length : 0,
-      tasaAsistencia: vivas.length ? asistidas.length / vivas.length : 0,
-      pacientes: new Set(vivas.map((c) => c.paciente_id)).size,
-    };
-  }, [citas, medicos]);
-
-  if (!listo) return null;
-
-  if (!sesion || sesion.rol !== "admin") {
-    return <SinSesion />;
-  }
+  const exportar = () => {
+    const filas = [["Especialista", "Atendidas", "Faltas", "Asistencia", "Ingresos", "Honorarios"], ...r.medicos.map((m) => [m.nombre, m.atendidas, m.faltas, pct(m.asistencia), m.ingresos, m.comisiones])];
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["﻿" + filas.map((f) => f.join(",")).join("\n")], { type: "text/csv" }));
+    a.download = "reporte-especialistas.csv";
+    a.click();
+  };
 
   return (
-    <PanelShell sesion={sesion} activo="Reportes" onLogout={store.logout}>
-      <header className="anim-in mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Reportes</h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
-          Desempeño financiero y operativo de la clínica en vivo.
-        </p>
-      </header>
-
-      <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiPastel tono="lila" delay="anim-d1" icon={<Banknote className="h-4 w-4" />} label="Ingresos totales" value={mxn.format(datos.ingresoTotal)} nota="Citas confirmadas y asistidas" />
-        <KpiPastel tono="azul" delay="anim-d2" icon={<TrendingUp className="h-4 w-4" />} label="Ticket promedio" value={mxn.format(Math.round(datos.ticketPromedio))} nota="Por cita" />
-        <KpiPastel tono="menta" delay="anim-d3" icon={<CalendarCheck className="h-4 w-4" />} label="Tasa de asistencia" value={`${Math.round(datos.tasaAsistencia * 100)}%`} nota="Asistidas vs. totales" />
-        <KpiPastel tono="durazno" delay="anim-d4" icon={<Users className="h-4 w-4" />} label="Pacientes activos" value={String(datos.pacientes)} nota="Con al menos una cita" />
-      </section>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="anim-in anim-d2 rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-          <h2 className="mb-4 font-semibold">Ingresos por médico</h2>
-          {datos.porMedico.length === 0 ? (
-            <EmptyState texto="Aún no hay citas registradas." />
-          ) : (
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={datos.porMedico} layout="vertical" margin={{ left: 8, right: 24 }}>
-                  <CartesianGrid horizontal={false} stroke={grid} />
-                  <XAxis type="number" tickFormatter={(v) => mxnCompact.format(v)} tick={{ fill: inkMuted, fontSize: 12 }} axisLine={{ stroke: grid }} tickLine={false} />
-                  <YAxis type="category" dataKey="nombre" width={90} tick={{ fill: inkMuted, fontSize: 12 }} axisLine={{ stroke: grid }} tickLine={false} />
-                  <Tooltip content={<TooltipCard formatter={(v) => mxn.format(v)} />} cursor={{ fill: esOscuro ? "rgba(255,255,255,0.04)" : "rgba(15,23,42,0.04)" }} />
-                  <Bar dataKey="ingresos" name="Ingresos" radius={[0, 4, 4, 0]} barSize={22} label={{ position: "right", fill: inkMuted, fontSize: 11, formatter: (v) => mxnCompact.format(Number(v)) }}>
-                    {datos.porMedico.map((_, i) => (
-                      <Cell key={i} fill={cat[i % cat.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </section>
-
-        <section className="anim-in anim-d3 rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10" style={{ background: "var(--card)" }}>
-          <h2 className="mb-4 font-semibold">Ingresos por método de pago</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={datos.porMetodo} layout="vertical" margin={{ left: 8, right: 24 }}>
-                <CartesianGrid horizontal={false} stroke={grid} />
-                <XAxis type="number" tickFormatter={(v) => mxnCompact.format(v)} tick={{ fill: inkMuted, fontSize: 12 }} axisLine={{ stroke: grid }} tickLine={false} />
-                <YAxis type="category" dataKey="metodo" width={90} tick={{ fill: inkMuted, fontSize: 12 }} axisLine={{ stroke: grid }} tickLine={false} />
-                <Tooltip content={<TooltipCard formatter={(v) => mxn.format(v)} />} cursor={{ fill: esOscuro ? "rgba(255,255,255,0.04)" : "rgba(15,23,42,0.04)" }} />
-                <Bar dataKey="ingresos" name="Ingresos" radius={[0, 4, 4, 0]} barSize={28} label={{ position: "right", fill: inkMuted, fontSize: 11, formatter: (v) => mxnCompact.format(Number(v)) }}>
-                  <Cell fill={cat[0]} />
-                  <Cell fill={cat[1]} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        <section className="anim-in anim-d4 rounded-3xl p-5 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 lg:col-span-2" style={{ background: "var(--card)" }}>
-          <h2 className="mb-4 font-semibold">Citas por día (últimos 14 días)</h2>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={datos.dias} margin={{ left: -16 }}>
-                <CartesianGrid vertical={false} stroke={grid} />
-                <XAxis dataKey="fecha" tick={{ fill: inkMuted, fontSize: 11 }} axisLine={{ stroke: grid }} tickLine={false} interval={1} />
-                <YAxis allowDecimals={false} tick={{ fill: inkMuted, fontSize: 12 }} axisLine={{ stroke: grid }} tickLine={false} />
-                <Tooltip content={<TooltipCard formatter={(v) => `${v} ${v === 1 ? "cita" : "citas"}`} />} cursor={{ fill: esOscuro ? "rgba(255,255,255,0.04)" : "rgba(15,23,42,0.04)" }} />
-                <Bar dataKey="citas" name="Citas" fill={cat[0]} radius={[4, 4, 0, 0]} barSize={18} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
+    <>
+      <PageHead titulo="Reportes" sub="Cómo se mueve la clínica: demanda, asistencia, ingresos y horas pico.">
+        <Segmented valor={dias} onChange={setDias} opciones={[{ id: "30", label: "30 días" }, { id: "60", label: "60 días" }]} />
+        <button type="button" className="btn btn-ghost btn-sm" onClick={exportar}><Download /> CSV</button>
+      </PageHead>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi destacado label="Ingresos" valor={moneda.format(r.total.ingresos)} nota={`${r.total.atendidas} consultas`} />
+        <Kpi label="Ticket medio" valor={moneda.format(r.total.ticketMedio)} />
+        <Kpi label="Asistencia" valor={pct(r.total.asistencia)} nota={`${r.total.faltas} faltas`} />
+        <Kpi label="Pacientes atendidos" valor={r.total.pacientes} nota="únicos en el periodo" />
       </div>
-    </PanelShell>
-  );
-}
-
-function EmptyState({ texto }: { texto: string }) {
-  return (
-    <div className="flex h-64 flex-col items-center justify-center gap-2 text-center text-sm" style={{ color: "var(--ink-muted)" }}>
-      {texto}
-    </div>
-  );
-}
-
-function SinSesion() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <ShieldCheck className="h-8 w-8 text-accent-500" />
-      <p className="anim-in text-lg font-semibold">Inicia sesión como administrador para ver este panel</p>
-      <Link
-        href="/login"
-        className="anim-in anim-d1 rounded-full bg-gradient-to-r from-brand-600 to-accent-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md"
-      >
-        Entrar a la demo
-      </Link>
-    </main>
+      <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]" style={{ marginTop: 16 }}>
+        <div className="card card-pad anim-in">
+          <div className="card-title"><div><h2>Citas por semana</h2><p>Atendidas, faltas y cancelaciones</p></div></div>
+          <div style={{ height: 270 }}>
+            <ResponsiveContainer>
+              <BarChart data={r.semanas} margin={{ left: -20 }}>
+                <CartesianGrid vertical={false} stroke="#eef3f5" />
+                <XAxis dataKey="semana" tick={{ fontSize: 11, fill: "#8a9bab" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#8a9bab" }} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={tip} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="Atendidas" stackId="a" fill="#04BFAD" />
+                <Bar dataKey="Faltas" stackId="a" fill="#F2A33A" />
+                <Bar dataKey="Canceladas" stackId="a" fill="#E2445C" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="card card-pad anim-in">
+          <div className="card-title"><div><h2>Ingresos por área</h2></div></div>
+          <div style={{ height: 270 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={r.porCat} dataKey="value" nameKey="name" innerRadius={60} outerRadius={95} paddingAngle={3} stroke="none">
+                  {r.porCat.map((_, i) => <Cell key={i} fill={COL[i % COL.length]} />)}
+                </Pie>
+                <Tooltip formatter={(v) => moneda.format(Number(v))} contentStyle={tip} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+      <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]" style={{ marginTop: 16 }}>
+        <div className="card card-pad anim-in">
+          <div className="card-title"><div><h2>Horas pico</h2><p>Citas por día y hora</p></div></div>
+          <div className="table-wrap">
+            <div style={{ display: "grid", gridTemplateColumns: "40px repeat(13, minmax(30px,1fr))", gap: 4, minWidth: 480 }}>
+              <span />
+              {Array.from({ length: 13 }, (_, h) => <span key={h} style={{ fontSize: 10.5, color: "var(--soft)", textAlign: "center" }}>{h + 8}</span>)}
+              {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((d, i) => (
+                <div key={d} style={{ display: "contents" }}>
+                  <span style={{ fontSize: 12, color: "var(--muted)", alignSelf: "center" }}>{d}</span>
+                  {r.calor[i].map((v, h) => (
+                    <span key={h} title={`${v} citas`} style={{ height: 30, borderRadius: 8, background: v ? `color-mix(in srgb, #009D9D ${Math.round(12 + (v / max) * 88)}%, #fff)` : "var(--bg-2)" }} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-4">
+          {[["Canal de reserva", r.canal], ["Modalidad", r.modalidad]].map(([t, data]) => (
+            <div key={t as string} className="card card-pad anim-in">
+              <div className="card-title"><div><h3>{t as string}</h3></div></div>
+              {(data as { name: string; value: number }[]).map((x, i) => {
+                const tot = (data as { value: number }[]).reduce((a, y) => a + y.value, 0) || 1;
+                return (
+                  <div key={x.name} style={{ marginBottom: 10 }}>
+                    <div className="flex justify-between" style={{ fontSize: 13.5, marginBottom: 4 }}><span>{x.name}</span><b style={{ fontWeight: 500 }}>{pct(x.value / tot)}</b></div>
+                    <div className="progress"><span style={{ width: `${(x.value / tot) * 100}%`, background: COL[i] }} /></div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="card anim-in" style={{ marginTop: 16, overflow: "hidden" }}>
+        <div className="card-title" style={{ padding: "20px 20px 0" }}><div><h2>Desempeño por especialista</h2></div></div>
+        <div className="table-wrap">
+          <table className="table">
+            <thead><tr><th>Especialista</th><th>Atendidas</th><th>Faltas</th><th>Asistencia</th><th style={{ textAlign: "right" }}>Ingresos</th><th style={{ textAlign: "right" }}>Honorarios</th></tr></thead>
+            <tbody>
+              {r.medicos.map((m) => (
+                <tr key={m.id}>
+                  <td><span className="flex items-center gap-2"><Avatar nombre={m.nombre} size="is-sm" color={c.medicos.find((x) => x.id === m.id)?.color} />{m.nombre}</span></td>
+                  <td className="tnum">{m.atendidas}</td>
+                  <td className="tnum">{m.faltas}</td>
+                  <td>{pct(m.asistencia)}</td>
+                  <td className="tnum" style={{ textAlign: "right" }}>{moneda.format(m.ingresos)}</td>
+                  <td className="tnum" style={{ textAlign: "right" }}>{moneda.format(m.comisiones)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
   );
 }

@@ -53,8 +53,8 @@ export default function PanelAdmin() {
         </Link>
       </PageHead>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi destacado label="Ingresos del mes" icono={<Wallet />} valor={moneda.format(datos.r.ingresos)} delta={delta(datos.r.ingresos, datos.rp.ingresos)} nota="vs. 30 días previos" />
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        <div className="col-span-2 md:col-span-1"><Kpi destacado label="Ingresos del mes" icono={<Wallet />} valor={moneda.format(datos.r.ingresos)} delta={delta(datos.r.ingresos, datos.rp.ingresos)} nota="vs. 30 días previos" /></div>
         <Kpi label="Citas hoy" icono={<CalendarDays />} valor={datos.hoy.length} nota={`${proximas.length} por atender · ${datos.hoy.filter((x) => x.estado === "asistida").length} atendidas`} />
         <Kpi label="Asistencia" icono={<Percent />} valor={pct(datos.r.asistencia)} delta={delta(datos.r.asistencia, datos.rp.asistencia)} nota={`${datos.r.faltas} faltas`} />
         <Kpi label="Pacientes nuevos" icono={<UserPlus />} valor={datos.nuevos} nota={`${c.pacientes.length} en total`} />

@@ -164,10 +164,10 @@ export function Portada() {
               </div>
             </div>
             <div className="hero-visual">
-              <div style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-40%)" }} className="anim-in">
+              <div style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-40%)" }} className="anim-in hero-telefono">
                 <TelefonoInicio />
               </div>
-              <div className="burbuja" style={{ left: "-2%", top: 70 }}>
+              <div className="burbuja burbuja-1" style={{ left: "-2%", top: 70 }}>
                 <i>
                   <Check />
                 </i>
@@ -176,7 +176,7 @@ export function Portada() {
                   <small>Revisión pediátrica · Jue 10:30</small>
                 </div>
               </div>
-              <div className="burbuja" style={{ left: "4%", top: 250, animationDelay: "-2s" }}>
+              <div className="burbuja burbuja-2" style={{ left: "4%", top: 250, animationDelay: "-2s" }}>
                 <i style={{ background: "#25D366" }}>
                   <MessageCircle />
                 </i>
@@ -185,7 +185,7 @@ export function Portada() {
                   <small>WhatsApp · 24 h antes</small>
                 </div>
               </div>
-              <div className="burbuja" style={{ right: "-3%", top: 330, animationDelay: "-4s" }}>
+              <div className="burbuja burbuja-3" style={{ right: "-3%", top: 330, animationDelay: "-4s" }}>
                 <i style={{ background: "#4285F4" }}>
                   <CalendarCheck2 />
                 </i>
@@ -203,7 +203,7 @@ export function Portada() {
       <section className="section" style={{ paddingTop: 60 }}>
         <div className="wrap grid items-center gap-14 lg:grid-cols-2">
           <Reveal className="relative order-2 lg:order-1" >
-            <div style={{ position: "relative", height: 560, display: "grid", placeItems: "center" }}>
+            <div className="beneficio-visual" style={{ position: "relative", height: 560, display: "grid", placeItems: "center" }}>
               <div style={{ position: "absolute", right: "6%", top: 40, width: "70%", height: 440, borderRadius: 44, background: "var(--grad-band)" }} />
               <div style={{ position: "absolute", left: "4%", bottom: 30, width: 170, height: 170, borderRadius: "40px 40px 40px 0", background: "var(--navy)" }} />
               <div style={{ position: "absolute", left: "13%", bottom: 96, width: 90, height: 90, borderRadius: 30, background: "#fff" }} />
@@ -363,7 +363,7 @@ export function Portada() {
             </h2>
             <p className="section-lead">Especialistas certificados, con cédula profesional verificada y agenda en línea.</p>
           </Reveal>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" style={{ marginTop: 40 }}>
+          <div className="medicos-grid grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" style={{ marginTop: 40 }}>
             {medicos.map((m, i) => (
               <Reveal key={m.id} delay={i * 80}>
                 <div className="medico-card">
@@ -386,7 +386,7 @@ export function Portada() {
                       Céd. prof. {m.cedula} · {m.experiencia} años
                     </div>
                     <Link href={`/reservar?medico=${m.id}`} className="btn btn-soft btn-sm" style={{ marginTop: 14, width: "100%" }}>
-                      Agendar con {m.nombre.split(" ")[0]} {m.nombre.split(" ")[1]}
+                      Agendar<span className="largo">&nbsp;con {m.nombre.split(" ")[0]} {m.nombre.split(" ")[1]}</span>
                     </Link>
                   </div>
                 </div>
@@ -407,7 +407,7 @@ export function Portada() {
             </Reveal>
             <div className="pasos">
               <div className="pasos-linea" />
-              <div className="grid gap-10 md:grid-cols-3">
+              <div className="pasos-grid grid gap-10 md:grid-cols-3">
                 {(
                   [
                     [1, "Elige servicio y especialista"],

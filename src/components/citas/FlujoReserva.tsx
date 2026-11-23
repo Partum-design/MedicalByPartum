@@ -19,12 +19,12 @@ import {
   Video,
 } from "lucide-react";
 import { useClinica } from "@/lib/store";
-import { slotsDisponibles } from "@/lib/datos/disponibilidad";
+import { slotsDisponibles, ZONA_HORARIA } from "@/lib/datos/disponibilidad";
 import { CATEGORIAS_SERVICIO, celularValido, ETIQUETA_MODALIDAD, type Cita, type Medico, type Modalidad, type Servicio } from "@/lib/datos/modelo";
 import { enlaceGoogleCalendar, descargarIcs } from "@/lib/calendario";
 import { Logo } from "@/components/marca/Logo";
 import { LogoGoogle } from "@/components/marca/LogoGoogle";
-import { Avatar, Cargando, claveDia, diaCorto, diaLargo, hora, moneda } from "@/components/ui";
+import { Avatar, Cargando, claveDia, diaLargo, hora, moneda } from "@/components/ui";
 import { QrCita } from "@/components/citas/QrCita";
 
 type Paso = 1 | 2 | 3 | 4;
@@ -76,6 +76,11 @@ export function FlujoReserva() {
   useEffect(() => {
     if (c.sesion?.rol === "paciente") setNombre(c.sesion.nombre);
   }, [c.sesion]);
+
+  // Cada paso arranca arriba: en el teléfono el contenido nuevo queda a la vista.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [paso]);
 
   // Horarios libres de los próximos 14 días, con la duración del servicio.
   const horarios = useMemo(() => {
@@ -279,7 +284,8 @@ export function FlujoReserva() {
                   <div className="flex gap-2 overflow-x-auto" style={{ marginTop: 18, paddingBottom: 6 }}>
                     {dias.map(([d, n]) => {
                       const t = horarios.find((h) => claveDia(h.t) === d)!.t;
-                      const [sem, num, mes] = diaCorto(t).split(" ");
+                      const partes = Object.fromEntries(new Intl.DateTimeFormat("es-MX", { timeZone: ZONA_HORARIA, weekday: "short", day: "numeric", month: "short" }).formatToParts(new Date(t)).map((x) => [x.type, x.value.replace(".", "")]));
+                      const [sem, num, mes] = [partes.weekday, partes.day, partes.month];
                       return (
                         <button key={d} type="button" onClick={() => { setDia(d); setSlot(null); }} style={{ flex: "none", width: 74, padding: "10px 0", borderRadius: 18, border: `1px solid ${dia === d ? "transparent" : "var(--line)"}`, background: dia === d ? "var(--grad)" : "#fff", color: dia === d ? "#fff" : "var(--navy)", boxShadow: dia === d ? "var(--shadow-teal)" : undefined }}>
                           <div style={{ fontSize: 12, textTransform: "capitalize", opacity: 0.8 }}>{sem}</div>

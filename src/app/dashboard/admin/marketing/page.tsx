@@ -40,7 +40,7 @@ export default function Marketing() {
   return (
     <>
       <PageHead titulo="Marketing" sub="Segmentos automáticos a partir de tus datos clínicos y recordatorios por WhatsApp." />
-      <div className="grid gap-4 sm:grid-cols-3" style={{ marginBottom: 16 }}>
+      <div className="grid grid-cols-2 gap-3 md:gap-4 sm:grid-cols-3" style={{ marginBottom: 16 }}>
         <Kpi destacado label="Pacientes contactables" icono={<MessageCircle />} valor={c.pacientes.filter((p) => p.telefono).length} nota="con celular registrado" />
         <Kpi label="Vacunas pendientes" icono={<Syringe />} valor={segmentos[0].pacientes.length} nota="oportunidad inmediata" />
         <Kpi label="Campañas enviadas" icono={<Send />} valor={enviadas.length} nota="en esta sesión" />

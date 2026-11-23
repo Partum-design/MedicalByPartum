@@ -34,10 +34,10 @@ export default function Lealtad() {
     <>
       <PageHead titulo="Programa de lealtad" sub="Sellos por consulta atendida y descuento al completar la tarjeta." />
       <div className="card anim-in" style={{ padding: 22, marginBottom: 16, background: cfg.activa ? "var(--teal-50)" : "#fff", borderColor: cfg.activa ? "var(--teal-100)" : undefined }}>
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="icon-tile" style={{ background: cfg.activa ? undefined : "#cfd9de", boxShadow: "none" }}><Power /></span>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <div className="flex items-center gap-2">
+        <div className="flex items-start gap-4">
+          <span className="icon-tile hidden sm:grid" style={{ background: cfg.activa ? undefined : "#cfd9de", boxShadow: "none" }}><Power /></span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="flex flex-wrap items-center gap-2">
               <b style={{ fontWeight: 600, color: "var(--navy)", fontSize: 17 }}>Programa {cfg.activa ? "encendido" : "apagado"}</b>
               <span className={`chip ${cfg.activa ? "chip-ok" : ""}`}><span className="dot" />{cfg.activa ? "Visible para pacientes" : "Oculto para pacientes"}</span>
             </div>
@@ -51,7 +51,7 @@ export default function Lealtad() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
         <div className="grid content-start gap-4">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 md:gap-4 sm:grid-cols-3">
             <Kpi label="Tarjetas emitidas" icono={<Gift />} valor={c.tarjetas.length} />
             <Kpi label="Recompensas por canjear" icono={<Sparkles />} valor={filas.reduce((a, f) => a + f.disponibles, 0)} />
             <Kpi label="Canjeadas" valor={Object.values(c.canjes).reduce((a, n) => a + n, 0)} />

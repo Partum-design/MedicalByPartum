@@ -34,7 +34,7 @@ export default function Caja() {
         <Segmented valor={periodo} onChange={setPeriodo} opciones={[{ id: "7", label: "7 días" }, { id: "30", label: "30 días" }, { id: "90", label: "90 días" }]} />
         <button type="button" className="btn btn-grad btn-sm" onClick={() => setAlta(true)}><Plus /> Registrar gasto</button>
       </PageHead>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Kpi destacado label="Cobrado" icono={<Wallet />} valor={moneda.format(d.ingresos)} nota={`${d.cobradas.length} consultas`} />
         <Kpi label="Gastos" icono={<TrendingDown />} valor={moneda.format(d.egresos)} nota={`${d.gastos.length} movimientos`} />
         <Kpi label="Utilidad estimada" icono={<Receipt />} valor={moneda.format(d.ingresos - d.egresos - d.comisiones)} nota={`después de ${moneda.format(d.comisiones)} en honorarios`} />

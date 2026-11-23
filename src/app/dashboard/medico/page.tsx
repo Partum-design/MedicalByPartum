@@ -33,9 +33,9 @@ export default function PanelMedico() {
         )}
       </PageHead>
 
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr_1fr_1fr]">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-[1.1fr_1fr_1fr_1fr]">
         {siguiente ? (
-          <div className="credencial anim-in">
+          <div className="credencial anim-in col-span-2 lg:col-span-1">
             <div style={{ fontSize: 12.5, opacity: 0.8, textTransform: "uppercase", letterSpacing: ".06em" }}>Siguiente paciente · {hora(siguiente.inicio)}</div>
             <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
               <Avatar nombre={siguiente.paciente_nombre} color="#0b6f75" />
@@ -50,11 +50,11 @@ export default function PanelMedico() {
             </div>
           </div>
         ) : (
-          <Kpi destacado label="Siguiente paciente" icono={<CalendarCheck2 />} valor="Libre" nota="No quedan citas por hoy" />
+          <div className="col-span-2 lg:col-span-1"><Kpi destacado label="Siguiente paciente" icono={<CalendarCheck2 />} valor="Libre" nota="No quedan citas por hoy" /></div>
         )}
         <Kpi label="Atendidos (30 días)" icono={<Users />} valor={mes.atendidas} nota={`${Math.round(mes.asistencia * 100)} % de asistencia`} />
         <Kpi label="Producción (30 días)" icono={<Wallet />} valor={moneda.format(mes.ingresos)} nota="Valor de consultas atendidas" />
-        <Kpi label="Por venir" icono={<CalendarDays />} valor={mias.filter((x) => x.estado === "confirmada" && new Date(x.inicio).getTime() > ahora).length} nota="citas agendadas" />
+        <div className="col-span-2 lg:col-span-1"><Kpi label="Por venir" icono={<CalendarDays />} valor={mias.filter((x) => x.estado === "confirmada" && new Date(x.inicio).getTime() > ahora).length} nota="citas agendadas" /></div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[380px_1fr]" style={{ marginTop: 16 }}>

@@ -59,7 +59,7 @@ export default function Reportes() {
         <Segmented valor={dias} onChange={setDias} opciones={[{ id: "30", label: "30 días" }, { id: "60", label: "60 días" }]} />
         <button type="button" className="btn btn-ghost btn-sm" onClick={exportar}><Download /> CSV</button>
       </PageHead>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Kpi destacado label="Ingresos" valor={moneda.format(r.total.ingresos)} nota={`${r.total.atendidas} consultas`} />
         <Kpi label="Ticket medio" valor={moneda.format(r.total.ticketMedio)} />
         <Kpi label="Asistencia" valor={pct(r.total.asistencia)} nota={`${r.total.faltas} faltas`} />
@@ -101,7 +101,7 @@ export default function Reportes() {
       <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]" style={{ marginTop: 16 }}>
         <div className="card card-pad anim-in">
           <div className="card-title"><div><h2>Horas pico</h2><p>Citas por día y hora</p></div></div>
-          <div className="table-wrap">
+          <div className="scroll-x">
             <div style={{ display: "grid", gridTemplateColumns: "40px repeat(13, minmax(30px,1fr))", gap: 4, minWidth: 480 }}>
               <span />
               {Array.from({ length: 13 }, (_, h) => <span key={h} style={{ fontSize: 10.5, color: "var(--soft)", textAlign: "center" }}>{h + 8}</span>)}

@@ -38,6 +38,7 @@ import type { Rol } from "@/lib/datos/modelo";
 import { useClinica } from "@/lib/store";
 import { Logo } from "@/components/marca/Logo";
 import { Avatar, Cargando, hace } from "@/components/ui";
+import { TablasResponsivas } from "@/components/panel/TablasResponsivas";
 
 type Item = { label: string; corto?: string; href: string; icon: ReactNode; grupo?: string; extra?: ReactNode };
 
@@ -240,7 +241,10 @@ export function PanelShell({ children, titulo }: { children: ReactNode; titulo?:
           </div>
         </header>
 
-        <main className="app-content">{children}</main>
+        <main className="app-content">
+          <TablasResponsivas />
+          {children}
+        </main>
       </div>
 
       <nav className="app-bottom" aria-label="Navegación principal">

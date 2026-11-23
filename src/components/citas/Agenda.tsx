@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Video, Home } from "lucide-react";
 import { useClinica } from "@/lib/store";
+import { useEsMovil } from "@/lib/useEsMovil";
 import { enZona, instante } from "@/lib/datos/disponibilidad";
 import type { Cita, EventoGoogle, Medico } from "@/lib/datos/modelo";
 import { Avatar, claveDia, diaCorto, diaLargo, EstadoChip, hora, moneda, PagoChip, Segmented, useToast } from "@/components/ui";
@@ -24,6 +25,12 @@ export function Agenda({ medicos, vistaInicial = "dia", soloLectura = false }: {
   const c = useClinica();
   const toast = useToast();
   const [vista, setVista] = useState<Vista>(vistaInicial);
+  const movil = useEsMovil();
+  // En el teléfono la agenda abre como lista del día: más fácil de leer y tocar.
+  useEffect(() => {
+    if (movil) setVista("lista");
+  }, [movil]);
+  const porDia = vista === "dia" || (vista === "lista" && movil);
   const [dia, setDia] = useState(() => claveDia(Date.now()));
   const [abierta, setAbierta] = useState<Cita | null>(null);
   const [nueva, setNueva] = useState<{ medico_id?: string; fecha?: string; hora?: string } | null>(null);
@@ -72,13 +79,13 @@ export function Agenda({ medicos, vistaInicial = "dia", soloLectura = false }: {
   const lista = useMemo(
     () =>
       c.citas
-        .filter((x) => ids.has(x.medico_id) && (vista !== "lista" || semana.includes(claveDia(x.inicio))))
+        .filter((x) => ids.has(x.medico_id) && (vista !== "lista" || (movil ? claveDia(x.inicio) === dia : semana.includes(claveDia(x.inicio)))))
         .sort((a, b) => a.inicio.localeCompare(b.inicio)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [c.citas, filtro, semana, vista, medicos]
+    [c.citas, filtro, semana, vista, medicos, movil, dia]
   );
 
-  const mover = (n: number) => setDia((d) => sumarDias(d, vista === "dia" ? n : n * 7));
+  const mover = (n: number) => setDia((d) => sumarDias(d, porDia ? n : n * 7));
 
   return (
     <div className="card" style={{ overflow: "hidden" }}>
@@ -95,9 +102,9 @@ export function Agenda({ medicos, vistaInicial = "dia", soloLectura = false }: {
           </button>
         </div>
         <div style={{ fontWeight: 600, color: "var(--navy)", textTransform: "capitalize", fontSize: 16 }}>
-          {vista === "dia" ? diaLargo(instante(+dia.slice(0, 4), +dia.slice(5, 7), +dia.slice(8), 720)) : `Semana del ${diaCorto(instante(+semana[0].slice(0, 4), +semana[0].slice(5, 7), +semana[0].slice(8), 720))}`}
+          {porDia ? diaLargo(instante(+dia.slice(0, 4), +dia.slice(5, 7), +dia.slice(8), 720)) : `Semana del ${diaCorto(instante(+semana[0].slice(0, 4), +semana[0].slice(5, 7), +semana[0].slice(8), 720))}`}
         </div>
-        <input type="date" className="input" style={{ width: 160, minHeight: 38 }} value={dia} onChange={(e) => e.target.value && setDia(e.target.value)} aria-label="Ir a fecha" />
+        <input type="date" className="input hidden sm:block" style={{ width: 160, minHeight: 38 }} value={dia} onChange={(e) => e.target.value && setDia(e.target.value)} aria-label="Ir a fecha" />
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {medicos.length > 1 && (
             <select className="input" style={{ width: "auto", minHeight: 38 }} value={filtro} onChange={(e) => { setFiltro(e.target.value); if (e.target.value === "todos" && vista === "semana") setVista("dia"); }}>
@@ -119,7 +126,7 @@ export function Agenda({ medicos, vistaInicial = "dia", soloLectura = false }: {
       </div>
 
       {vista !== "lista" ? (
-        <div className="table-wrap">
+        <div className="scroll-x">
           <div style={{ display: "grid", gridTemplateColumns: `56px repeat(${columnas.length}, minmax(160px, 1fr))`, minWidth: 56 + columnas.length * 160 }}>
             <div style={{ position: "sticky", top: 0, background: "#fff", zIndex: 4, borderBottom: "1px solid var(--line-2)" }} />
             {columnas.map((col) => (
@@ -188,6 +195,40 @@ export function Agenda({ medicos, vistaInicial = "dia", soloLectura = false }: {
               );
             })}
           </div>
+        </div>
+      ) : movil ? (
+        <div style={{ padding: "4px 14px 10px" }}>
+          {lista.length === 0 && <p style={{ textAlign: "center", color: "var(--muted)", padding: 28 }}>Sin citas este día.</p>}
+          {lista.map((x) => {
+            const color = c.medicos.find((m) => m.id === x.medico_id)?.color ?? "var(--teal)";
+            return (
+              <button
+                key={x.id}
+                type="button"
+                onClick={() => setAbierta(x)}
+                className="flex w-full items-center gap-3"
+                style={{ textAlign: "left", padding: "12px 0", border: "none", borderBottom: "1px solid var(--line-2)", background: "none", opacity: x.estado === "cancelada" ? 0.55 : 1 }}
+              >
+                <div className="tnum" style={{ width: 46, flex: "none" }}>
+                  <b style={{ fontWeight: 600, color: "var(--navy)", fontSize: 15 }}>{hora(x.inicio)}</b>
+                  <div style={{ fontSize: 11, color: "var(--soft)" }}>{hora(x.fin)}</div>
+                </div>
+                <span style={{ width: 3, alignSelf: "stretch", borderRadius: 3, background: color, flex: "none" }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="trunc flex items-center gap-1" style={{ fontWeight: 500, color: "var(--navy)", fontSize: 14.5 }}>
+                    {x.modalidad === "telemedicina" && <Video size={13} color="var(--violet)" />}
+                    {x.modalidad === "domicilio" && <Home size={13} />}
+                    <span className="trunc">{x.paciente_nombre}</span>
+                  </div>
+                  <div className="trunc" style={{ fontSize: 12.5, color: "var(--muted)" }}>{x.servicio_nombre}</div>
+                  {medicos.length > 1 && <div className="trunc" style={{ fontSize: 12, color: "var(--soft)" }}>{x.medico_nombre}</div>}
+                </div>
+                <div style={{ flex: "none" }}>
+                  <EstadoChip estado={x.estado} />
+                </div>
+              </button>
+            );
+          })}
         </div>
       ) : (
         <div className="table-wrap">

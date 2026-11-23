@@ -33,7 +33,7 @@ export default function Inventario() {
       <PageHead titulo="Inventario" sub="Vacunas con lote y caducidad, medicamentos y material. Al aplicar una vacuna se descuenta sola.">
         <button type="button" className="btn btn-grad btn-sm" onClick={() => abrir("nuevo")}><Plus /> Nuevo producto</button>
       </PageHead>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" style={{ marginBottom: 16 }}>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4" style={{ marginBottom: 16 }}>
         <Kpi destacado label="Valor del inventario" icono={<Boxes />} valor={moneda.format(valor)} nota="a costo de compra" />
         <Kpi label="Dosis de vacuna" icono={<Syringe />} valor={c.productos.filter((p) => p.categoria === "Vacuna").reduce((a, p) => a + p.existencias, 0)} nota={`${c.productos.filter((p) => p.categoria === "Vacuna").length} biológicos`} />
         <Kpi label="Bajo el mínimo" icono={<AlertTriangle />} valor={bajos} nota="por reabastecer" />

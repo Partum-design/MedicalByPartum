@@ -12,7 +12,7 @@ export default function Pagos() {
   return (
     <>
       <PageHead titulo="Pagos" sub="Tus consultas pagadas y por pagar. El pago se hace en recepción con efectivo, tarjeta o transferencia." />
-      <div className="grid gap-4 sm:grid-cols-3" style={{ marginBottom: 16 }}>
+      <div className="grid grid-cols-2 gap-3 md:gap-4 sm:grid-cols-3" style={{ marginBottom: 16 }}>
         <Kpi destacado label="Pagado" icono={<Wallet />} valor={moneda.format(pagado)} />
         <Kpi label="Por pagar" icono={<Receipt />} valor={moneda.format(pendiente)} nota="incluye citas próximas" />
         <Kpi label="Pago en línea" icono={<CreditCard />} valor={c.integraciones.pagos_en_linea ? "Disponible" : "Pronto"} nota="tarjeta al reservar" />

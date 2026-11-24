@@ -30,8 +30,3 @@ export function Isotipo({ alto = 32, className = "" }: { alto?: number; classNam
     />
   );
 }
-
-/** Palabra «medical / por Partum» sin el isotipo: la usa el preloader para animarla por separado. */
-export function Palabra({ className = "" }: { className?: string }) {
-  return <img src="/marca/palabra-medical.png" alt="" aria-hidden width={1200} height={351} className={className} draggable={false} />;
-}

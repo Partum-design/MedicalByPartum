@@ -1,10 +1,16 @@
 @import "tailwindcss";
 
-/* Ángulo animable para el barrido del isotipo en el preloader. */
+/* Valores animables del preloader: barrido del isotipo y radio de la onda de salida. */
 @property --pre-ang {
   syntax: "<angle>";
   inherits: false;
   initial-value: 0deg;
+}
+
+@property --pre-r {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
 }
 
 
@@ -724,6 +730,8 @@ select.input {
    ========================================================================== */
 
 .preloader {
+  --pre-cx: 50%;
+  --pre-cy: 50%;
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -733,151 +741,300 @@ select.input {
   overflow: hidden;
 }
 
+/* Salida: se abre un hueco desde el centro con un borde turquesa → menta. */
+.preloader::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at var(--pre-cx) var(--pre-cy),
+    transparent var(--pre-r),
+    var(--teal) var(--pre-r),
+    var(--mint) calc(var(--pre-r) + 18px),
+    rgba(255, 255, 255, 0) calc(var(--pre-r) + 60px)
+  );
+}
+
 .preloader.is-saliendo {
-  animation: pre-salida 0.9s var(--ease) 0.15s forwards;
+  pointer-events: none;
+  -webkit-mask: radial-gradient(circle at var(--pre-cx) var(--pre-cy), transparent var(--pre-r), #000 calc(var(--pre-r) + 1px));
+  mask: radial-gradient(circle at var(--pre-cx) var(--pre-cy), transparent var(--pre-r), #000 calc(var(--pre-r) + 1px));
+  animation: pre-abrir 0.85s cubic-bezier(0.7, 0, 0.2, 1) 0.15s both;
+}
+
+.preloader.is-saliendo::after {
+  opacity: 1;
+}
+
+.preloader.is-saliendo .pre-centro {
+  animation: pre-despedida 0.45s var(--ease) forwards;
+}
+
+@keyframes pre-abrir {
+  from {
+    --pre-r: 0px;
+  }
+  to {
+    --pre-r: 150vmax;
+  }
+}
+
+@keyframes pre-despedida {
+  to {
+    opacity: 0;
+    transform: scale(1.06);
+    filter: blur(4px);
+  }
+}
+
+/* Fondo: dos orbes de color a la deriva y una retícula de puntos que se desvanece. */
+.pre-fondo {
+  position: absolute;
+  inset: 0;
   pointer-events: none;
 }
 
-@keyframes pre-salida {
-  to {
-    clip-path: circle(0% at 50% 50%);
-    opacity: 0.6;
-  }
-}
-
-.preloader {
-  clip-path: circle(150% at 50% 50%);
-}
-
-.pre-anillo {
+.pre-orbe {
   position: absolute;
-  width: 120vmax;
-  height: 120vmax;
+  width: 46vmax;
+  height: 46vmax;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(4, 191, 173, 0.09) 0%, rgba(85, 217, 168, 0.05) 35%, transparent 62%);
-  animation: pre-respira 2.4s ease-in-out infinite;
+  filter: blur(60px);
+  opacity: 0;
+  animation: aparecer 1.2s ease forwards, pre-deriva 7s ease-in-out infinite alternate;
 }
 
-@keyframes pre-respira {
-  50% {
-    transform: scale(1.06);
+.pre-orbe.is-a {
+  left: -12vmax;
+  top: -14vmax;
+  background: radial-gradient(circle, rgba(4, 191, 173, 0.22), transparent 65%);
+}
+
+.pre-orbe.is-b {
+  right: -14vmax;
+  bottom: -16vmax;
+  background: radial-gradient(circle, rgba(85, 217, 168, 0.26), transparent 65%);
+  animation-delay: 0s, -3.5s;
+}
+
+@keyframes pre-deriva {
+  to {
+    transform: translate(6vmax, 4vmax) scale(1.08);
   }
+}
+
+.pre-reticula {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(11, 26, 56, 0.09) 1px, transparent 1.4px);
+  background-size: 26px 26px;
+  -webkit-mask: radial-gradient(circle at 50% 50%, #000 0%, transparent 55%);
+  mask: radial-gradient(circle at 50% 50%, #000 0%, transparent 55%);
+  opacity: 0;
+  animation: aparecer 1.4s ease 0.2s forwards;
 }
 
 .pre-centro {
   position: relative;
   display: grid;
   justify-items: center;
-  gap: 26px;
+  gap: clamp(30px, 5vh, 46px);
 }
 
-/* Logotipo armado con sus dos piezas: palabra + isotipo «OS». */
+/* Halo que respira detrás del logotipo. */
+.pre-anillo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120vmax;
+  height: 120vmax;
+  margin: -60vmax 0 0 -60vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(4, 191, 173, 0.1) 0%, rgba(85, 217, 168, 0.05) 32%, transparent 60%);
+  animation: pre-respira 2.4s ease-in-out infinite;
+}
+
+@keyframes pre-respira {
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+/* Logotipo vectorial: cada pieza se anima por separado. */
 .pre-logo {
-  display: flex;
-  align-items: flex-start;
-  gap: clamp(8px, 1.6vw, 14px);
-  width: min(560px, 84vw);
-}
-
-.pre-palabra {
-  flex: 0 0 69%;
-  clip-path: inset(0 100% 0 0);
-  animation: pre-barrido 0.9s var(--ease) 0.95s forwards;
-}
-
-.pre-palabra img {
-  display: block;
-  width: 100%;
+  width: min(620px, 86vw);
   height: auto;
+  overflow: visible;
 }
 
+.pre-logo path {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* «O» + «S»: primero el contorno se dibuja, luego se rellena. */
 .pre-os {
-  position: relative;
-  flex: 1;
-  margin-top: -1.5%;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  fill-opacity: 0;
 }
 
-.pre-os .pre-os-img {
-  display: block;
-  width: 100% !important;
-  height: auto !important;
-  -webkit-mask: conic-gradient(from -40deg, #000 var(--pre-ang), transparent 0);
-  mask: conic-gradient(from -40deg, #000 var(--pre-ang), transparent 0);
-  transform: scale(0.86) rotate(-8deg);
-  animation: pre-dibuja-os 1.15s var(--ease) 0.15s forwards;
+.pre-os-a {
+  fill: #00c2c1;
+  stroke: #00c2c1;
+  animation: pre-trazo 1.05s cubic-bezier(0.65, 0, 0.35, 1) 0.1s forwards, pre-relleno 0.55s ease 0.95s forwards;
+}
+
+.pre-os-b {
+  fill: #5bebba;
+  stroke: #5bebba;
+  animation: pre-trazo 0.8s cubic-bezier(0.65, 0, 0.35, 1) 0.5s forwards, pre-relleno 0.5s ease 1.15s forwards;
+}
+
+@keyframes pre-trazo {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pre-relleno {
+  to {
+    fill-opacity: 1;
+    stroke-opacity: 0;
+  }
+}
+
+/* Cruz: entra girando con rebote y luego late. */
+.pre-cruz {
+  fill: #5bebba;
+  transform: scale(0) rotate(-90deg);
+  animation: pre-cruz 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) 1.05s forwards;
+}
+
+@keyframes pre-cruz {
+  to {
+    transform: scale(1) rotate(0);
+  }
 }
 
 .pre-pulso {
-  position: absolute;
-  left: 30%;
-  top: 50%;
-  width: 46%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 3px solid var(--mint);
-  transform: translate(-50%, -50%) scale(0.3);
+  fill: none;
+  stroke: #5bebba;
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
   opacity: 0;
-  animation: pre-pulso 1.6s ease-out 1.25s infinite;
+  animation: pre-pulso 1.7s ease-out 1.4s infinite;
 }
 
-@keyframes pre-dibuja-os {
-  to {
-    --pre-ang: 360deg;
-    transform: none;
-  }
-}
-
-@keyframes pre-barrido {
-  to {
-    clip-path: inset(0 0 0 0);
-  }
+.pre-pulso.is-2 {
+  animation-delay: 2s;
 }
 
 @keyframes pre-pulso {
   0% {
-    opacity: 0.8;
-    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0.85;
+    transform: scale(0.35);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1.7);
+    transform: scale(2.4);
   }
 }
 
+/* «medical»: cada letra sube y se endereza, como en la versión anterior. */
+.pre-letra {
+  fill: #04274d;
+  opacity: 0;
+  transform: translateY(55%) rotate(9deg);
+  animation: pre-letra 0.7s var(--ease) forwards;
+}
+
+@keyframes pre-letra {
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pre-sub {
+  fill: #055a6f;
+  opacity: 0;
+  transform: translateY(40%);
+  animation: pre-sub 0.5s var(--ease) forwards;
+}
+
+@keyframes pre-sub {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pre-brillo {
+  animation: pre-brillo 1.1s ease-in-out 2.1s forwards;
+}
+
+@keyframes pre-brillo {
+  to {
+    transform: translateX(140%);
+  }
+}
+
+/* Barra de carga con porcentaje y frase. */
+.pre-estado {
+  width: min(260px, 70vw);
+  display: grid;
+  gap: 10px;
+  opacity: 0;
+  animation: aparecer 0.5s ease 0.5s forwards;
+}
+
 .pre-barra {
-  width: 180px;
-  height: 4px;
+  height: 3px;
   border-radius: 99px;
   background: var(--line-2);
   overflow: hidden;
-  opacity: 0;
-  animation: aparecer 0.4s ease 0.4s forwards;
 }
 
 .pre-barra span {
   display: block;
   height: 100%;
-  width: 40%;
   border-radius: 99px;
   background: var(--grad-soft);
-  animation: pre-carga 1.3s var(--ease) infinite;
+  transform-origin: left;
+  transition: transform 0.12s linear;
 }
 
-@keyframes pre-carga {
-  0% {
-    transform: translateX(-110%);
-  }
-  100% {
-    transform: translateX(260%);
-  }
+.pre-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--soft);
 }
 
 .pre-frase {
-  font-size: 13px;
-  color: var(--soft);
-  height: 18px;
-  opacity: 0;
-  animation: aparecer 0.4s ease 0.6s forwards;
+  animation: pre-frase 0.4s var(--ease);
+}
+
+@keyframes pre-frase {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.pre-pct {
+  color: var(--teal-700);
+  font-weight: 600;
 }
 
 /* ==========================================================================

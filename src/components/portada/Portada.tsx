@@ -1,75 +1,145 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  BarChart3,
   BellRing,
+  Building2,
   CalendarCheck2,
-  CalendarHeart,
+  CalendarDays,
   Check,
-  Clock3,
+  CreditCard,
   FileHeart,
   Gift,
-  HeartPulse,
-  MapPin,
+  Megaphone,
   MessageCircle,
-  Phone,
   Plus,
   ShieldCheck,
   Sparkles,
   Stethoscope,
   Syringe,
+  User,
   Video,
 } from "lucide-react";
 import { useClinica } from "@/lib/store";
-import { crearSemilla } from "@/lib/datos/semilla";
-import { enZona } from "@/lib/datos/disponibilidad";
-import { CATEGORIAS_SERVICIO, DIAS_SEMANA, type ClinicaConfig, type Servicio } from "@/lib/datos/modelo";
 import { Logo } from "@/components/marca/Logo";
-import { Avatar, moneda, Reveal } from "@/components/ui";
+import { Reveal } from "@/components/ui";
 import { TelefonoInicio, TelefonoPanel, TelefonoPaso } from "@/components/portada/Mockups";
 
-function abiertoAhora(cfg: ClinicaConfig) {
-  const z = enZona(Date.now());
-  const b = cfg.horario[z.diaSemana];
-  if (!b?.activo) return { abierto: false, texto: "Cerrado hoy" };
-  const [ha, ma] = b.inicio.split(":").map(Number);
-  const [hb, mb] = b.fin.split(":").map(Number);
-  const abierto = z.minutos >= ha * 60 + ma && z.minutos < hb * 60 + mb;
-  return { abierto, texto: abierto ? `Abierto · cierra ${b.fin}` : z.minutos < ha * 60 + ma ? `Abre hoy a las ${b.inicio}` : "Cerrado · abre mañana" };
-}
+/** Correo de ventas para cotizaciones Enterprise: cámbialo por el definitivo. */
+const VENTAS = "hola@partumdesign.com.mx";
 
-const ICONO_CATEGORIA: Record<string, React.ReactNode> = {
-  Pediatría: <HeartPulse />,
-  Vacunación: <Syringe />,
-  Consulta: <Stethoscope />,
-  Especialidad: <CalendarHeart />,
-  Estudios: <FileHeart />,
-  Telemedicina: <Video />,
-  Paquete: <Sparkles />,
+const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+
+const MODULOS: [React.ReactNode, string, string][] = [
+  [<CalendarDays key="a" />, "Agenda y reservas en línea", "Tus pacientes reservan 24/7 desde tu enlace. Horarios por médico, bloqueos y cero empalmes."],
+  [<FileHeart key="b" />, "Expediente clínico", "Notas de consulta, signos vitales, diagnósticos y recetas digitales en el historial de cada paciente."],
+  [<BellRing key="c" />, "Recordatorios automáticos", "WhatsApp y SMS 24 horas antes. El paciente confirma, cancela o reagenda con un toque."],
+  [<Video key="d" />, "Telemedicina", "Videollamada creada en automático para cada teleconsulta, con receta digital al terminar."],
+  [<CreditCard key="e" />, "Caja y cobros", "Efectivo, tarjeta y transferencia. Corte de caja diario y pagos ligados a cada cita."],
+  [<Syringe key="f" />, "Cartilla de vacunación", "Esquema por paciente, próximas dosis y avisos a los papás cuando toca la siguiente."],
+  [<Gift key="g" />, "Programa de lealtad", "Tarjeta digital con descuentos por visitas. Tú defines las reglas y las recompensas."],
+  [<BarChart3 key="h" />, "Reportes", "Ingresos, ocupación por médico, inasistencias y servicios más pedidos, en tiempo real."],
+  [<Megaphone key="i" />, "Marketing", "Campañas a tus pacientes por segmento: reactivación, cumpleaños y recordatorios de control."],
+  [<CalendarCheck2 key="j" />, "Google Calendar", "Cada médico sincroniza su agenda y los pacientes agregan su cita a su calendario."],
+];
+
+const PANELES = [
+  {
+    icono: <Building2 />,
+    titulo: "Administración",
+    texto: "Configura servicios, precios, horarios y equipo. Lleva la caja, revisa reportes y lanza campañas desde un solo lugar.",
+    puntos: ["Equipo, roles y permisos", "Caja y corte diario", "Reportes y marketing"],
+    href: "/login?rol=admin",
+    cta: "Ver panel de administración",
+  },
+  {
+    icono: <Stethoscope />,
+    titulo: "Médicos",
+    texto: "Cada médico ve su agenda del día, confirma llegadas, consulta el expediente y emite recetas sin papel.",
+    puntos: ["Agenda del día y llegadas", "Expediente y recetas", "Sincronía con Google"],
+    href: "/login?rol=medico",
+    cta: "Ver panel médico",
+  },
+  {
+    icono: <User />,
+    titulo: "Pacientes",
+    texto: "Tus pacientes agendan en un minuto, reciben recordatorios y consultan sus citas, recetas y cartilla desde su celular.",
+    puntos: ["Reserva sin llamadas", "Recordatorios por WhatsApp", "Historial y tarjeta de lealtad"],
+    href: "/reservar",
+    cta: "Ver reserva de pacientes",
+  },
+];
+
+type Plan = {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  precioMensual: number | null;
+  destacado?: boolean;
+  features: string[];
 };
 
+const PLANES: Plan[] = [
+  {
+    id: "esencial",
+    nombre: "Esencial",
+    descripcion: "Para el consultorio de un solo médico que quiere dejar de agendar por teléfono.",
+    precioMensual: 990,
+    features: [
+      "1 médico activo",
+      "Agenda en línea con bloqueo anti-scalping",
+      "Pago con tarjeta (Stripe) y efectivo en clínica",
+      "Verificación de pacientes por WhatsApp/SMS",
+      "Recordatorios automáticos de cita",
+    ],
+  },
+  {
+    id: "profesional",
+    nombre: "Profesional",
+    descripcion: "Para clínicas con varios especialistas que quieren fidelizar pacientes.",
+    precioMensual: 1990,
+    destacado: true,
+    features: [
+      "Hasta 5 médicos activos",
+      "Todo lo del plan Esencial",
+      "Telemedicina con videollamada automática",
+      "Programa de lealtad configurable",
+      "Panel de administrador con reportes",
+      "Sincronización con Google/Outlook Calendar",
+    ],
+  },
+  {
+    id: "enterprise",
+    nombre: "Enterprise",
+    descripcion: "Para hospitales, redes y clínicas multi-sucursal con necesidades a la medida.",
+    precioMensual: null,
+    features: [
+      "Médicos y sucursales ilimitados",
+      "Todo lo del plan Profesional",
+      "Roles y permisos por sucursal",
+      "Soporte prioritario y onboarding dedicado",
+      "Acceso a API para integraciones propias",
+      "Implementación y migración de datos",
+    ],
+  },
+];
+
 const FAQ = [
-  ["¿Necesito crear una cuenta para agendar?", "No. Puedes reservar sólo con tu nombre y celular. Si creas tu cuenta (o entras con Google) verás tu expediente, recetas, cartilla de vacunación y podrás reagendar tú mismo."],
-  ["¿Cómo funciona la vacuna de primer año?", "A los 12 meses corresponden SRP (triple viral), varicela, hepatitis A y el refuerzo de neumococo. Revisamos la cartilla de tu bebé, aplicamos en una sola visita y queda registrado en su cartilla digital."],
-  ["¿Puedo agregar mi cita a Google Calendar?", "Sí. Al confirmar te damos un botón para agregarla a tu Google Calendar con la dirección y el enlace de videollamada si es teleconsulta. Nuestros médicos también sincronizan su agenda con Google."],
-  ["¿Atienden por videollamada?", "Sí, en medicina general, pediatría, ginecología y nutrición. Recibes el enlace de la sala al reservar y tu receta digital al terminar."],
-  ["¿Qué formas de pago aceptan?", "Efectivo, tarjeta de débito o crédito y transferencia en recepción. El pago en línea está disponible en la versión con pasarela conectada."],
+  ["¿Qué es Medical OS?", "Es el sistema operativo de tu clínica: agenda en línea, expediente clínico, cobros, recordatorios, telemedicina y reportes en una sola plataforma. Tu equipo trabaja desde el panel y tus pacientes reservan desde su celular."],
+  ["¿Necesito instalar algo?", "No. Medical OS funciona en el navegador de cualquier computadora, tableta o celular. Tus pacientes tampoco descargan nada: reservan desde tu enlace."],
+  ["¿Puedo migrar mis pacientes y mi agenda actual?", "Sí. Importamos tu base de pacientes y citas desde Excel u otro sistema. En el plan Enterprise la migración la hace nuestro equipo."],
+  ["¿Mis datos están seguros?", "La información clínica viaja cifrada y cada usuario sólo ve lo que su rol le permite. Tú eres dueño de tus datos y puedes exportarlos cuando quieras."],
+  ["¿Hay plazo forzoso?", "No. Los planes Esencial y Profesional se pagan mes a mes o por año con 20% de descuento, y cancelas cuando quieras. Enterprise se cotiza según tu operación."],
+  ["¿Puedo probarlo antes de contratar?", "Sí. La demo tiene datos simulados de una clínica completa: entra como administrador, médico o paciente y recorre todos los módulos."],
 ];
 
 export function Portada() {
   const c = useClinica();
-  const base = useMemo(() => (c.listo ? null : crearSemilla()), [c.listo]);
-  const clinica = c.listo ? c.clinicaConfig : base!.clinica;
-  const medicos = (c.listo ? c.medicos : base!.medicos).filter((m) => m.activo);
-  const servicios = (c.listo ? c.servicios : base!.servicios).filter((s) => s.activo);
-  const lealtad = c.listo ? c.recompensasConfig : base!.recompensas;
-
   const [scroll, setScroll] = useState(false);
-  const [estado, setEstado] = useState<{ abierto: boolean; texto: string } | null>(null);
-  const categorias = CATEGORIAS_SERVICIO.filter((k) => servicios.some((s) => s.categoria === k));
-  const [cat, setCat] = useState<string>("Pediatría");
+  const [anual, setAnual] = useState(false);
 
   useEffect(() => {
     const f = () => setScroll(window.scrollY > 12);
@@ -77,15 +147,8 @@ export function Portada() {
     window.addEventListener("scroll", f, { passive: true });
     return () => window.removeEventListener("scroll", f);
   }, []);
-  useEffect(() => {
-    setEstado(abiertoAhora(clinica));
-    const t = window.setInterval(() => setEstado(abiertoAhora(clinica)), 60_000);
-    return () => window.clearInterval(t);
-  }, [clinica]);
 
-  const wa = clinica.whatsapp.replace(/\D/g, "");
   const panel = c.sesion ? (c.sesion.rol === "admin" ? "/dashboard/admin" : c.sesion.rol === "medico" ? "/dashboard/medico" : "/cuenta") : null;
-  const hoy = estado ? enZona(Date.now()).diaSemana : null;
 
   return (
     <div className="site">
@@ -99,22 +162,22 @@ export function Portada() {
 
       <header className={`site-nav ${scroll ? "is-scrolled" : ""}`}>
         <div className="wrap">
-          <Link href="/" aria-label="Inicio">
-            <Logo alto={34} />
+          <Link href="/" aria-label="Medical OS · inicio" className="site-logo">
+            <Logo alto={46} />
           </Link>
           <nav aria-label="Secciones">
-            <a href="#servicios">Servicios</a>
-            <a href="#especialistas">Especialistas</a>
-            <a href="#vacunacion">Vacunación</a>
-            <a href="#como-funciona">Cómo funciona</a>
-            <a href="#visitanos">Visítanos</a>
+            <a href="#producto">Producto</a>
+            <a href="#modulos">Módulos</a>
+            <a href="#paneles">Paneles</a>
+            <a href="#precios">Precios</a>
+            <a href="#preguntas">Preguntas</a>
           </nav>
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
             <Link href={panel ?? "/login"} className="btn btn-ghost btn-sm hidden sm:inline-flex">
               {panel ? "Mi panel" : "Iniciar sesión"}
             </Link>
-            <Link href="/reservar" className="btn btn-grad btn-sm">
-              Agendar cita
+            <Link href="/login" className="btn btn-grad btn-sm">
+              Probar la demo
             </Link>
           </div>
         </div>
@@ -125,41 +188,38 @@ export function Portada() {
         <div className="wrap">
           <div className="band hero-band">
             <div className="anim-in" style={{ position: "relative", zIndex: 2 }}>
-              {estado && (
-                <span className="chip" style={{ background: "rgba(255,255,255,.16)", color: "#fff", marginBottom: 22 }}>
-                  <span className="dot" style={{ color: estado.abierto ? "#7dffc9" : "#ffd28a" }} />
-                  {clinica.nombre} · {estado.texto}
-                </span>
-              )}
+              <span className="chip" style={{ background: "rgba(255,255,255,.16)", color: "#fff", marginBottom: 22 }}>
+                <Sparkles /> Software para clínicas y consultorios
+              </span>
               <h1>
-                Consultas sin filas,
+                El sistema operativo
                 <br />
-                <em>nunca más.</em>
+                <em>de tu clínica.</em>
               </h1>
               <p className="hero-lead">
-                Agenda en línea con pediatras, médicos generales y especialistas. Recordatorios por WhatsApp, expediente digital y la cartilla de
-                vacunación de tus hijos siempre contigo.
+                Agenda en línea, expediente clínico, cobros, recordatorios por WhatsApp y telemedicina en una sola plataforma. Tu equipo trabaja
+                menos en papeleo y tus pacientes agendan sin llamar.
               </p>
               <div className="flex flex-wrap gap-3" style={{ marginTop: 30 }}>
-                <Link href="/reservar" className="btn btn-white btn-lg">
-                  Agendar mi cita <ArrowRight />
+                <Link href="/login" className="btn btn-white btn-lg">
+                  Probar la demo <ArrowRight />
                 </Link>
-                <a href="#servicios" className="btn btn-outline-white btn-lg">
-                  Ver servicios
+                <a href="#precios" className="btn btn-outline-white btn-lg">
+                  Ver planes
                 </a>
               </div>
               <div className="hero-stats">
                 <div>
-                  <b>{medicos.length}</b>
-                  <span>especialistas</span>
+                  <b>10</b>
+                  <span>módulos integrados</span>
                 </div>
                 <div>
-                  <b>{servicios.length}</b>
-                  <span>servicios en línea</span>
+                  <b>3</b>
+                  <span>paneles: admin, médico y paciente</span>
                 </div>
                 <div>
-                  <b>60 s</b>
-                  <span>para agendar</span>
+                  <b>24/7</b>
+                  <span>reservas en línea</span>
                 </div>
               </div>
             </div>
@@ -172,8 +232,8 @@ export function Portada() {
                   <Check />
                 </i>
                 <div>
-                  <b>Cita confirmada</b>
-                  <small>Revisión pediátrica · Jue 10:30</small>
+                  <b>Nueva cita en línea</b>
+                  <small>Agendada sin llamadas · Jue 10:30</small>
                 </div>
               </div>
               <div className="burbuja burbuja-2" style={{ left: "4%", top: 250, animationDelay: "-2s" }}>
@@ -190,8 +250,8 @@ export function Portada() {
                   <CalendarCheck2 />
                 </i>
                 <div>
-                  <b>En tu Google Calendar</b>
-                  <small>Sincronizado al instante</small>
+                  <b>Agenda sincronizada</b>
+                  <small>Google Calendar al instante</small>
                 </div>
               </div>
             </div>
@@ -199,10 +259,10 @@ export function Portada() {
         </div>
       </section>
 
-      {/* ---------- Beneficios ---------- */}
-      <section className="section" style={{ paddingTop: 60 }}>
+      {/* ---------- Producto ---------- */}
+      <section className="section" id="producto" style={{ paddingTop: 60 }}>
         <div className="wrap grid items-center gap-14 lg:grid-cols-2">
-          <Reveal className="relative order-2 lg:order-1" >
+          <Reveal className="relative order-2 lg:order-1">
             <div className="beneficio-visual" style={{ position: "relative", height: 560, display: "grid", placeItems: "center" }}>
               <div style={{ position: "absolute", right: "6%", top: 40, width: "70%", height: 440, borderRadius: 44, background: "var(--grad-band)" }} />
               <div style={{ position: "absolute", left: "4%", bottom: 30, width: 170, height: 170, borderRadius: "40px 40px 40px 0", background: "var(--navy)" }} />
@@ -218,19 +278,22 @@ export function Portada() {
                 <i>
                   <Plus />
                 </i>
-                Pensado para familias
+                Qué es Medical OS
               </span>
               <h2 className="section-title" style={{ marginTop: 16 }}>
-                <em>Paciente</em>, deja el papeleo con nosotros.
+                Toda tu clínica, <em>en un solo lugar.</em>
               </h2>
-              <p className="section-lead">Tú sólo preocúpate por sentirte mejor; de lo demás se encarga la clínica.</p>
+              <p className="section-lead">
+                Deja de saltar entre la libreta de citas, Excel, WhatsApp y la caja. Medical OS conecta la agenda, el expediente y los cobros para
+                que todo tu equipo vea lo mismo.
+              </p>
             </Reveal>
             <div className="grid gap-3" style={{ marginTop: 28 }}>
               {[
-                [<CalendarHeart key="1" />, "Agenda en 60 segundos", "Elige servicio, especialista y hora disponible en tiempo real. Sin llamadas ni esperas."],
-                [<BellRing key="2" />, "Recordatorios automáticos", "Te avisamos por WhatsApp 24 horas antes y puedes cancelar o reagendar con un toque."],
-                [<FileHeart key="3" />, "Expediente y recetas digitales", "Diagnósticos, signos vitales y recetas de cada consulta, siempre disponibles en tu cuenta."],
-                [<Syringe key="4" />, "Cartilla de vacunación digital", "Sabes qué vacuna le toca a tus hijos y cuándo. Te recordamos las siguientes dosis."],
+                [<CalendarDays key="1" />, "Menos llamadas, más consultas", "Tus pacientes reservan solos en horarios reales. Recepción deja de contestar el teléfono para agendar."],
+                [<BellRing key="2" />, "Menos inasistencias", "Recordatorios automáticos por WhatsApp y confirmación de llegada con código QR."],
+                [<FileHeart key="3" />, "Expediente sin papel", "Notas, signos vitales y recetas digitales que el médico encuentra en segundos."],
+                [<ShieldCheck key="4" />, "Control para el dueño", "Ingresos, ocupación y desempeño por médico en reportes en tiempo real."],
               ].map(([icono, t, d], i) => (
                 <Reveal key={i} delay={i * 90}>
                   <div className="feature">
@@ -247,148 +310,55 @@ export function Portada() {
         </div>
       </section>
 
-      {/* ---------- Servicios ---------- */}
-      <section className="section" id="servicios" style={{ background: "var(--bg-2)", borderRadius: 48, margin: "0 12px" }}>
+      {/* ---------- Módulos ---------- */}
+      <section className="section" id="modulos" style={{ background: "var(--bg-2)", borderRadius: 48, margin: "0 12px" }}>
         <div className="wrap">
-          <Reveal className="flex flex-wrap items-end justify-between gap-6">
-            <div className="section-head">
-              <h2 className="section-title">
-                Servicios para <em>cada etapa</em> de la vida
-              </h2>
-              <p className="section-lead">Precios claros y duración de cada consulta. Reserva el que necesites en línea.</p>
-            </div>
-            <div className="segmented" role="tablist" aria-label="Categoría">
-              {categorias.map((k) => (
-                <button key={k} type="button" role="tab" aria-selected={cat === k} onClick={() => setCat(k)}>
-                  {k}
-                </button>
-              ))}
-            </div>
+          <Reveal className="section-head is-center">
+            <h2 className="section-title">
+              Módulos que <em>trabajan juntos</em>
+            </h2>
+            <p className="section-lead">Activa sólo lo que necesitas hoy y suma módulos conforme crece tu clínica.</p>
           </Reveal>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" style={{ marginTop: 34 }}>
-            {servicios
-              .filter((s) => s.categoria === cat)
-              .map((s: Servicio, i) => (
-                <div key={s.id} className="servicio-card anim-in" style={{ animationDelay: `${i * 60}ms` }}>
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="icon-tile">{ICONO_CATEGORIA[s.categoria] ?? <Stethoscope />}</span>
-                    <span className="chip">
-                      <Clock3 /> {s.duracion_min} min
-                    </span>
-                  </div>
-                  <h3 style={{ fontSize: 18, marginTop: 6 }}>{s.nombre}</h3>
-                  <p style={{ color: "var(--muted)", fontSize: 14, flex: 1 }}>{s.descripcion}</p>
-                  <div className="flex items-center justify-between" style={{ marginTop: 8 }}>
-                    <span className="precio">
-                      {s.desde && <small style={{ fontSize: 13, color: "var(--muted)", fontWeight: 400 }}>desde </small>}
-                      {moneda.format(s.precio)}
-                    </span>
-                    <Link href={`/reservar?servicio=${s.id}`} className="btn btn-soft btn-sm">
-                      Agendar <ArrowRight />
-                    </Link>
-                  </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" style={{ marginTop: 34 }}>
+            {MODULOS.map(([icono, t, d], i) => (
+              <Reveal key={t} delay={(i % 5) * 70}>
+                <div className="servicio-card modulo-card">
+                  <span className="icon-tile">{icono}</span>
+                  <h3 style={{ fontSize: 17, marginTop: 6 }}>{t}</h3>
+                  <p style={{ color: "var(--muted)", fontSize: 14 }}>{d}</p>
                 </div>
-              ))}
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ---------- Vacunación ---------- */}
-      <section className="section" id="vacunacion">
-        <div className="wrap grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
-          <Reveal>
-            <span className="eyebrow">
-              <i>
-                <Syringe />
-              </i>
-              Módulo de vacunación
-            </span>
-            <h2 className="section-title" style={{ marginTop: 16 }}>
-              La <em>vacuna de primer año</em>, sin estrés.
-            </h2>
-            <p className="section-lead">
-              Red de frío certificada, enfermera especializada y la cartilla digital de tu bebé actualizada al momento. Te avisamos cuando toque la
-              siguiente dosis.
-            </p>
-            <div className="flex flex-wrap gap-3" style={{ marginTop: 26 }}>
-              <Link href="/reservar?servicio=srv-vacuna-1anio" className="btn btn-grad btn-lg">
-                Agendar vacuna <ArrowRight />
-              </Link>
-              <Link href="/reservar?servicio=srv-revision-ped" className="btn btn-ghost btn-lg">
-                Revisión pediátrica
-              </Link>
-            </div>
-          </Reveal>
-          <Reveal delay={120}>
-            <div className="card card-pad" style={{ borderRadius: 32, padding: 28 }}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div style={{ fontWeight: 600, color: "var(--navy)", fontSize: 17 }}>Esquema del primer año</div>
-                  <div style={{ fontSize: 13, color: "var(--muted)" }}>Referencia simplificada · tu pediatra confirma cada dosis</div>
-                </div>
-                <span className="chip chip-mint">
-                  <ShieldCheck /> Red de frío
-                </span>
-              </div>
-              <div style={{ position: "relative", marginTop: 26, paddingLeft: 28 }}>
-                <div style={{ position: "absolute", left: 9, top: 6, bottom: 6, width: 2, background: "linear-gradient(var(--aqua), var(--mint))", borderRadius: 2 }} />
-                {[
-                  ["Al nacer", "BCG · Hepatitis B"],
-                  ["2 meses", "Hexavalente · Rotavirus · Neumococo"],
-                  ["4 meses", "Hexavalente · Rotavirus · Neumococo"],
-                  ["6 meses", "Hexavalente · Influenza"],
-                  ["12 meses", "SRP · Varicela · Hepatitis A · Neumococo"],
-                  ["18 meses", "Refuerzo hexavalente"],
-                ].map(([edad, v], i) => (
-                  <div key={edad} style={{ position: "relative", paddingBottom: i === 5 ? 0 : 18 }}>
-                    <span style={{ position: "absolute", left: -26, top: 3, width: 16, height: 16, borderRadius: 16, background: i === 4 ? "var(--teal)" : "#fff", border: "3px solid var(--teal)", boxShadow: i === 4 ? "0 0 0 6px var(--teal-50)" : undefined }} />
-                    <div className="flex flex-wrap items-baseline gap-x-3">
-                      <b style={{ color: i === 4 ? "var(--teal-700)" : "var(--navy)", fontWeight: 600, minWidth: 74 }}>{edad}</b>
-                      <span style={{ color: "var(--muted)", fontSize: 14 }}>{v}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ---------- Especialistas ---------- */}
-      <section className="section" id="especialistas" style={{ paddingTop: 30 }}>
+      {/* ---------- Paneles ---------- */}
+      <section className="section" id="paneles">
         <div className="wrap">
           <Reveal className="section-head is-center">
             <h2 className="section-title">
-              Nuestro <em>equipo médico</em>
+              Un panel para <em>cada persona</em>
             </h2>
-            <p className="section-lead">Especialistas certificados, con cédula profesional verificada y agenda en línea.</p>
+            <p className="section-lead">Administración, médicos y pacientes usan la misma plataforma, cada quien con lo que necesita ver.</p>
           </Reveal>
-          <div className="medicos-grid grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" style={{ marginTop: 40 }}>
-            {medicos.map((m, i) => (
-              <Reveal key={m.id} delay={i * 80}>
-                <div className="medico-card">
-                  <div className="medico-foto" style={{ background: `linear-gradient(150deg, color-mix(in srgb, ${m.color} 18%, #fff), color-mix(in srgb, ${m.color} 42%, #fff))` }}>
-                    <svg viewBox="0 0 200 170" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} aria-hidden>
-                      <circle cx="170" cy="20" r="60" fill="#fff" opacity=".35" />
-                      <circle cx="20" cy="160" r="40" fill="#fff" opacity=".25" />
-                    </svg>
-                    <Avatar nombre={m.nombre} color={m.color} size="is-xl" />
-                    {m.telemedicina && (
-                      <span className="chip" style={{ position: "absolute", left: 12, bottom: 12, background: "#fff" }}>
-                        <Video /> Teleconsulta
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ padding: 18 }}>
-                    <div style={{ fontWeight: 600, color: "var(--navy)", fontSize: 16.5 }}>{m.nombre}</div>
-                    <div style={{ color: "var(--teal-700)", fontSize: 14 }}>{m.especialidad}</div>
-                    <div style={{ color: "var(--soft)", fontSize: 12.5, marginTop: 6 }}>
-                      Céd. prof. {m.cedula} · {m.experiencia} años
-                    </div>
-                    <Link href={`/reservar?medico=${m.id}`} className="btn btn-soft btn-sm" style={{ marginTop: 14, width: "100%" }}>
-                      Agendar<span className="largo">&nbsp;con {m.nombre.split(" ")[0]} {m.nombre.split(" ")[1]}</span>
-                    </Link>
-                  </div>
+          <div className="grid gap-5 lg:grid-cols-3" style={{ marginTop: 40 }}>
+            {PANELES.map((p, i) => (
+              <Reveal key={p.titulo} delay={i * 100} className="h-full">
+                <div className="card card-pad panel-card">
+                  <span className="icon-tile">{p.icono}</span>
+                  <h3 style={{ fontSize: 21, marginTop: 14 }}>{p.titulo}</h3>
+                  <p style={{ color: "var(--muted)", fontSize: 14.5, marginTop: 6 }}>{p.texto}</p>
+                  <ul className="grid gap-2" style={{ marginTop: 16, flex: 1 }}>
+                    {p.puntos.map((x) => (
+                      <li key={x} className="flex items-center gap-2" style={{ fontSize: 14 }}>
+                        <Check size={16} color="var(--teal)" /> {x}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href={p.href} className="btn btn-soft" style={{ marginTop: 20, width: "100%" }}>
+                    {p.cta} <ArrowRight />
+                  </Link>
                 </div>
               </Reveal>
             ))}
@@ -400,9 +370,9 @@ export function Portada() {
       <section className="section" id="como-funciona" style={{ paddingTop: 30 }}>
         <div className="wrap">
           <div className="band" style={{ paddingBottom: 0 }}>
-            <Reveal className="text-center" >
+            <Reveal className="text-center">
               <h2 className="section-title" style={{ color: "#fff", padding: "64px 20px 0", maxWidth: 760, margin: "0 auto" }}>
-                <span style={{ color: "var(--navy)" }}>Paciente</span>, tu cita confirmada en pocos clics…
+                Tus pacientes agendan <span style={{ color: "var(--navy)" }}>solos</span>, en tres pasos…
               </h2>
             </Reveal>
             <div className="pasos">
@@ -410,9 +380,9 @@ export function Portada() {
               <div className="pasos-grid grid gap-10 md:grid-cols-3">
                 {(
                   [
-                    [1, "Elige servicio y especialista"],
-                    [2, "Escoge día y hora"],
-                    [3, "Recibe tu confirmación"],
+                    [1, "Eligen servicio y especialista"],
+                    [2, "Escogen día y hora libres"],
+                    [3, "Reciben su confirmación"],
                   ] as const
                 ).map(([n, t], i) => (
                   <Reveal key={n} delay={i * 140} className="text-center">
@@ -429,97 +399,98 @@ export function Portada() {
         </div>
       </section>
 
-      {/* ---------- Lealtad (sólo si el programa está encendido) ---------- */}
-      {lealtad.activa && (
-        <section className="section" style={{ paddingTop: 20 }}>
-          <div className="wrap">
-            <Reveal className="card card-pad flex flex-wrap items-center justify-between gap-6" >
-              <div className="flex items-center gap-4">
-                <span className="icon-tile">
-                  <Gift />
-                </span>
-                <div>
-                  <h3 style={{ fontSize: 20 }}>Tarjeta Vitalia</h3>
-                  <p style={{ color: "var(--muted)" }}>
-                    Cada {lealtad.citas_requeridas} consultas atendidas te ganas {lealtad.valor_descuento}% de descuento en la siguiente.
-                  </p>
-                </div>
-              </div>
-              <Link href="/login" className="btn btn-grad">
-                Obtener mi tarjeta
-              </Link>
-            </Reveal>
-          </div>
-        </section>
-      )}
-
-      {/* ---------- Visítanos ---------- */}
-      <section className="section" id="visitanos" style={{ paddingTop: 30 }}>
-        <div className="wrap grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-          <Reveal className="card card-pad" >
-            <h2 className="section-title" style={{ fontSize: 34 }}>
-              <em>Visítanos</em>
+      {/* ---------- Precios ---------- */}
+      <section className="section" id="precios">
+        <div className="wrap">
+          <Reveal className="section-head is-center">
+            <span className="eyebrow" style={{ justifyContent: "center" }}>
+              <i>
+                <Sparkles />
+              </i>
+              Precios
+            </span>
+            <h2 className="section-title" style={{ marginTop: 16 }}>
+              Planes simples, <em>sin sorpresas</em>
             </h2>
-            <p style={{ color: "var(--muted)", marginTop: 8 }}>{clinica.descripcion}</p>
-            <div className="grid gap-3" style={{ marginTop: 22 }}>
-              <div className="flex gap-3">
-                <span className="icon-tile is-sm is-soft">
-                  <MapPin />
-                </span>
-                <span style={{ fontSize: 14.5 }}>{clinica.direccion}</span>
-              </div>
-              <div className="flex gap-3">
-                <span className="icon-tile is-sm is-soft">
-                  <Phone />
-                </span>
-                <span style={{ fontSize: 14.5 }}>
-                  {clinica.telefono} · {clinica.email}
-                </span>
-              </div>
+            <p className="section-lead">Cancela cuando quieras. Todos los planes incluyen pago con tarjeta y en efectivo desde el día uno.</p>
+            <div className="segmented precio-toggle" role="group" aria-label="Periodo de pago" style={{ marginTop: 26 }}>
+              <button type="button" aria-pressed={!anual} onClick={() => setAnual(false)}>
+                Mensual
+              </button>
+              <button type="button" aria-pressed={anual} onClick={() => setAnual(true)}>
+                Anual <small>· ahorra 20%</small>
+              </button>
             </div>
-            <div style={{ marginTop: 22, borderTop: "1px solid var(--line-2)", paddingTop: 14 }}>
-              {DIAS_SEMANA.map((d) => {
-                const b = clinica.horario[d.id];
-                return (
-                  <div key={d.id} className="flex justify-between" style={{ padding: "6px 0", fontSize: 14, color: hoy === d.id ? "var(--teal-700)" : "var(--slate)", fontWeight: hoy === d.id ? 600 : 400 }}>
-                    <span>{d.label}</span>
-                    <span className="tnum">{b.activo ? `${b.inicio} – ${b.fin}` : "Cerrado"}</span>
+          </Reveal>
+
+          <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch" style={{ marginTop: 40 }}>
+            {PLANES.map((plan, i) => {
+              const precio = plan.precioMensual === null ? null : anual ? Math.round(plan.precioMensual * 0.8) : plan.precioMensual;
+              return (
+                <Reveal key={plan.id} delay={i * 100} className="h-full">
+                  <div className={`plan-card ${plan.destacado ? "is-destacado" : ""}`}>
+                    {plan.destacado && (
+                      <span className="plan-badge">
+                        <Sparkles /> Más elegido
+                      </span>
+                    )}
+                    {plan.precioMensual === null && (
+                      <span className="plan-badge is-enterprise">
+                        <Building2 /> A la medida
+                      </span>
+                    )}
+                    <h3>{plan.nombre}</h3>
+                    <p className="plan-desc">{plan.descripcion}</p>
+                    {precio === null ? (
+                      <p className="plan-precio">
+                        <b className="is-texto">Bajo cotización</b>
+                        <span>Precio según médicos, sucursales e integraciones</span>
+                      </p>
+                    ) : (
+                      <p className="plan-precio">
+                        <b className="tnum">{mxn.format(precio)}</b>
+                        <span>/mes{anual && " · facturado anual"}</span>
+                      </p>
+                    )}
+                    <ul>
+                      {plan.features.map((f) => (
+                        <li key={f}>
+                          <Check /> {f}
+                        </li>
+                      ))}
+                    </ul>
+                    {plan.precioMensual === null ? (
+                      <a href={`mailto:${VENTAS}?subject=${encodeURIComponent("Cotización Medical OS Enterprise")}`} className="btn btn-dark btn-lg">
+                        Solicitar cotización
+                      </a>
+                    ) : (
+                      <Link href="/login" className={`btn btn-lg ${plan.destacado ? "btn-white" : "btn-dark"}`}>
+                        Probar la demo
+                      </Link>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-wrap gap-2" style={{ marginTop: 20 }}>
-              <a href={`tel:${clinica.telefono.replace(/\s/g, "")}`} className="btn btn-ghost">
-                <Phone /> Llamar
-              </a>
-              <a href={`https://wa.me/52${wa}`} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ background: "#1faa59", boxShadow: "none" }}>
-                <MessageCircle /> WhatsApp
-              </a>
-              <a href={clinica.mapa_url} target="_blank" rel="noreferrer" className="btn btn-soft">
-                <MapPin /> Cómo llegar
-              </a>
-            </div>
-          </Reveal>
-          <Reveal delay={120} className="card" >
-            <iframe
-              title="Mapa de la clínica"
-              src={`https://www.google.com/maps?q=${encodeURIComponent(clinica.direccion)}&output=embed`}
-              style={{ width: "100%", height: "100%", minHeight: 420, border: 0, borderRadius: 24, display: "block" }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </Reveal>
+                </Reveal>
+              );
+            })}
+          </div>
+
+          <p style={{ textAlign: "center", fontSize: 12.5, color: "var(--soft)", marginTop: 26, maxWidth: 560, marginInline: "auto" }}>
+            Precios de referencia en pesos mexicanos (MXN), antes de IVA. Esta demo no procesa pagos reales de suscripción.
+          </p>
         </div>
       </section>
 
       {/* ---------- Preguntas ---------- */}
-      <section className="section" style={{ paddingTop: 40 }}>
+      <section className="section" id="preguntas" style={{ paddingTop: 40 }}>
         <div className="wrap grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
             <h2 className="section-title">
               Preguntas <em>frecuentes</em>
             </h2>
-            <p className="section-lead">¿Tienes otra duda? Escríbenos por WhatsApp y te respondemos en minutos.</p>
+            <p className="section-lead">¿Tienes otra duda? Escríbenos y te mostramos Medical OS con los datos de tu clínica.</p>
+            <Link href="/login" className="btn btn-grad btn-lg" style={{ marginTop: 24 }}>
+              Probar la demo <ArrowRight />
+            </Link>
           </Reveal>
           <Reveal className="faq" delay={100}>
             {FAQ.map(([q, a]) => (
@@ -538,37 +509,37 @@ export function Portada() {
       <footer className="site-footer">
         <div className="wrap grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Logo alto={34} blanco />
-            <p style={{ marginTop: 16, fontSize: 14, maxWidth: 320 }}>
-              {clinica.nombre}: {clinica.eslogan.toLowerCase()}. Sitio y sistema de gestión impulsados por Medical OS.
+            <Logo alto={46} blanco />
+            <p style={{ marginTop: 18, fontSize: 14, maxWidth: 320 }}>
+              El sistema operativo para clínicas y consultorios: agenda, expediente, cobros y pacientes en una sola plataforma.
             </p>
           </div>
           <div>
-            <h4>Pacientes</h4>
+            <h4>Producto</h4>
             <div className="grid gap-2" style={{ fontSize: 14 }}>
-              <Link href="/reservar">Agendar cita</Link>
-              <Link href="/login">Mi cuenta</Link>
-              <a href="#vacunacion">Vacunación</a>
+              <a href="#modulos">Módulos</a>
+              <a href="#paneles">Paneles</a>
+              <a href="#precios">Precios</a>
             </div>
           </div>
           <div>
-            <h4>Clínica</h4>
-            <div className="grid gap-2" style={{ fontSize: 14 }}>
-              <a href="#especialistas">Especialistas</a>
-              <a href="#servicios">Servicios</a>
-              <a href="#visitanos">Ubicación</a>
-            </div>
-          </div>
-          <div>
-            <h4>Equipo</h4>
+            <h4>Demo</h4>
             <div className="grid gap-2" style={{ fontSize: 14 }}>
               <Link href="/login?rol=admin">Administración</Link>
               <Link href="/login?rol=medico">Acceso médico</Link>
+              <Link href="/reservar">Reserva de pacientes</Link>
+            </div>
+          </div>
+          <div>
+            <h4>Contacto</h4>
+            <div className="grid gap-2" style={{ fontSize: 14 }}>
+              <a href={`mailto:${VENTAS}`}>Ventas</a>
+              <a href="#preguntas">Preguntas frecuentes</a>
             </div>
           </div>
         </div>
         <div className="wrap flex flex-wrap justify-between gap-3" style={{ marginTop: 40, paddingTop: 22, borderTop: "1px solid rgba(255,255,255,.1)", fontSize: 13 }}>
-          <span>© {new Date().getFullYear()} {clinica.nombre}. Datos de demostración.</span>
+          <span>© {new Date().getFullYear()} Medical OS. Demo con datos simulados.</span>
           <span>Medical OS por Partum Design</span>
         </div>
       </footer>

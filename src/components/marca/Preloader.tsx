@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { IsotipoSVG } from "@/components/marca/Logo";
+import { Isotipo, Palabra } from "@/components/marca/Logo";
 
 const FRASES = ["Preparando tu agenda…", "Abriendo expedientes…", "Sincronizando Google Calendar…", "Todo listo"];
-const PALABRA = "medical";
 
 /**
- * Preloader de marca: dibuja el isotipo trazo por trazo, arma la palabra
- * letra por letra y sale con un barrido circular. Sólo aparece la primera
+ * Preloader de marca: el isotipo «OS» se dibuja con un barrido circular,
+ * la cruz late, la palabra «medical» entra de izquierda a derecha y todo
+ * sale con un barrido circular. Sólo aparece la primera
  * vez en cada sesión del navegador para no estorbar al navegar.
  */
 export function Preloader() {
@@ -48,17 +48,14 @@ export function Preloader() {
     <div className={`preloader ${fase === "saliendo" ? "is-saliendo" : ""}`} role="status" aria-label="Cargando Medical OS">
       <div className="pre-anillo" />
       <div className="pre-centro">
-        <IsotipoSVG className="pre-marca" />
-        <div className="pre-texto">
-          <div className="pre-palabra" aria-hidden>
-            {PALABRA.split("").map((l, i) => (
-              <span key={i} style={{ animationDelay: `${0.9 + i * 0.06}s` }}>
-                {l}
-              </span>
-            ))}
-            <span style={{ animationDelay: `${0.9 + PALABRA.length * 0.06}s`, color: "var(--teal)" }}>OS</span>
+        <div className="pre-logo">
+          <div className="pre-palabra">
+            <Palabra />
           </div>
-          <div className="pre-sub">por Partum</div>
+          <div className="pre-os">
+            <span className="pre-pulso" />
+            <Isotipo alto={120} className="pre-os-img" />
+          </div>
         </div>
         <div className="pre-barra">
           <span />
